@@ -1,0 +1,14 @@
+# --- Basura de ROS 2 ---
+build/
+install/
+log/
+*.pyc
+
+# --- Basura de LaTeX ---
+*.aux
+*.log
+*.toc
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
