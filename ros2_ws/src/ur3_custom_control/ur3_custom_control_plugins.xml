@@ -1,0 +1,16 @@
+<library path="ur3_custom_control">
+  <class name="ur3_custom_control/ComputedTorqueController"
+         type="ur3_control_cpp::ComputedTorqueController"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Controlador RNEA Custom para UR3e
+    </description>
+  </class>
+  <class name="ur3_custom_control/NeuralTorqueController"
+         type="ur3_control_cpp::NeuralTorqueController"
+         base_class_type="controller_interface::ControllerInterface">
+    <description>
+    Controlador basado en Red Neuronal ONNX
+    </description>
+  </class>
+</library>

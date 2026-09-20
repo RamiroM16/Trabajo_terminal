@@ -1,0 +1,850 @@
+\documentclass[12pt]{article}
+
+% Paquetes necesarios
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{array}
+\usepackage{pdflscape}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{amsfonts}
+\usepackage{enumitem}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage{afterpage}
+
+\geometry{left=3cm, right=3cm, top=2.5cm, bottom=2.5cm}
+
+\begin{document}
+
+\pagenumbering{roman}
+
+% --- PRELIMINAR ---
+\begin{titlepage}
+    \begin{center}
+        \begin{minipage}{0.4\linewidth}
+            \includegraphics[width=0.9\linewidth]{Imagenes/IPN.png}
+        \end{minipage}
+        \hfill
+        \begin{minipage}{0.4\linewidth}
+            \includegraphics[width=0.6\linewidth]{Imagenes/upiita.png}
+        \end{minipage}
+
+        \vspace{1cm}
+        \hrule
+        \vspace{2cm}
+
+        {\LARGE \textbf{Instituto Politécnico Nacional}} \\
+        \vspace{0.5cm}
+        {\Large Unidad Profesional Interdisciplinaria en Ingeniería y Tecnologías Avanzadas} \\
+        \vspace{1cm}
+                
+        {\Large Ingeniería Mecatrónica} \\
+        \vspace{.5cm}
+        {\Large Reporte de Trabajo Terminal 1} \\
+        \vspace{1.5cm}
+
+        {\huge \textbf{Control de posición de robot manipulador usando redes neuronales cuantizadas}} \\
+        \vspace{1.5cm}
+
+        {\Large \textbf{ Autor:}} \\
+        {\Large Mendoza Díaz Ramiro} \\
+        \vspace{1.5cm}
+        
+        {\Large \textbf{Asesor:}} \\
+        {\Large Dr. Jorge Alejandro Juárez Lora} \\
+        \vspace{1.5cm}
+
+        {\Large \textbf{Profesores:}} \\
+        {\Large Fernandez Nava Cecilia} \\
+        {\Large Martínez Solis Sandra} \\
+        \vspace{2cm}
+
+    \end{center}
+\end{titlepage}
+
+\newpage
+\vspace*{5cm}
+\begin{center}
+    \Huge \textbf{Portada con firmas}
+    
+    (Añadir la portada de firmas aquí)
+\end{center}
+
+\newpage
+\vspace*{5cm}
+\begin{flushright}
+    \Large \textit{Dedicatoria...}
+\end{flushright}
+
+\newpage
+\vspace*{5cm}
+\begin{center}
+    \Large \textbf{Agradecimientos}
+    
+    Agradezco a...
+\end{center}
+
+\newpage
+\tableofcontents
+
+\newpage
+\addcontentsline{toc}{section}{Resumen}
+{\large \textbf{Resumen}}\\
+La robótica moderna demanda sistemas de control cada vez más complejos para que los manipuladores ejecuten tareas aún más desarrolladas con precisión y adaptabilidad. Si bien la inteligencia artificial, y en particular las redes neuronales profundas (DNNs), ofrecen soluciones potentes, su elevado costo computacional y energético restringe su aplicación en plataformas robóticas con cómputo al filo. Este proyecto de investigación se centra en este desafío, motivado por la necesidad crítica de desarrollar controladores robóticos energéticamente eficientes y de validar cuantitativamente sus beneficios.
+
+Se plantea el problema de cómo implementar un control de posición para un robot manipulador que sea preciso y, fundamentalmente, de bajo consumo, mediante el uso de redes neuronales cuantizadas (QNNs) desplegadas en hardware reconfigurable (FPGA). El objetivo general de este trabajo es diseñar, implementar y evaluar comparativamente el desempeño energético, la utilización de recursos de hardware y la precisión del control de un sistema basado en QNNs, contrastándolo con un control PID clásico y una red neuronal de punto flotante (FP12-NN), todos operando sobre la misma plataforma FPGA.
+
+La propuesta de solución abarca el desarrollo de estos tres enfoques de control, la aplicación de técnicas de cuantización para generar modelos QNN con distintos niveles de precisión, y la ejecución de un plan experimental para medir y analizar las métricas de rendimiento y consumo energético. Se espera que los resultados demuestren la viabilidad y las ventajas energéticas de las QNNs, aportando una metodología y datos concretos para el diseño de futuros sistemas de control robótico energéticamente sostenibles.
+
+\vspace{1.5cm}
+\addcontentsline{toc}{section}{Abstract}
+{\large \textbf{Abstract}}\\ 
+Modern robotics demands increasingly complex control systems for manipulators to perform more advanced tasks with precision and adaptability. While artificial intelligence—particularly deep neural networks (DNNs)—offers powerful solutions, their high computational and energy costs limit their use in robotic platforms with edge computing. This research project addresses this challenge, driven by the critical need to develop energy-efficient robotic controllers and to quantitatively validate their benefits.
+
+The central problem is how to implement a position control system for a robotic manipulator that is both accurate and, fundamentally, low-power, using quantized neural networks (QNNs) deployed on reconfigurable hardware (FPGAs). The main objective of this work is to design, implement, and comparatively evaluate the energy performance, hardware resource usage, and control accuracy of a QNN-based system, benchmarking it against a classical PID controller and a floating-point neural network (FP12-NN), all running on the same FPGA platform.
+
+The proposed solution involves developing all three control strategies, applying quantization techniques to produce QNN models with varying precision levels, and executing an experimental plan to measure and analyze performance and energy consumption metrics. The expected outcome is to demonstrate the feasibility and energy advantages of QNNs, providing both a methodology and concrete data for the design of future energy-efficient robotic control systems.
+
+\vspace{1.5cm}
+\addcontentsline{toc}{section}{Palabras clave}
+{\large \textbf{Palabras clave}}\\ 
+Redes Neuronales Cuantizadas, Control de Robots, FPGA, Eficiencia Energética, Robótica, Computo al filo.
+
+\newpage
+\addcontentsline{toc}{section}{Índice de figuras}
+\listoffigures
+
+\newpage
+\addcontentsline{toc}{section}{Índice de tablas}
+\listoftables
+
+\newpage
+\section*{Nomenclatura}
+\addcontentsline{toc}{section}{Nomenclatura}
+(Definición de términos)
+
+\newpage
+\section*{Simbología}
+\addcontentsline{toc}{section}{Simbología}
+(Definición de símbolos)
+
+
+\newpage
+\pagenumbering{arabic}
+% --- INICIAL ---
+
+\section*{Introducción}
+\addcontentsline{toc}{section}{Introducción}
+Los robots manipuladores son componentes esenciales en la automatización industrial, la cirugía asistida, la exploración espacial y una creciente variedad de aplicaciones de servicio, gracias a su capacidad para realizar tareas de manipulación con precisión y repetibilidad \cite{modern_robotics}. El control efectivo de estos sistemas es fundamental para su desempeño. Tradicionalmente, se han empleado técnicas de control clásico, como el control Proporcional-Integral-Derivativo (PID) o el control por par calculado, que han demostrado ser robustas para tareas definidas y con modelos dinámicos precisos del robot \cite{modern_robotics}. Sin embargo, la creciente demanda de mayor autonomía, adaptabilidad a entornos no estructurados y la capacidad para manejar interacciones complejas ha impulsado la adopción de enfoques basados en Inteligencia Artificial (IA), particularmente las Redes Neuronales Artificiales (ANNs) y las Redes Neuronales Profundas (DNNs) \cite{JuarezLora2024Thesis, Park2025electronics}.
+
+A pesar de sus ventajas, la implementación de DNNs en sistemas robóticos conlleva desafíos significativos. Estos modelos suelen ser computacionalmente intensivos, caracterizados por un gran número de parámetros y una alta densidad de operaciones aritméticas, lo que se traduce en un considerable consumo energético y una fuerte demanda de recursos de memoria y procesamiento \cite{Chen2021memristor, Liang2021PruningSurvey}. Estas exigencias son particularmente problemáticas para las plataformas robóticas autónomas, que operan con fuentes de alimentación y recursos computacionales limitados\cite{Bartolozzi2022embodied, deVriesGao2025AIenergy}.
+
+El interés de este estudio surge de la necesidad de reducir estos costes computacionales y energéticos. Las Redes Neuronales Cuantizadas (QNNs), que reducen la precisión numérica de los pesos y activaciones de una red, ofrecen una vía prometedora para comprimir modelos y acelerar la inferencia, con el potencial de disminuir drásticamente el consumo energético y el uso de memoria \cite{Liang2021PruningSurvey, ZhangL2025FLQ}.
+
+Este trabajo busca aportar conocimiento práctico y cuantitativo sobre la viabilidad y los beneficios de utilizar QNNs para el control eficiente de robots manipuladores, ofreciendo una perspectiva con un enfoque en la eficiencia energética de diferentes métodos de control de sistemas robóticos.
+
+\subsection*{Enfoque mecatrónico}
+En este apartado se describe cómo el proyecto evalúa un sistema completo que integra la mecánica del robot, la electrónica de medición y actuación, y el algoritmo de control implementado.
+
+\subsection*{Definición del problema}
+El control de robots es esencial para su implementación en la automatización industrial o en robótica de consumo, a medida que los robots se emplean en tareas más avanzadas o con entornos cambiantes o dinámicos, los métodos de control se vuelven más complejos y con esto, su coste computacional y energético aumentan\cite{JuarezLora2024Thesis, Park2025electronics}.
+\subsubsection{Multiplicación de matrices, procesamiento de señales y problemas de computación en tareas robóticas}
+Las multiplicaciones de matrices tienen consecuencia directa en la robótica ya que las operaciones matriciales están implicadas en todos sus aspectos, particularmente la multiplicación vector-matriz y las operaciones de multiplicación-acumulación. Las ecuaciones de la cinemática directa e inversa, el modelo dinámico del robot dado por las ecuaciones de Euler-Lagrange o Newton-Euler, así como los diferentes métodos de control pudiendo ir desde un PID con compensaciones dinámicas, hasta los basados en aprendizaje automático y redes neuronales, todos dependen del uso y operación de matrices y vectores.\cite{Chen2021memristor,modern_robotics}
+
+Este tipo de operaciones se realizan repetidamente a una alta frecuencia, lo que conlleva un costo computacional significativo. La ineficiencia en la realización de estas operaciones provoca un deterioro en el rendimiento en tiempo real, y un incremento en el consumo energético, que tiene su origen en la arquitectura de los equipos de computo actuales. 
+
+\subsubsection{Cuello de botella de Von Neumann}
+La arquitectura Von Neumann, es un tipo específico de arquitectura computacional en la que tanto los datos como las instrucciones se almacenan en una memoria común como se muestra en la figura \ref{fig:imagen1} donde se detalla el uso de memoria para los datos e instrucciones.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Imagenes/Von_neumann.png}  
+    \caption{Arquitectura Von Neumann original~\cite{EigenmannLilja1998VonNeumann}}  % Título de la imagen
+    \label{fig:imagen1}  % Etiqueta para referenciar la imagen
+\end{figure}
+
+Aunque este modelo ha sido fundamental para la computación digital durante muchos años, tiene limitaciones inherentes a su diseño que surgen del uso intensivo de datos, debido a la separación física entre el CPU y la memoria. Esto conlleva la necesidad de transferir datos e instrucciones a través de un bus de memoria compartido, lo que se conoce como el \emph{cuello de botella de Von Neumann}.~\cite{EigenmannLilja1998VonNeumann,Arikpo2007}
+
+Este cuello de botella provoca una latencia significativamente elevada, producto de la espera constante de la CPU por datos e instrucciones desde la memoria, y en un consumo energético considerable debido al intenso tráfico de datos -conocido como \textit{memory wall}. En algoritmos con alta demanda de acceso a memoria y operaciones repetitivas sobre datos (ejemplo, multiplicación de matrices), como un control robótico, procesamiento en tiempo real y aprendizaje automático, estas limitaciones impactan directamente en el rendimiento y la eficiencia energética del sistema.
+
+\subsubsection{Proyección a futuro de la problemática energética}
+Tanto la robótica como la inteligencia artificial se perfilan hacia su integración en sistemas autónomos capaces de percibir diferentes entornos, aprender de su propia experiencia y tomar decisiones en tiempo real. Debido a la complejidad de estas implementaciones, la demanda computacional ha incrementado trayendo consigo un consumo energético cada vez mayor\cite{deVriesGao2025AIenergy, DomingoReguero2025EnergyEfficient}. Esto presenta un problema para robots autónomos, drones, exoesqueletos de asistencia o sistemas colaborativos humano-robot donde la fuente de energía está suministrada por baterías. Este alto consumo proviene de los sistemas de control que hacen un uso intensivo de datos en arquitecturas de cómputo basadas principalmente en la arquitectura Von Neumann poniendo en juego la viabilidad de dichos sistemas autónomos.
+
+Conforme los modelos de IA se vuelven más profundos y los sensores generan mayores volúmenes de datos, este ``muro energético'' se vuelve cada vez más pronunciado. Con esta proyección, se resalta la necesidad de la investigación y exploración de diferentes paradigmas computacionales que ofrezcan una mejora significativa a la eficiencia energética.
+
+\subsection*{Justificación}
+%Describir cómo la implementación de algoritmos de IA en robótica conlleva a un incremento considerable de recursos energéticos, de hardware
+
+%Describir también como es que en robótica, ese tipo de recursos usualmente son escasos, por lo que nuevas estructuras de cómputo para control automático deben emerger para ahorro energético
+
+
+Debido a las restricciones de cómputo actuales en chips tradicionales, surge la necesidad de mejorar su desempeño energético explorando alternativas de control enfocadas en la eficiencia computacional y energética. Este proyecto se centra en la evaluación de un método de control alternativo denominado redes neuronales cuantizadas o Quantized Neural Networks (QNNs) como una vía para lograr una mejora sustancial en la eficiencia energética de los sistemas de control de robots manipuladores. El objetivo principal es realizar una comparación directa del consumo energético de un sistema de control basado en QNNs con un control clásico bajo una plataforma de pruebas como lo puede ser una FPGA. Las redes neuronales cuantizadas reducen sus bits de entrada provocando una reducción en su requerimiento de computo y provoca una reducción también en la precisión de salida de dicha red como se ve en la figura \ref{fig:qnn}\cite{Zhang2025jlpea, Jiang2023SingleShot, LeeYS2023ScaleCIM}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Imagenes/qnn.png}  
+    \caption{Reducción de bits de entrada y de precisión en la salida por la cuantización~\cite{aac_quantization}}  % Título de la imagen
+    \label{fig:qnn}  % Etiqueta para referenciar la imagen
+\end{figure}
+
+El enfoque mecatrónico es esencial, ya que el proyecto evaluará un sistema completo que integra la mecánica del robot, la electrónica de medición y actuación, y el algoritmo de control (QNN o tradicional) implementado en una plataforma de \textit{hardware} específica. La comparación energética se realizará considerando el sistema en su conjunto, ofreciendo una perspectiva realista del impacto de la optimización neuronal en el consumo global del robot durante tareas de control.
+\newpage
+
+\subsection*{Objetivo}
+\subsubsection{Objetivo general}
+Evaluar el desempeño energético, de precisión y de recursos utilizados en la implementación de un control de lazo cerrado con una planta robótica con control tradicional y con una red neuronal cuantizada.
+
+%Implementación de un algoritmo de control de un brazo robótico usando algoritmos de redes neuronales de impulsos 
+
+\subsubsection{Objetivos específicos TT1}
+
+\begin{itemize}
+    \item Investigar el estado del arte de las redes neuronales cuantizadas (QNNs) aplicadas al control de sistemas robóticos, las metodologías de cuantización (Post-Training Quantization - PTQ y Quantization-Aware Training - QAT), y las técnicas para la estimación y comparación del consumo energético en plataformas de cómputo embebidas y tradicionales.
+    \item Definir la arquitectura de una red neuronal artificial (ANN) adecuada para el control de posición de un robot manipulador, incluyendo el preprocesamiento de las señales de entrada necesarias para la red.
+    \item Diseñar el sistema de control de posición basado en la ANN seleccionada (sin cuantizar) y establecer las métricas de rendimiento de control que servirán como línea base.
+    \item Establecer una metodología detallada para la cuantización del modelo de red neuronal diseñado, seleccionando al menos dos niveles de precisión distintos (ej., INT6 y INT8) y las herramientas de software para llevar a cabo el proceso. 
+    \item Diseñar el plan experimental para la comparación energética y de rendimiento, definiendo los escenarios de prueba, las variables a medir (ej., latencia de inferencia, uso de memoria, consumo energético estimado/medido, precisión del control) y la configuración del entorno de pruebas (simulado y/o físico).
+    \item Caracterizar y poner en marcha la plataforma robótica y su interfaz de control, asegurando la capacidad de implementar y evaluar los diferentes esquemas de control.
+    \item Escribir en el documento escrito dichos avances en la investigación.
+    
+\end{itemize}
+
+\subsubsection{Objetivos específicos TT2}
+ 
+\begin{itemize}
+    \item  Implementar el lazo de control numérico tradicional (ej. PID) de posición del efector final, tanto en simulación numérica, como en físico, con la finalidad de tener un \textit{benchmark} para comparar con la red neuronal quantizada, tanto en desempeño, recurso energético, etc.
+    \item Entrenar, implementar y validar el sistema de control de posición basado en la red neuronal no cuantizada (ANN de punto flotante) en la plataforma robótica, evaluando su rendimiento de control y su perfil de consumo energético como segundo punto de referencia.
+    \item Implementar los sistemas de control de posición basados en las redes neuronales cuantizadas (QNNs) para los niveles de precisión seleccionados en TT1, integrándolos con la plataforma robótica.
+    %paramater n = 8;
+    %reg [n-1:0] entradas;
+    %//diseño parametrizable
+    \item Realizar estudio comparativo de ambas soluciones y evaluar el desempeño energético, de control, de recursos computacionales, y de recursos de hardware implementados.
+    \item Analizar e interpretar los resultados experimentales para cuantificar las ventajas y desventajas de cada enfoque de control, con un énfasis particular en la eficiencia energética lograda por las QNNs y su relación con la precisión del control.
+    \item Documentar la metodología, los resultados obtenidos, las conclusiones del estudio comparativo y las recomendaciones para futuras implementaciones de QNNs en control robótico. 
+\end{itemize}
+
+\subsection*{Antecedentes}
+%como se pelaban papas antes
+El control de robots manipuladores es un campo bien establecido con una amplia historia de técnicas desarrolladas para lograr un movimiento preciso y fiable. Antes de la prominencia de los enfoques basados en inteligencia artificial, el control robótico se fundamentaba en gran medida en modelos matemáticos del robot y su entorno.
+\subsubsection{Técnicas de control clásico para robots manipuladores}
+
+Los controladores para robots manipuladores se pueden clasificar ampliamente según el espacio en el que se ejerce el control (espacio articular o espacio de la tarea) y el grado en que utilizan un modelo dinámico del robot.
+
+Una de las estrategias más directas y comúnmente implementadas es el control PID (Proporcional-Integral-Derivativo) independiente para cada articulación. En este enfoque, cada articulación del robot es tratada como un sistema de un solo grado de libertad, y se diseña un controlador PID para regular su posición y velocidad basándose en el error entre el estado deseado y el medido (Lynch \& Park, 2017, Capítulo 11.2)\cite{modern_robotics}. La simplicidad de diseño como se muestra en la figura \ref{fig:imagen6} y sintonización (aunque esta última puede ser tediosa para sistemas multigrado de libertad altamente acoplados) ha hecho del control PID una opción popular, especialmente cuando no se dispone de un modelo dinámico preciso del robot. Para mejorar el rendimiento, a menudo se complementa con un control por prealimentación (\textit{feedforward}), que utiliza el modelo cinemático y, a veces, un modelo dinámico simplificado para calcular los pares/fuerzas articulares nominales necesarios para seguir una trayectoria deseada, ayudando al lazo de realimentación PID a compensar solo las perturbaciones y errores de modelado (Lynch \& Park, 2017, Capítulo 11.3)\cite{modern_robotics}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/pid.png}  
+    \caption{Diagrama simplificado de un control PID~\cite{wattco2024pid}.}  % Título de la imagen
+    \label{fig:imagen6}  % Etiqueta para referenciar la imagen
+\end{figure}
+
+Cuando se dispone de un modelo dinámico mas completo del robot como en la ecuación \ref{eqt:equation1}.
+
+\begin{equation}
+M(\theta)\ddot{\theta} + c(\theta, \dot{\theta}) + g(\theta) = \tau
+\label{eqt:equation1}
+\end{equation}
+
+\vspace{1\baselineskip} 
+Se pueden implementar estrategias de control basadas en modelo más sofisticadas. Una técnica fundamental es el control por par calculado (\textit{computed torque control}) o control por dinámica inversa (\textit{inverse dynamics control}). Este enfoque busca linealizar y desacoplar la dinámica del robot mediante una ley de control que cancela los términos no lineales y de acoplamiento. La idea es calcular los pares de motor necesarios utilizando el modelo dinámico inverso y luego aplicar un control lineal simple (como un PID) sobre el sistema linealizado resultante. Bajo la suposición de un modelo dinámico perfecto, el robot se comportaría como un sistema lineal desacoplado, lo que permitiría un control de alta precisión\cite{modern_robotics}.
+
+
+Otras técnicas de control avanzado incluyen el control adaptativo, que ajusta los parámetros del controlador en línea para compensar incertidumbres en el modelo dinámico del robot o variaciones en la carga útil\cite{modern_robotis_115}, y el control robusto, diseñado para mantener la estabilidad y el rendimiento a pesar de las incertidumbres acotadas del modelo y las perturbaciones externas. El control en el espacio de la tarea (\textit{task space control}) también es crucial, donde el control se ejerce directamente sobre la posición y orientación del efector final del robot, utilizando el jacobiano para relacionar las velocidades del efector final con las velocidades articulares.
+
+\subsubsection{Transicion hacia el control basado en Inteligencia Artificial (IA)}
+Si bien las técnicas de control clásico mencionadas son efectivas en muchas situaciones, su rendimiento puede degradarse significativamente en presencia de dinámicas no modeladas complejas, fricción no lineal, incertidumbres paramétricas grandes o cuando se requiere que el robot opere en entornos altamente no estructurados o interactúe de forma compleja con el entorno. La obtención de modelos dinámicos precisos puede ser costosa y difícil, y la sintonización de controladores PID para sistemas multivariables fuertemente acoplados es a menudo un desafío.Estas limitaciones han motivado la exploración de enfoques basados en inteligencia artificial (IA), y en particular las redes neuronales artificiales (ANNs) de las cuales su estructura se puede apreciar en la figura \ref{fig:imagen4}.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{Imagenes/ANN.png}  
+    \caption{Estructura de una red neuronal (ANN)~\cite{prasan2024anns}.}  % Título de la imagen
+    \label{fig:imagen4}  % Etiqueta para referenciar la imagen
+\end{figure}
+\newpage
+
+Las redes neuronales profundas (DNNs) mostradas en la figura \ref{fig:imagen5}, han emergido como herramientas poderosas para el aprendizaje de tareas de control complejas, como la cinemática inversa, el seguimiento de trayectorias y el aprendizaje por refuerzo para la manipulación\cite{Park2025electronics, Zanatta2024exploring}. Estas técnicas permiten a los robots aprender de la experiencia y adaptarse a variaciones, superando en muchos casos las limitaciones de los controladores tradicionales.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Imagenes/dnn.png}  
+    \caption{Comparación de una ANN y una DNN~\cite{jaffery2023annvsdnn}.}  % Título de la imagen
+    \label{fig:imagen5}  % Etiqueta para referenciar la imagen
+\end{figure}
+
+Sin embargo, el éxito y la creciente complejidad de los modelos de DNNs vienen acompañados de una demanda computacional y un consumo energético considerables\cite{Chen2021memristor, deVriesGao2025AIenergy}. El gran número de parámetros y las intensivas operaciones de multiplicación y acumulación (MAC) inherentes a estas redes plantean un desafío significativo para su despliegue en plataformas robóticas, las cuales a menudo operan con recursos de hardware limitados (memoria, capacidad de procesamiento) y restricciones energéticas, especialmente en aplicaciones móviles o autónomas\cite{Bartolozzi2022embodied, Kudithipudi2025scale}. Esta tensión entre la capacidad de los modelos de IA y las limitaciones de las plataformas de despliegue ha impulsado una vasta investigación en la optimización y compresión de redes neuronales.
+\subsubsection{Estado del arte}
+%cual es la tecnologia mas avanzada hasta ahora para pelar papas
+Gestionar de manera eficaz sistemas robóticos en contextos donde la energía es limitada sigue siendo un reto constante y cada vez más relevante. Aunque las arquitecturas de cómputo tradicionales, en su mayoría basadas en el esquema de Von Neumann, han facilitado importantes desarrollos, presentan limitaciones estructurales, especialmente en lo referente al acceso a la memoria y al consumo energético, cuando se utilizan en tareas de control avanzadas o en aplicaciones de inteligencia artificial.
+Investigaciones recientes han mostrado un interés creciente por mejorar la eficiencia de los modelos de inteligencia artificial, lo cual se refleja en iniciativas como la compresión de redes neuronales y el estudio de enfoques de cómputo alternativos a los tradicionales.
+
+Dentro de este panorama, el cómputo neuromórfico se perfila como una opción innovadora, inspirada en la forma en que el cerebro humano procesa información de manera eficiente y paralela\cite{Mehonic2022}. Este enfoque se basa en la implementación de las redes neuronales de impulsos (SNN), las cuales funcionan a través de eventos discretos (conocidos como \textit{spikes}) y presentan una dinámica temporal inherente, lo que las hace especialmente adecuadas para aplicaciones de control en tiempo real\cite{Zanatta2024exploring, MAASS19971659}.
+Esta implementación de las SNN al control se ha explorado desde su aplicacion al péndulo-carro \cite{Vlasov2023}, hasta el control de brazos robot 3D mediante aprendizaje por refuerzo (RL)\cite{Park2025electronics,Zanatta2024exploring}.
+
+En estos trabajos se hace enfasis en el potencial de las QNN para aprender políticas de control con un eficiente consumo energético. Sin embargo la implementacion de estas redes en \textit{hardware}, específicamente en plataformas reconfigurables como las FPGA, sigue siento un área de oportunidad para la investigacion. El diseño en conjunto del \textit{hardware/software} es esencial para la configuración de la arquitectura de las QNNs dentro de los recursos de una FPGA, buscando el equilibrio entre rendimiento y consumo\cite{Zhang2025jlpea}.
+
+A pesar de estos avances aun existe la necesidad de estudios comparativos que cuantifiquen la eficiencia energetica de estos controles neuromorficos frente a los enfoques tradicionales. Este proyecto busca llenar este vacio proporcionando una evaluacion directa en una plataforma comun aplicado a un robot manipulador.
+
+\subsection*{Organización del documento}
+En el Capítulo 1 se aborda el marco de referencia en el que se sustenta el proyecto. En el Capítulo 2 se plantea el diseño del sistema, desglosando los requerimientos, la arquitectura y las propuestas de solución. En el Capítulo 3 se detalla la implementación técnica e integración de los módulos mecatrónicos. En el Capítulo 4 se analizan los resultados obtenidos técnica y económicamente. Finalmente, se presentan las conclusiones correspondientes.
+
+
+% --- 1. Marco de Referencia ---
+\section{Marco de Referencia}
+
+\subsection{Marco teórico}
+Este proyecto se fundamenta en la intersección de varias disciplinas clave: la robótica de manipulación, el control automático, la inteligencia artificial (específicamente las redes neuronales) y las técnicas de optimización de modelos para la eficiencia computacional y energética.
+
+\subsubsection{Modelado y Control de Robots Manipuladores}
+\label{ssec:modelado_control_robots}
+
+Los robots manipuladores son sistemas mecánicos articulados cuyo movimiento y comportamiento se describen mediante modelos matemáticos precisos.
+
+\paragraph{Cinemática}
+\label{sssec:cinematica_robots}
+La cinemática estudia la geometría del movimiento. La \textbf{cinemática directa} relaciona las variables articulares $\bm{q} \in \mathbb{R}^n$ (donde $n$ es el número de grados de libertad) con la configuración (posición y orientación) del efector final $\bm{x} \in SE(3)$ mediante una función $\bm{x} = f(\bm{q})$. La \textbf{cinemática inversa} busca la función $\bm{q} = f^{-1}(\bm{x})$, que es esencial para el control de posición y puede ser no lineal y tener múltiples soluciones \cite{modern_robotics}.
+
+\paragraph{Dinámica}
+\label{sssec:dinamica_robots}
+El modelo dinámico de un robot manipulador relaciona los pares/fuerzas articulares aplicados $\bm{\tau} \in \mathbb{R}^n$ con las posiciones $\bm{q}$, velocidades $\dot{\bm{q}}$ y aceleraciones $\ddot{\bm{q}}$ articulares. La ecuación general de la dinámica para un manipulador rígido es:
+\begin{equation}
+\bm{\tau} = M(\bm{q})\ddot{\bm{q}} + \bm{c}(\bm{q},\dot{\bm{q}}) + \bm{g}(\bm{q})
+\label{eq:dinamica_robot}
+\end{equation}
+Donde:
+\begin{itemize}
+    \item $M(\bm{q}) \in \mathbb{R}^{n \times n}$ es la matriz de inercia, simétrica y definida positiva.
+    \item $\bm{c}(\bm{q},\dot{\bm{q}}) \in \mathbb{R}^n$ es el vector de pares/fuerzas centrífugas y de Coriolis.
+    \item $\bm{g}(\bm{q}) \in \mathbb{R}^n$ es el vector de pares/fuerzas gravitacionales.
+\end{itemize}
+Obtener un modelo dinámico preciso es fundamental para el diseño de controladores avanzados \cite{modern_robotics}.
+
+\paragraph{Estrategias de Control Clásicas}
+\label{sssec:control_clasico}
+\begin{itemize}
+    \item \textbf{Control PID Independiente por Articulación:} Para cada articulación $i$, la ley de control es:
+    \begin{equation}
+    \tau_i(t) = K_{p_i} e_i(t) + K_{i_i} \int_0^t e_i(\lambda) d\lambda + K_{d_i} \frac{de_i(t)}{dt}
+    \label{eq:pid_control}
+    \end{equation}
+    donde $e_i(t) = q_{d_i}(t) - q_i(t)$ es el error de la articulación $i$, y $K_p, K_i, K_d$ son las ganancias proporcional, integral y derivativa respectivamente. A menudo se complementa con un término de prealimentación (\textit{feedforward}) $\tau_{ff_i}$ para mejorar el seguimiento de trayectorias\cite{modern_robotics}:
+    \begin{equation}
+    \tau_i = \tau_{ff_i} + K_{p_i} e_i + K_{i_i} \int e_i dt + K_{d_i} \dot{e}_i
+    \label{eq:pid_ff_control}
+    \end{equation}
+    
+
+    \item \textbf{Control por Par Calculado (\textit{Computed Torque Control}):} Esta técnica utiliza el modelo dinámico para cancelar las no linealidades. Si se tiene un modelo estimado $\hat{M}(\bm{q})$, $\hat{\bm{c}}(\bm{q},\dot{\bm{q}})$, y $\hat{\bm{g}}(\bm{q})$, la ley de control es:
+    \begin{equation}
+    \bm{\tau} = \hat{M}(\bm{q})\bm{a}_{cmd} + \hat{\bm{c}}(\bm{q},\dot{\bm{q}}) + \hat{\bm{g}}(\bm{q})
+    \label{eq:computed_torque}
+    \end{equation}
+    donde $\bm{a}_{cmd}$ es una aceleración de comando, comúnmente diseñada usando un control lineal sobre el error:
+    \begin{equation}
+    \bm{a}_{cmd} = \ddot{\bm{q}}_d + K_d (\dot{\bm{q}}_d - \dot{\bm{q}}) + K_p (\bm{q}_d - \bm{q})
+    \label{eq:acmd_ctc}
+    \end{equation}
+    Bajo la suposición de un modelo perfecto ($\hat{M}=M, \hat{\bm{c}}=\bm{c}, \hat{\bm{g}}=\bm{g}$), el sistema en lazo cerrado se comportaría como un conjunto de $n$ integradores dobles desacoplados: $\ddot{\bm{e}} + K_d \dot{\bm{e}} + K_p \bm{e} = 0$, permitiendo un control preciso \cite{modern_robotics}.
+\end{itemize}
+
+\subsubsection{Redes Neuronales Artificiales para el Control Robótico}
+\label{ssec:ann_control_robotico}
+Las Redes Neuronales Artificiales (ANN), y sus variantes profundas (DNN), pueden aprender mapeos complejos a partir de datos, lo que las hace adecuadas para tareas de control robótico donde los modelos analíticos son imprecisos o difíciles de obtener.
+
+Pueden usarse para aprender la cinemática inversa $\bm{q} = f_{NN}(\bm{x}; \bm{\theta}_{NN})$, la dinámica inversa $\bm{\tau} = f_{NN}(\bm{q}, \dot{\bm{q}}, \ddot{\bm{q}}; \bm{\theta}_{NN})$, o directamente políticas de control $\bm{\tau} = \pi_{NN}(\text{estado}; \bm{\theta}_{NN})$ mediante aprendizaje por refuerzo \cite{Park2025electronics, Zanatta2024exploring}, donde $\bm{\theta}_{NN}$ representa los parámetros de la red.
+
+Las operaciones fundamentales en las DNN, como las convoluciones o las capas totalmente conectadas, se basan en un gran número de operaciones de Multiplicación y Acumulación (MAC): $y = \sum_i w_i x_i + b$ para una neurona, o de forma matricial $\bm{Y} = \bm{W}\bm{X} + \bm{B}$ para una capa, lo que resulta en una alta carga computacional y accesos a memoria \cite{Chen2021memristor}.
+
+\subsubsection{Estrategias de Optimización de Redes Neuronales}
+\label{ssec:optimizacion_nn_exp}
+La alta demanda computacional y energética de las DNN, detallada en secciones previas, se convierte en el principal problema a tratar en este proyecto. El objetivo general es reducir la complejidad del modelo (en términos de parámetros y operaciones), el tamaño en memoria, la latencia de inferencia y el consumo energético, manteniendo al mismo tiempo la precisión de la tarea lo más alta posible. Las principales estrategias incluyen la poda de redes, el desarrollo de arquitecturas eficientes, el uso de paradigmas alternativos como las redes neuronales de impulsos, y la cuantización de redes neuronales, siendo esta última el foco central de este proyecto.
+
+\paragraph{Poda de Redes (\textit{Neural Pruning})}
+\label{sssec:pruning_exp}
+La poda de redes neuronales se basa en la observación de que muchos modelos de DNNs están sobreparametrizados, conteniendo un gran número de pesos o neuronas que contribuyen poco o nada al rendimiento final \cite{Liang2021PruningSurvey}. El objetivo de la poda es identificar y eliminar estos elementos redundantes.
+
+\paragraph{Tipos de Poda:}
+\begin{itemize}
+    \item \textbf{Poda No Estructurada (\textit{Unstructured Pruning}):} Consiste en eliminar pesos individuales de la red. Se establece un criterio de importancia (saliencia) para cada peso $w_{ij}$, y aquellos por debajo de un umbral son eliminados (su valor se fija a cero). Formalmente, si $\mathcal{T}$ es el umbral:
+    \begin{equation}
+    w'_{ij} = \begin{cases} w_{ij} & \text{si } \text{saliencia}(w_{ij}) > \mathcal{T} \\ 0 & \text{en caso contrario} \end{cases}
+    \label{eq:poda_no_estructurada}
+    \end{equation}
+    \item \textbf{Poda Estructurada (\textit{Structured Pruning}):} En lugar de eliminar pesos individuales, se eliminan grupos de pesos o estructuras enteras, como neuronas completas, filtros convolucionales completos o incluso capas. Por ejemplo, se puede calcular la importancia de un filtro convolucional (ej., sumando las magnitudes de sus pesos o usando su norma L1/L2) y eliminar los filtros menos importantes. Esto resulta en redes más pequeñas y con una estructura regular, lo que facilita la aceleración en hardware estándar, ya que las dimensiones de las matrices y tensores se reducen directamente \cite{Liang2021PruningSurvey}.
+\end{itemize}
+
+\paragraph{Proceso de Poda:}
+La poda puede realizarse de forma iterativa: se entrena la red, se podan los elementos menos importantes, y luego se re-entrena (\textit{fine-tuning}) la red podada para recuperar la precisión que se haya podido perder. Este ciclo de podar y re-entrenar puede repetirse varias veces. Alternativamente, existen métodos de poda \textit{one-shot} que intentan realizar la poda en una sola etapa, a veces durante el mismo entrenamiento o inmediatamente después, como la propuesta de ``\textit{Single-shot pruning and quantization}'' de Jiang \cite{Jiang2023SingleShot}.
+
+\paragraph{Redes Neuronales de Impulsos (\textit{Spiking Neural Networks} - SNN)}
+\label{sssec:snn_exp}
+Las SNN representan un paradigma de computación neuronal alternativo, inspirado más directamente en el funcionamiento de las neuronas biológicas. Se las considera la ``tercera generación'' de redes neuronales y se caracterizan por procesar información mediante secuencias de eventos discretos en el tiempo, denominados impulsos (\textit{spikes}).
+
+\paragraph{Modelos Neuronales de SNN:}
+A diferencia de las neuronas de las ANN que calculan una salida analógica (o un valor de activación continuo), las neuronas en las SNN integran las señales de entrada (\textit{spikes} ponderados de otras neuronas) a lo largo del tiempo, y generan un \textit{spike} de salida solo cuando su potencial de membrana alcanza un umbral específico.
+\begin{itemize}
+    \item \textbf{\textit{Leaky Integrate-and-Fire} (LIF):} Es uno de los modelos más simples y computacionalmente eficientes. El potencial de membrana $v(t)$ de una neurona LIF evoluciona según la ecuación diferencial:
+    \begin{equation}
+    \tau_m \frac{dv(t)}{dt} = - (v(t) - v_{rest}) + R_{in} I(t)
+    \label{eq:lif_model_exp}
+    \end{equation}
+    donde $\tau_m$ es la constante de tiempo de la membrana, $v_{rest}$ es el potencial de reposo, $R_{in}$ es la resistencia de entrada, e $I(t)$ es la corriente sináptica total de entrada. Cuando $v(t)$ alcanza el umbral $v_{th}$, la neurona emite un \textit{spike} y $v(t)$ se reinicia (ej., a $v_{reset} < v_{th}$) y puede entrar en un periodo refractario.
+    \item \textbf{Modelo de Izhikevich:} Es un modelo bidimensional que puede reproducir una rica variedad de patrones de disparo observados en neuronas biológicas (ej., \textit{regular spiking}, \textit{bursting}, \textit{chattering}, \textit{fast spiking}, etc.) con solo cuatro parámetros ajustables $(a, b, c, d)$ y un par de ecuaciones diferenciales acopladas:
+    \begin{align}
+    \frac{dv}{dt} &= 0.04v^2 + 5v + 140 - u + I \label{eq:izhikevich_v} \\
+    \frac{du}{dt} &= a(bv - u) \label{eq:izhikevich_u}
+    \end{align}
+    Con la condición de reseteo post-impulso: si $v(t) \ge v_{peak}$ (usualmente $30 \text{ mV}$), entonces $v(t) \leftarrow c$ y $u(t) \leftarrow u(t) + d$. La variable $u$ representa una variable de recuperación de la membrana. Este modelo es utilizado, por ejemplo, en la tesis del Dr. Juárez Lora para la implementación de una plataforma neuromórfica \cite{JuarezLora2024Thesis}.
+\end{itemize}
+
+Las SNN ofrecen un gran potencial para la eficiencia energética, especialmente cuando se implementan en \textit{hardware} neuromórfico dedicado (ej., Loihi de Intel, TrueNorth de IBM, SpiNNaker) que está diseñado para manejar la comunicación basada en eventos y la computación dispersa en el tiempo y el espacio \cite{intel2021loihi2}.
+
+\paragraph{Redes Neuronales Cuantizadas (\textit{Quantized Neural Networks} - QNN)}
+\label{sssec:qnn_exp}
+La cuantización es una técnica de compresión y optimización que reduce la precisión numérica utilizada para representar los pesos $\bm{w}$ y/o las activaciones $\bm{a}$ de una red neuronal. Esta es la estrategia de optimización central de este proyecto.
+
+\paragraph{Principios Fundamentales y Proceso de Cuantización:}
+El objetivo es transformar los parámetros y activaciones, típicamente almacenados como números de punto flotante de 32 bits (FP32), a representaciones de enteros de baja precisión (ej., INT6, INT4) o formatos de punto fijo.
+Una cuantización \textbf{uniforme afín} (asimétrica) de un valor real $x$ a un entero cuantizado $x_q$ de $k$ bits se define mediante una escala $S \in \mathbb{R}^+$ y un punto cero $Z \in \mathbb{Z}$ (que es un entero de $k$ bits y representa el mapeo del valor real $0.0$):
+\begin{equation}
+x_q = \text{clamp} \left( \text{round}\left(\frac{x}{S}\right) + Z, \quad N_{min}^{(k)}, N_{max}^{(k)} \right)
+\label{eq:quantization_affine}
+\end{equation}
+donde $\text{round}(\cdot)$ es el redondeo al entero más cercano, y $\text{clamp}(\cdot, N_{min}^{(k)}, N_{max}^{(k)})$ asegura que $x_q$ permanezca dentro del rango representable por $k$ bits (ej., $[0, 2^k-1]$ para $k$ bits sin signo, o $[-2^{k-1}, 2^{k-1}-1]$ para $k$ bits con signo). La escala $S$ determina el tamaño del paso de cuantización, y $Z$ permite que el rango de cuantización no sea necesariamente simétrico alrededor del cero real. La operación inversa (de-cuantización) para obtener una aproximación de $x$ es:
+\begin{equation}
+\hat{x} = S (x_q - Z)
+\label{eq:dequantization_affine}
+\end{equation}
+En la cuantización \textbf{uniforme simétrica}, el punto cero $Z$ se asume como $0$ (o el punto cero de la representación entera es el cero real), y el mapeo es simétrico alrededor del origen. La escala $S$ se determina a partir del valor absoluto máximo del rango.
+La determinación de los parámetros $S$ y $Z$ es crucial:
+\begin{itemize}
+    \item \textbf{\textit{Min-Max Quantization}:} $S = \frac{\max(x_{tensor}) - \min(x_{tensor})}{N_{max}^{(k)} - N_{min}^{(k)}}$ y $Z$ se deriva para alinear el cero.
+    \item Otros métodos buscan minimizar el error de cuantización, por ejemplo, minimizando la divergencia KL entre la distribución de los valores FP32 y los valores cuantizados, o utilizando percentiles para ser robustos a outliers.
+\end{itemize}
+La cuantización puede aplicarse con diferente granularidad:
+\begin{itemize}
+    \item \textbf{Por Tensor:} Un único par $(S, Z)$ para todo un tensor (ej., todos los pesos de una capa).
+    \item \textbf{Por Canal:} Un par $(S, Z)$ diferente para cada canal de salida de un filtro convolucional o para cada fila/columna de una matriz de pesos. Generalmente ofrece mejor precisión que la cuantización por tensor, especialmente para capas con distribuciones de pesos muy variables entre canales.
+\end{itemize}
+
+\paragraph{Tipos de Datos de Baja Precisión y Formatos de Punto Fijo:}
+Mientras que INT6 es un objetivo común y bien soportado, la investigación explora precisiones aún menores como INT4, INT2 (ternario: \{-1, 0, 1\}) o INT1 (binario: \{-1, 1\} o \{0, 1\}) \cite{LiX2021RobustnessAware}. La representación de \textbf{punto fijo} $Q(I,F)$ denota un número con $I$ bits para la parte entera y $F$ bits para la parte fraccionaria (más un bit de signo si es necesario). El valor real es $X_{int} \cdot 2^{-F}$, donde $X_{int}$ es la representación entera. La cuantización moderna a menudo prefiere el formalismo de escala y punto cero para enteros, ya que es más flexible y se adapta mejor a las capacidades del \textit{hardware}.
+
+\paragraph{\textit{Post-Training Quantization} (PTQ):}
+PTQ se aplica a un modelo ya entrenado en FP32. El proceso típicamente implica:
+\begin{enumerate}
+    \item \textbf{Calibración:} Se pasa un pequeño conjunto de datos representativos (usualmente sin etiquetas, del conjunto de entrenamiento o validación) a través del modelo FP32 para recolectar estadísticas de los rangos de activación de cada capa. Los rangos de los pesos se obtienen directamente del modelo entrenado.
+    \item \textbf{Cálculo de Parámetros de Cuantización:} Usando los rangos observados, se calculan $S$ y $Z$ para cada tensor a cuantizar.
+    \item \textbf{Conversión del Modelo:} Los pesos se cuantizan y almacenan en el formato de baja precisión. Las activaciones se cuantizarán dinámicamente durante la inferencia, o se insertarán operaciones de cuantización/de-cuantización en el grafo.
+\end{enumerate}
+Para mejorar la precisión de PTQ, especialmente con pocos bits, se utilizan técnicas como:
+\begin{itemize}
+    \item \textbf{\textit{Bias Correction}:} Se ajustan los vectores de sesgo de las capas para compensar el error medio introducido por la cuantización de los pesos, que puede desplazar la media de las activaciones.
+    \item \textbf{\textit{Cross-Layer Equalization} (CLE):} Se re-escalan los pesos entre capas consecutivas para igualar sus rangos dinámicos antes de la cuantización, lo que puede reducir el error de cuantización global. Métodos como AdaRound ajustan los pesos de forma más sofisticada para minimizar el error de redondeo \cite{Liang2021PruningSurvey, Rezk2022MOHAQ}.
+\end{itemize}
+
+
+\paragraph{\textit{Quantization-Aware Training} (QAT):}
+QAT simula el proceso de cuantización durante la fase de entrenamiento (o más comúnmente, durante una fase de re-entrenamiento o \textit{fine-tuning} a partir de un modelo FP32 pre-entrenado). Esto se logra insertando nodos de \textbf{\textit{Fake Quantization} (FQ)} en el grafo computacional, típicamente después de los pesos y de las activaciones.
+
+\begin{itemize}
+    \item \textbf{\textit{Forward Pass}:} En un nodo FQ, la entrada $x$ (FP32) se cuantiza a $k$ bits (simulando el efecto de $S$ y $Z$) y luego se de-cuantiza inmediatamente para obtener $\hat{x}$ (FP32 con valores discretos). Este $\hat{x}$ se pasa a la siguiente operación.
+    \begin{equation}
+    \hat{x}_{FQ} = S \left( \text{clamp} \left( \text{round}\left(\frac{x}{S}\right) + Z, N_{min}^{(k)}, N_{max}^{(k)} \right) - Z \right)
+    \label{eq:fake_quantization}
+    \end{equation}
+    \item \textbf{\textit{Backward Pass}:} El gradiente de la función de pérdida con respecto a $\hat{x}_{FQ}$ debe propagarse hacia $x$. Dado que la función $round(\cdot)$ tiene gradiente cero casi en todas partes, se utiliza el \textbf{\textit{Straight-Through Estimator} (STE)}, que simplemente copia el gradiente: $\frac{\partial L}{\partial x} = \frac{\partial L}{\partial \hat{x}_{FQ}}$. Es decir, se asume $\frac{\partial \hat{x}_{FQ}}{\partial x} \approx 1$.
+\end{itemize}
+QAT permite que los pesos del modelo se ajusten durante el entrenamiento para compensar la pérdida de precisión introducida por la cuantización, resultando generalmente en una mayor exactitud final en comparación con PTQ, especialmente para cuantización a muy bajos bits \cite{Liang2021PruningSurvey, Rezk2022MOHAQ}.
+
+\paragraph{Cuantización de Precisión Mixta (\textit{Mixed-Precision Quantization}):}
+No todas las capas de una red neuronal tienen la misma sensibilidad a la cuantización. Algunas pueden tolerar precisiones muy bajas (ej., INT4) con poca degradación, mientras que otras (ej., la primera o la última capa) pueden requerir mayor precisión (ej., INT6 o incluso FP16) para mantener el rendimiento general del modelo. La cuantización de precisión mixta asigna diferentes números de bits a diferentes capas o tensores, buscando un óptimo global entre compresión/eficiencia y precisión.
+La determinación de la política de asignación de bits es un problema complejo. Los enfoques incluyen:
+\begin{itemize}
+    \item Métodos basados en análisis de sensibilidad heurístico.
+    \item Técnicas de búsqueda automatizada como AutoML o aprendizaje por refuerzo, donde un agente aprende a asignar precisiones.
+    \item Optimización multiobjetivo, como en MOHAQ de \textbf{Rezk (2022)}\cite{Rezk2022MOHAQ}, que utiliza algoritmos genéticos para encontrar soluciones en el frente de Pareto de error vs. recursos de hardware.
+\end{itemize}
+
+\paragraph{Impacto en Operaciones Aritméticas y Eficiencia:}
+La cuantización transforma las operaciones de punto flotante en operaciones enteras. Consideremos la multiplicación de matrices o convoluciones, que son sumas de productos: $y = \sum w_i x_i + b$. Si $w_i$ y $x_i$ son cuantizados a $k_w$ y $k_x$ bits respectivamente, con parámetros $(S_w, Z_w)$ y $(S_x, Z_x)$:
+\begin{equation}
+S_y (y_q - Z_y) \approx \sum_i [S_w (w_{q_i} - Z_w)] [S_x (x_{q_i} - Z_x)] + S_b (b_q - Z_b)
+\end{equation}
+Desarrollando y agrupando las escalas:
+\begin{equation}
+y_q \approx Z_y + \frac{S_w S_x}{S_y} \sum_i (w_{q_i} - Z_w)(x_{q_i} - Z_x) + \frac{S_b}{S_y} (b_q - Z_b)
+\label{eq:quantized_mac_full}
+\end{equation}
+La suma $\sum_i (w_{q_i} - Z_w)(x_{q_i} - Z_x)$ involucra productos y acumulaciones de enteros, que se realizan típicamente en una precisión mayor (ej., INT32). El factor de re-escala $M = \frac{S_w S_x}{S_y}$ (y similar para el sesgo) se calcula offline y puede aproximarse por un producto de un entero y una potencia de dos para ser implementado con multiplicaciones enteras y bit-shifts, evitando operaciones de punto flotante en tiempo de inferencia. Las operaciones de normalización de batch (Batch Normalization), si presentes, a menudo se ``pliegan'' en los pesos y sesgos de las capas lineales o convolucionales precedentes antes de la cuantización, eliminando la necesidad de calcularlas durante la inferencia cuantizada.
+Los beneficios son una reducción significativa en el tamaño del modelo (ej., INT6 vs FP32 es una reducción de aproximadamente 4 veces), menor ancho de banda de memoria, y aceleración de cómputo debido a que las operaciones enteras son inherentemente más rápidas y menos costosas energéticamente que las de punto flotante en la mayoría de los procesadores y hardware dedicado.
+
+%todo lo que el lector debe de saber para entender el resto de la tesis
+
+\subsection{Marco procedimental}
+\subsubsection{Metodología mecatrónica}
+\label{ssec:metodologia_scrum}
+
+Para la gestión y desarrollo de este proyecto de investigación, que inherentemente combina elementos de diseño de software (controladores neuronales, cuantización), integración de hardware (plataforma robótica, sistema de cómputo) y experimentación (simulación y/o pruebas físicas), se ha optado por adoptar y adaptar el marco de trabajo ágil \textbf{\textit{Scrum}}. Esta elección se fundamenta en la flexibilidad de \textit{Scrum} para manejar la incertidumbre inherente a la investigación, su énfasis en la entrega incremental de valor y la colaboración continua, son aspectos importantes para un proyecto de con un componente significativo de desarrollo tecnológico y evaluación comparativa \cite{Schwaber2020ScrumGuide}.
+
+\textit{Scrum}, originalmente se crea para el desarrollo de software, pese a eso se ha aplicado al desarrollo de proyectos de ingeniería \cite{cano2021scrum}. Su naturaleza iterativa e incremental permite la validación y verificación constante del progreso, un principio fundamental en el diseño mecatrónico.
+
+
+\paragraph{Eventos de \textit{Scrum} Adaptados al Proyecto}
+\label{sssec:eventos_scrum_proyecto}
+Los eventos de \textit{Scrum} proporcionarán la estructura para la inspección y adaptación regular:
+\begin{itemize}
+    \item \textbf{\textit{Sprint}:} Serán iteraciones de duración fija (ej., 2 a 4 semanas) durante las cuales se trabajará para completar un conjunto de objetivos del \textit{Product Backlog} y crear un Incremento utilizable o evaluable del proyecto. La duración se definirá al inicio de cada fase (TT1 y TT2).
+    \item \textbf{Planificación del \textit{Sprint} (\textit{Sprint} Planning):} Al inicio de cada \textit{Sprint}, se seleccionarán los ítems de mayor prioridad del \textit{Product Backlog} que se pueden completar en el \textit{Sprint} y definirá un Objetivo del \textit{Sprint} (\textit{Sprint goal}). Se desglosarán las tareas necesarias (\textit{Sprint Backlog}).
+    \item \textbf{Reuniones de Avance (Adaptación del \textit{Daily Scrum}):} Se realizarán reuniones periódicas (ej., semanales) con los asesores para inspeccionar el progreso hacia el Objetivo del \textit{Sprint}, discutir los trabajos completados, los que están en curso, los problemas encontrados y planificar los siguientes pasos. Esto reemplaza al \textit{Daily Scrum} en un contexto de trabajo individual supervisado.
+    \item \textbf{Revisión del \textit{Sprint} (\textit{Sprint Review}):} Al final de cada \textit{Sprint}, se presentará el Incremento logrado (ej., un módulo de software funcional, resultados de simulación, un avance en la investigación documentado) a los asesores. Se discutirá el trabajo completado y se recogerá retroalimentación que podrá influir en el \textit{Product Backlog} y en la planificación de \textit{Sprints} futuros.
+    \item \textbf{Retrospectiva del \textit{Sprint} (\textit{Sprint} Retrospective):} Después de la Revisión del \textit{Sprint}, se realizará una reflexión sobre el proceso seguido durante el \textit{Sprint}: qué funcionó bien, qué se podría mejorar y qué acciones concretas se tomarán para optimizar la eficiencia y efectividad en el siguiente \textit{Sprint}.
+\end{itemize}
+
+\paragraph{Artefactos de \textit{Scrum} Adaptados al Proyecto}
+\label{sssec:artefactos_scrum_proyecto}
+Los artefactos de \textit{Scrum} proporcionarán transparencia y oportunidades para la inspección y adaptación:
+\begin{itemize}
+    \item \textbf{\textit{Product Backlog}:} Será una lista ordenada y dinámica de todo lo que se necesita para el proyecto. Incluirá los objetivos específicos de TT1 y TT2, desglosados en tareas de investigación, diseño, desarrollo, experimentación y documentación.
+    \item \textbf{\textit{Sprint Backlog}:} Es el conjunto de ítems del \textit{Product Backlog} seleccionados para un \textit{Sprint}, más un plan para entregar el Incremento y alcanzar el Objetivo del \textit{Sprint}.
+    \item \textbf{Incremento:} Es la suma de todos los ítems del \textit{Product Backlog} completados durante un \textit{Sprint} y todos los \textit{Sprints} anteriores. Al final de cada \textit{Sprint}, el nuevo Incremento debe ser \textit{utilizable} o \textbf{evaluable} en el contexto del proyecto, lo que significa que representa un avance tangible y verificable hacia los objetivos generales.
+\end{itemize}
+Esta adopcion de la metodologia \textit{Scrum} proporciona una planificacion estructurada pero flexible, fomentando el progreso constante, la adaptacion de los hallazgos y la entrega de resultados de forma incremental.
+
+% --- 2. Diseño del sistema ---
+\section{Diseño del sistema}
+
+\subsection{Diseño conceptual}
+\subsubsection{Necesidades - requerimientos}
+\subsubsection{Arquitectura funcional (funciones)}
+\subsubsection{Arquitectura física (módulos)}
+\label{sssec:arquitectura_modular_scrum}
+
+Aunque los detalles finos de la arquitectura emergerán y se refinarán durante los \textit{Sprints}, se concibe una arquitectura modular general que facilite el desarrollo incremental y la integración. Los principales componentes que se desarrollarán o integrarán iterativamente son:
+
+\begin{itemize}
+    \item \textbf{Componente Robot Manipulador (Simulado/Físico con Interfaz Hardware):} Como se describió en la sección \ref{sssec:vision_solucion_scrum}, será un robot sujeto a elección simulado en herramientas como CoppeliaSim, con una interfaz definida para recibir comandos de actuadores y enviar datos de sensores (posiciones articulares) hacia la FPGA.
+    \item \textbf{Componente FPGA (Núcleo de Control, Medición e Interfaz):} Este es el corazón del sistema y contendrá:
+        \begin{itemize}
+            \item \textit{Sub-componente de Interfaz con Robot:} Módulos HDL para la comunicación con los sensores (ej., lectura de encoders) y actuadores (ej., generación de señales PWM) del robot.
+            \item \textit{Sub-componente de Procesamiento de Control:} Bloques HDL intercambiables que implementarán la lógica de cada uno de los controladores: PID, FP12-NN (o su equivalente de alta precisión fija), y las variantes QNN (INT6, INT4). Estos bloques recibirán el estado del robot y generarán los comandos de actuación.
+            \item \textit{Sub-componente de Medición de Recursos y Estimación de Energía:} Lógica para medir latencias de cómputo, y puntos de acceso para que las herramientas de Vivado estimen el uso de recursos (LUTs, BRAMs, DSPs) y la potencia consumida por cada configuración de controlador activa.
+            \item \textit{Sub-componente de Comunicación con PC:} Interfaz (ej., UART, Ethernet simulada) para recibir comandos de alto nivel, parámetros de configuración, trayectorias, y para enviar datos de telemetría y resultados al PC.
+        \end{itemize}
+    \item \textbf{Componente PC (Entorno de Desarrollo, Orquestación, Entrenamiento y Análisis):}
+        \begin{itemize}
+            \item \textit{Sub-componente de Diseño y Síntesis FPGA:} Uso de Xilinx Vivado para el desarrollo HDL, simulación, síntesis, implementación y generación de bitstreams.
+            \item \textit{Sub-componente de Diseño, Entrenamiento y Cuantización de NN:} Uso de Python con TensorFlow/PyTorch para definir arquitecturas NN, entrenar modelos FP32, y aplicar cuantización (PTQ/QAT) para generar modelos QNN.
+            \item \textit{Sub-componente de Orquestación de Experimentos y Análisis:} Scripts en Python para controlar el flujo de los experimentos, enviar comandos a la FPGA, recolectar datos de rendimiento y energía, procesar estos datos y generar las gráficas y tablas comparativas.
+        \end{itemize}
+\end{itemize}
+
+\subsubsection{Propuestas solución}
+\paragraph{Módulos ($M_1 \dots M_n$)}
+\label{sssec:vision_solucion_scrum}
+
+La \textbf{visión del producto} de este proyecto es desarrollar una plataforma experimental y un conjunto de resultados que demuestren cuantitativamente las ventajas y compromisos del uso de redes neuronales cuantizadas para el control de robots manipuladores, específicamente en términos de consumo energético y utilización de recursos de hardware, en comparación con controladores PID tradicionales y redes neuronales de punto flotante (FP12-NN), todos implementados y evaluados en una plataforma FPGA.
+
+Para alcanzar esta visión, se utilizarán las siguientes \textbf{tecnologías y herramientas base} (sujetas a refinamiento durante los \textit{Sprints} iniciales de investigación):
+\begin{itemize}
+    \item \textbf{Robot Manipulador:} Se realizará la selección de un robot existente, para su caracterización y simulación con algún toolbox como el \textbf{Robotics, Vision and Control} o software como \textbf{CoppeliaSim (V-REP)}.
+    \item \textbf{Plataforma FPGA:} Una tarjeta de desarrollo \textbf{Xilinx Artix-7 (ej., Nexys A7 o Basys 3)} o una plataforma \textbf{Zynq (ej., PYNQ-Z2)} si se requiere un sistema de procesamiento ARM integrado. El diseño para la FPGA se realizará utilizando \textbf{VHDL o Verilog} y las herramientas del \textbf{Xilinx Vivado Design Suite}.
+    \item \textbf{PC para el desarrollo:}
+        \begin{itemize}
+            \item Lenguaje principal de scripting y desarrollo de alto nivel: \textbf{Python 3.x}.
+            \item Frameworks de Deep Learning para diseño, entrenamiento y cuantización de NNs: \textbf{TensorFlow 2.x (con TensorFlow Lite Quantization Toolkit) o PyTorch (con su Quantization API)}.
+            \item Software de comunicación y control de la FPGA desde el PC.
+            \item Herramientas de análisis de datos y visualización (ej., NumPy, Pandas, Matplotlib).
+        \end{itemize}
+    \item \textbf{Controladores a Implementar y Comparar:}
+        \begin{itemize}
+            \item Controlador Proporcional-Integral-Derivativo (PID) clásico.
+            \item Red Neuronal de Punto Flotante (FP12-NN) para control.
+            \item Redes Neuronales Cuantizadas (QNNs) con al menos dos niveles de precisión (ej., INT8 e INT6).
+        \end{itemize}
+    \item \textbf{Mecanismos de Interfaz y Medición:}
+        \begin{itemize}
+            \item Interfaz FPGA-Robot: Lógica para leer encoders simulados/reales y enviar comandos a actuadores simulados/reales.
+            \item Interfaz FPGA-PC: Para carga de configuraciones, envío de trayectorias, y recepción de datos de telemetría y resultados.
+            \item Sistema de estimación/medición de energía y recursos en FPGA: Utilizando reportes de Vivado (potencia estática y dinámica estimada, uso de LUTs, BRAMs, DSPs) y/o instrumentación para mediciones más directas.
+        \end{itemize}
+\end{itemize}
+
+\paragraph{Integración (sistema)}
+\label{sssec:product_backlog_epicos}
+
+El trabajo necesario para desarrollar la solución se organizará en un \textit{Product Backlog}, que contendrá una lista priorizada de Épicos (grandes bloques de funcionalidad o investigación). Estos Épicos se descompondrán en \textit{Product Backlog} Items (PBIs) más pequeños y manejables durante la Planificación de cada \textit{Sprint}. A continuación, se presenta una lista preliminar de Épicos:
+
+\begin{description}[style=unboxed,leftmargin=0em]
+    \item[EP01: Configuración del Entorno de Desarrollo y Simulación Robótica.]
+        Incluye la selección final y configuración detallada del robot manipulador, el establecimiento de la comunicación entre Python y el simulador, y la definición de las tareas de control base (ej., seguimiento de trayectorias específicas).
+    \item[EP02: Diseño e Implementación del Controlador PID en FPGA.]
+        Involucra el diseño del algoritmo PID, su implementación en HDL (VHDL/Verilog), simulación HDL, síntesis para la FPGA objetivo, y pruebas de control con el robot simulado y fisico interactuando con la FPGA.
+    \item[EP03: Diseño y Entrenamiento del Modelo de Red Neuronal de Punto Flotante (FP12-NN) para Control.]
+        Cubre la definición de la arquitectura de la red neuronal (ej., MLP para cinemática inversa), la generación o adquisición de datos de entrenamiento, el proceso de entrenamiento, y la validación de su rendimiento en simulación.
+    \item[EP04: Diseño e Implementación del Controlador FP12-NN en FPGA.]
+        Implica el diseño de una arquitectura HDL para la inferencia del modelo FP12-NN, su simulación, síntesis, y pruebas de control con el robot interactuando con la FPGA. Se evaluará la viabilidad y los recursos consumidos por una implementación de alta precisión en FPGA.
+    \item[EP05: Investigación, Selección y Aplicación de Técnicas de Cuantización.]
+        Cubre el estudio de las herramientas de cuantización (TensorFlow Lite, PyTorch Quantization), la selección de estrategias PTQ y/o QAT, y la generación de modelos QNN con los niveles de precisión objetivo (ej., INT8, INT6) a partir del modelo FP12-NN entrenado.
+    \item[EP06: Diseño e Implementación de los Controladores QNN en FPGA.]
+        Involucra el diseño de arquitecturas HDL optimizadas para la inferencia de los modelos QNN (aprovechando operaciones enteras, menor ancho de banda de memoria), su simulación, síntesis, y pruebas de control con el robot interactuando con la FPGA para cada nivel de cuantización.
+    \item[EP07: Diseño e Implementación del Sistema de Medición/Estimación de Consumo Energético y Uso de Recursos en FPGA.]
+        Cubre el desarrollo de la lógica en HDL (si es necesaria para contadores o monitores internos) y/o la metodología para utilizar las herramientas del fabricante de la FPGA (ej., Vivado Power Estimator, reportes de utilización) para obtener datos fiables del consumo energético y los recursos lógicos (LUTs, BRAMs, DSPs) para cada controlador implementado.
+    \item[EP08: Diseño e Implementación del Sistema de Medición del Rendimiento del Control.]
+        Define e implementa los mecanismos para medir la precisión del control (ej., error de seguimiento de trayectoria, tiempo de establecimiento) en la FPGA.
+    \item[EP09: Desarrollo de la Interfaz de Orquestación de Pruebas y Recolección de Datos.]
+        Construcción de scripts o una interfaz simple en el PC para configurar y lanzar los experimentos comparativos de manera sistemática, enviar trayectorias a la FPGA y recolectar todos los datos de rendimiento, recursos y energía.
+    \item[EP10: Ejecución de Experimentos Comparativos Exhaustivos y Análisis de Resultados.]
+        Realización de las pruebas comparativas bajo condiciones controladas para los controladores PID, FP12-NN y QNNs en la FPGA. Análisis estadístico de los datos recolectados, interpretación de los resultados y elaboración de conclusiones sobre la eficiencia energética y los compromisos de rendimiento.
+\end{description}
+
+\subsubsection{Validación}
+\subsubsection{Selección diseño conceptual}
+
+\subsection{Diseño detallado}
+\subsubsection{Detalle módulo 1 ($M_1$)}
+\paragraph{Validación ($M_1$)}
+\subsubsection{Detalle módulo 2 ($M_2$)}
+\paragraph{Validación ($M_2$)}
+\subsubsection{Detalle módulo n ($M_n$)}
+\paragraph{Validación ($M_n$)}
+\subsubsection{Integración sistema mecatrónico}
+\paragraph{Validación sistema mecatrónico}
+
+
+% --- 3. Implementación del sistema ---
+\section{Implementación del sistema}
+\subsection{Implementación módulo 1 ($M_1$)}
+\subsubsection{Verificación ($M_1$)}
+
+\subsection{Implementación módulo 2 ($M_2$)}
+\subsubsection{Verificación ($M_2$)}
+
+\subsection{Implementación módulo n ($M_n$)}
+\subsubsection{Verificación ($M_n$)}
+
+\subsection{Integración del sistema mecatrónico}
+\subsubsection{Verificación del sistema mecatrónico}
+
+
+% --- 4. Análisis de resultados ---
+\section{Análisis de resultados}
+\subsection{Análisis de ingeniería}
+\subsection{Análisis de costos}
+\subsection{Análisis de valor}
+
+
+% --- FINAL ---
+\newpage
+\addcontentsline{toc}{section}{Conclusiones}
+\section*{Conclusiones}
+
+
+\addcontentsline{toc}{section}{Recomendaciones y trabajo a futuro}
+\section*{Recomendaciones y trabajo a futuro}
+
+
+
+% --- ADICIONAL ---
+\newpage
+\addcontentsline{toc}{section}{Apéndices}
+\section*{Apéndices}
+
+
+\addcontentsline{toc}{section}{Anexos}
+\section*{Anexos}
+\label{sec:administracion_proyecto_listas}
+
+La gestión adecuada de los recursos y una planificación clara de las actividades son cruciales para el éxito de este proyecto. A continuación, se presenta un desglose de los recursos humanos, materiales, económicos y la infraestructura necesaria, seguido de una planeación general de actividades.
+
+\subsubsection{Recursos Estimados e Infraestructura}
+\label{ssec:presupuesto_infraestructura_listas}
+
+\subsubsection{Recursos Humanos}
+\label{sssec:recursos_humanos_listas}
+Los participantes en el proyecto y sus roles son los siguientes:
+\begin{itemize}
+    \item \textbf{Desarrollador:} Mendoza Díaz Ramiro.
+        \begin{itemize}
+            \item \textit{Dedicación Estimada:} Aproximadamente 600 horas distribuidas en las fases TT1 y TT2.
+            \item \textit{Área Principal STEM de Aporte:} Ingeniería (Mecatrónica).
+            \item \textit{Otras Áreas STEM de Aporte:} Tecnología, Ciencias de la Computación.
+        \end{itemize}
+    \item \textbf{Asesor Principal:} Dr. Jorge Alejandro Juárez Lora.
+        \begin{itemize}
+            \item \textit{Dedicación Estimada:} Aproximadamente 60 horas de asesoría.
+            \item \textit{Área Principal STEM de Aporte:} Ingeniería (Electrónica/IA).
+            \item \textit{Otras Áreas STEM de Aporte:} Ciencias de la Computación.
+        \end{itemize}
+\end{itemize}
+
+
+\subsubsection{Recursos Materiales y Económicos}
+\label{sssec:recursos_materiales_economicos_listas}
+A continuación, se listan los recursos materiales y económicos estimados para el proyecto:
+
+\begin{itemize}
+    \item \textbf{Plataforma Robótica (Módulo 1):}
+        \begin{itemize}
+            \item \textit{Recurso:} Robot manipulador.
+            \item \textit{Cantidad:} 1.
+            \item \textit{Costo Estimado (MXN):} \$5,000. - \$15,000.
+            \item \textit{Fuente de Financiamiento:} Recursos Propios.
+            \item \textit{Recurso (Opcional):} Componentes para interfaz hardware (si se conecta simulador a FPGA mediante una placa intermedia).
+            \item \textit{Cantidad:} 1.
+            \item \textit{Costo Estimado (MXN):} \$500 - \$1,000.
+            \item \textit{Fuente de Financiamiento:} Recursos Propios.
+        \end{itemize}
+    \item \textbf{Plataforma FPGA (Módulo 2):}
+        \begin{itemize}
+            \item \textit{Recurso:} Tarjeta de desarrollo FPGA (ej., Xilinx Nexys A7 o PYNQ-Z2).
+            \item \textit{Cantidad:} 1.
+            \item \textit{Costo Estimado (MXN):} \$3,000 - \$7,000.
+            \item \textit{Fuente de Financiamiento:} Recursos Propios o tarjeta prestada por el asesor.
+            \item \textit{Recurso:} Cables y accesorios para FPGA (JTAG, USB, etc.).
+            \item \textit{Cantidad:} Varios.
+            \item \textit{Costo Estimado (MXN):} \$500.
+            \item \textit{Fuente de Financiamiento:} Recursos Propios.
+        \end{itemize}
+    \item \textbf{PC para Desarrollo (Módulo 3):}
+        \begin{itemize}
+            \item \textit{Recurso:} Computadora personal para desarrollo (existente).
+            \item \textit{Cantidad:} 1.
+            \item \textit{Costo Estimado (MXN):} N/A (equipo existente).
+            \item \textit{Fuente de Financiamiento:} N/A.
+            \item \textit{Recurso:} Software de desarrollo (Xilinx Vivado, Python, TensorFlow/PyTorch, CoppeliaSim).
+            \item \textit{Cantidad:} Licencias o descargas.
+            \item \textit{Costo Estimado (MXN):} N/A (se priorizará software gratuito, con licencia educativa o ya disponible).
+            \item \textit{Fuente de Financiamiento:} N/A.
+        \end{itemize}
+    \item \textbf{Material Diverso y Consumibles (Módulo 4):}
+        \begin{itemize}
+            \item \textit{Recurso:} Componentes electrónicos menores (resistencias, cables, protoboard, si se construye alguna interfaz simple).
+            \item \textit{Cantidad:} Varios.
+            \item \textit{Costo Estimado (MXN):} \$300.
+            \item \textit{Fuente de Financiamiento:} Recursos Propios.
+            \item \textit{Recurso:} Material de impresión y papelería (para documentación, artículos).
+            \item \textit{Cantidad:} Según necesidad.
+            \item \textit{Costo Estimado (MXN):} \$200.
+            \item \textit{Fuente de Financiamiento:} Recursos Propios.
+        \end{itemize}
+    \item \textbf{Imprevistos:}
+        \begin{itemize}
+            \item \textit{Descripción:} Reserva para gastos no contemplados (aproximadamente 10\% del subtotal de gastos directos).
+            \item \textit{Costo Estimado (MXN):} A definir una vez se tengan costos más precisos.
+            \item \textit{Fuente de Financiamiento:} Recursos Propios.
+        \end{itemize}
+\end{itemize}
+\textit{Nota: Los costos son estimaciones preliminares. Las necesidades y costos pueden variar a medida de que avanza el proyecto.}
+
+\subsubsection{Infraestructura Requerida}
+\label{sssec:infraestructura_requerida_listas}
+La infraestructura necesaria para el proyecto incluye:
+
+\begin{itemize}
+    \item \textbf{Instalaciones Físicas:}
+        \begin{itemize}
+            \item Laboratorio de Cómputo de UPIITA: Para acceso a software especializado y desarrollo general.
+            \item Espacio de Trabajo Personal: Para desarrollo y estudio.
+            \item (Opcional) Laboratorio de Sistemas digitales de UPIITA: Si se requiere para pruebas con un robot físico, construcción de interfaces, o mediciones energéticas.
+        \end{itemize}
+    \item \textbf{Equipo Principal:}
+        \begin{itemize}
+            \item Computadora Personal (PC personal).
+            \item Tarjeta de Desarrollo FPGA: Puede ser la Digilent Nexys 3 de los laboratorios de electronica de UPIITA, Intesc amiba 2 propia, o la proporcionada por el asesor.
+            \item Robot Manipulador Físico: Pueden ser modelos desde 4 hasta 6 grados de libertad disponibles en el mercado que se ajusten al presupuesto o el proporcionado por el asesor.
+            \item Instrumentación Electrónica: Multímetro, osciloscopio, fuente de alimentación regulada.
+        \end{itemize}
+    \item \textbf{Software Especializado:}
+        \begin{itemize}
+            \item Entorno de Desarrollo Integrado (IDE) para FPGA: Xilinx Vivado Design Suite (se utilizará la versión WebPACK gratuita o la disponible bajo licencia académica en UPIITA).
+            \item Lenguajes de Programación: Python (versión 3.8 o superior), VHDL o Verilog (según la preferencia para el diseño en FPGA).
+            \item Frameworks de Deep Learning: TensorFlow (versión 2.x con TensorFlow Lite) y/o PyTorch (con su módulo de cuantización).
+            \item Simulador Robótico: CoppeliaSim (V-REP) en su versión educativa (gratuita).
+            \item Software de Productividad: Un editor de LaTeX como overleaf, un gestor de referencias bibliográficas, software para creación de diagramas.
+            \item Sistema de Control de Versiones: Git, con un repositorio en GitHub o GitLab.
+        \end{itemize}
+\end{itemize}
+
+\subsubsection{Planeación de Actividades (Cronograma General)}
+\label{ssec:planeacion_actividades_listas}
+
+La gestión detallada del proyecto, incluyendo la asignación de tareas específicas y el seguimiento del progreso, se realizará mediante \textit{Sprints} de duración definida (ej., 2 a 4 semanas), conforme a la metodología \textit{Scrum} adoptada (ver Sección \ref{ssec:metodologia_scrum}). Para fines de este protocolo, se presenta a continuación una planeación general de alto nivel, distribuyendo los Épicos del proyecto a lo largo de las 36 semanas estimadas (18 semanas para Trabajo Terminal 1 - TT1, y 18 semanas para Trabajo Terminal 2 - TT2).
+
+\textbf{Fase TT1 (Semanas 1-18): Enfoque en Investigación, Diseño y Desarrollos Preliminares}
+\begin{itemize}
+    \item \textit{Semanas 1-4:}
+        \begin{itemize}
+            \item [EP01] Configuración del Entorno de Desarrollo y Simulación Robótica (CoppeliaSim, Python, interfaz básica).
+            \item [INV01] Investigación exhaustiva del estado del arte: QNNs, control robótico, FPGAs, metodologías de evaluación energética.
+            \item [DOC1] Inicio de la documentación de avances.
+        \end{itemize}
+    \item \textit{Semanas 5-8:}
+        \begin{itemize}
+            \item [EP03] Diseño conceptual de la arquitectura de Red Neuronal (FP12-NN) para control. Generación/adquisición de datos de entrenamiento.
+            \item [EP02] Diseño conceptual del controlador PID y su adaptación para FPGA.
+            \item [DOC1] Continuación de la documentación.
+        \end{itemize}
+    \item \textit{Semanas 9-13:}
+        \begin{itemize}
+            \item [EP03] Entrenamiento y validación (simulación Python) del modelo FP12-NN.
+            \item [EP02] Inicio del desarrollo HDL y simulación del controlador PID para FPGA.
+            \item [EP05] Investigación detallada y selección de técnicas y herramientas de cuantización.
+            \item [DOC1] Continuación de la documentación.
+        \end{itemize}
+    \item \textit{Semanas 14-18:}
+        \begin{itemize}
+            \item [EP02] Finalización de la implementación y pruebas básicas del PID en FPGA (interactuando con robot simulado).
+            \item [EP05] Aplicación preliminar de cuantización (PTQ) al modelo FP12-NN para generar un primer QNN (ej., INT6).
+            \item [DOC1] Preparación y finalización del informe de avances TT1.
+            \item [ENT1] Entrega y presentación de avances TT1.
+        \end{itemize}
+\end{itemize}
+
+\textbf{Fase TT2 (Semanas 19-36): Enfoque en Implementación en FPGA, Experimentación y Análisis}
+\begin{itemize}
+    \item \textit{Semanas 19-22:}
+        \begin{itemize}
+            \item [EP04] Diseño HDL e implementación del controlador FP12-NN en FPGA. Simulación y pruebas.
+            \item [EP05/EP06] Refinamiento de la cuantización (posible QAT) y diseño HDL de los controladores QNN (INT6, INT4).
+            \item [DOC2] Inicio de la redacción de la tesis con toda la documentacion previa.
+        \end{itemize}
+    \item \textit{Semanas 23-26:}
+        \begin{itemize}
+            \item [EP06] Implementación y pruebas en FPGA de los controladores QNN.
+            \item [EP07] Diseño e implementación del sistema de medición/estimación de consumo energético y uso de recursos en la FPGA.
+            \item [DOC2] Avance en la tesis.
+        \end{itemize}
+    \item \textit{Semanas 27-31:}
+        \begin{itemize}
+            \item [EP08] Diseño e implementación del sistema de medición del rendimiento del control (precisión, latencia) en la FPGA.
+            \item [EP09] Desarrollo de la interfaz de orquestación de pruebas y recolección de datos (PC - FPGA).
+            \item [EP10] Inicio de la ejecución de experimentos comparativos.
+            \item [DOC2] Continuación de la tesis.
+        \end{itemize}
+    \item \textit{Semanas 32-36:}
+        \begin{itemize}
+            \item [EP10] Finalización de los experimentos. Análisis estadístico e interpretación de todos los resultados comparativos.
+            \item [DOC2] Redacción final de la tesis, incluyendo conclusiones y trabajo futuro.
+            \item [ENT2] Entrega de la tesis y preparación para la presentación final.
+        \end{itemize}
+\end{itemize}
+\textit{Nota: Este cronograma es una guía general de alto nivel. La asignación específica de tareas a los \textit{Sprints} y su duración se definirá dinámicamente durante el proyecto, facilitando la adaptación a los hallazgos y desafíos que surjan. INV01, DOC1, DOC2, ENT1 y ENT2 son hitos o actividades transversales.}
+
+\newpage
+\addcontentsline{toc}{section}{Fuentes -- Referencias}
+\section*{Fuentes -- Referencias}
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\newpage
+\addcontentsline{toc}{section}{Glosario}
+\section*{Glosario}
+
+\end{document}
