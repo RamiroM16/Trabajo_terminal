@@ -19,6 +19,36 @@
 \usepackage{longtable}
 \usepackage{rotating}
 \usepackage{afterpage}
+\usepackage{xcolor}
+\usepackage{listings}
+
+% Configuración profesional de listings para C++ y Python
+\definecolor{codegreen}{rgb}{0.1,0.6,0.2}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.97,0.97,0.97}
+
+\lstdefinestyle{codestyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen}\itshape,
+    keywordstyle=\color{blue}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{codegray!30}
+}
+\lstset{style=codestyle}
 
 \geometry{left=3cm, right=3cm, top=2.5cm, bottom=2.5cm}
 
@@ -129,12 +159,132 @@ Redes Neuronales Cuantizadas, Control de Robots, FPGA, Eficiencia Energética, R
 \newpage
 \section*{Nomenclatura}
 \addcontentsline{toc}{section}{Nomenclatura}
-(Definición de términos)
+
+En la Tabla \ref{tab:nomenclatura} se presentan los acrónimos, términos técnicos y abreviaturas especializadas utilizadas a lo largo de este documento, ordenadas alfabéticamente.
+
+\vspace{0.5cm}
+\begin{longtable}{p{0.22\linewidth} p{0.72\linewidth}}
+\caption{Acrónimos y términos técnicos empleados en el proyecto.} \label{tab:nomenclatura} \\
+\toprule
+\textbf{Término / Sigla} & \textbf{Significado y Descripción Técnica} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Término / Sigla} & \textbf{Significado y Descripción Técnica} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{2}{r}{\textit{Continúa en la siguiente página...}} \\
+\bottomrule
+\endfoot
+\bottomrule
+\endlastfoot
+\textbf{AI / IA} & Inteligencia Artificial (\textit{Artificial Intelligence}). \\
+\textbf{ANN} & Red Neuronal Artificial (\textit{Artificial Neural Network}). \\
+\textbf{CIM} & Computación en Memoria (\textit{Computing-In-Memory}). \\
+\textbf{CoM} & Centro de Masa (\textit{Center of Mass}) de un eslabón rígido. \\
+\textbf{CTC} & Control por Par Computado (\textit{Computed Torque Control}). \\
+\textbf{DH} & Denavit-Hartenberg (convención cinemática modificada de parámetros geométricos). \\
+\textbf{DNN} & Red Neuronal Profunda (\textit{Deep Neural Network}). \\
+\textbf{FP32} & Formato de punto flotante de precisión simple de 32 bits (estándar IEEE 754). \\
+\textbf{FPGA} & Matriz de Puertas Lógicas Programable en Campo (\textit{Field-Programmable Gate Array}). \\
+\textbf{GDL} & Grados de Libertad (\textit{Degrees of Freedom}, DoF). \\
+\textbf{INT8} & Formato numérico entero con signo de 8 bits (rango $[-128, 127]$). \\
+\textbf{MAC} & Operación de Multiplicación y Acumulación (\textit{Multiply-Accumulate}). \\
+\textbf{MAE} & Error Absoluto Medio (\textit{Mean Absolute Error}). \\
+\textbf{MCAP} & Formato de almacenamiento eficiente para grabación de datos y telemetría en ROS 2. \\
+\textbf{ML} & Aprendizaje Automático (\textit{Machine Learning}). \\
+\textbf{MLP} & Perceptrón Multicapa (\textit{Multilayer Perceptron}). \\
+\textbf{MSE} & Error Cuadrático Medio (\textit{Mean Squared Error}). \\
+\textbf{ONNX} & Formato Abierto para Intercambio de Redes Neuronales (\textit{Open Neural Network Exchange}). \\
+\textbf{PD / PID} & Controlador Proporcional-Derivativo / Proporcional-Integral-Derivativo. \\
+\textbf{PINN} & Red Neuronal Informada por la Física (\textit{Physics-Informed Neural Network}). \\
+\textbf{PTQ} & Cuantización Post-Entrenamiento (\textit{Post-Training Quantization}). \\
+\textbf{QAT} & Entrenamiento Consciente de Cuantización (\textit{Quantization-Aware Training}). \\
+\textbf{QNN} & Red Neuronal Cuantizada (\textit{Quantized Neural Network}). \\
+\textbf{QoS} & Calidad de Servicio (\textit{Quality of Service}) en protocolos de transporte ROS 2. \\
+\textbf{RNEA} & Algoritmo Recursivo de Newton-Euler (\textit{Recursive Newton-Euler Algorithm}). \\
+\textbf{RMSE} & Raíz del Error Cuadrático Medio (\textit{Root Mean Square Error}). \\
+\textbf{ROS / ROS 2} & Sistema Operativo de Robots (\textit{Robot Operating System} versión 2). \\
+\textbf{RT} & Tiempo Real (\textit{Real-Time}). \\
+\textbf{SNN} & Red Neuronal de Impulsos (\textit{Spiking Neural Network}). \\
+\textbf{UR3e} & Robot manipulador colaborativo industrial de 6 GDL de Universal Robots. \\
+\textbf{URDF} & Formato Unificado de Descripción de Robots (\textit{Unified Robot Description Format}). \\
+\textbf{VoBo} & Visto Bueno de aprobación emitido por el jurado o asesores. \\
+\end{longtable}
 
 \newpage
 \section*{Simbología}
 \addcontentsline{toc}{section}{Simbología}
-(Definición de símbolos)
+
+En la Tabla \ref{tab:simbologia} se detallan las variables matemáticas, operadores, vectores y matrices empleados en la formulación cinemática, dinámica y de control, especificando sus unidades en el Sistema Internacional (SI).
+
+\vspace{0.5cm}
+\begin{longtable}{p{0.20\linewidth} p{0.62\linewidth} p{0.14\linewidth}}
+\caption{Simbología matemática y magnitudes físicas del sistema mecatrónico.} \label{tab:simbologia} \\
+\toprule
+\textbf{Símbolo} & \textbf{Descripción Física o Matemática} & \textbf{Unidad (SI)} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Símbolo} & \textbf{Descripción Física o Matemática} & \textbf{Unidad (SI)} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\textit{Continúa en la siguiente página...}} \\
+\bottomrule
+\endfoot
+\bottomrule
+\endlastfoot
+\multicolumn{3}{l}{\textit{\textbf{Cinemática y Variables Articulares:}}} \\
+$\bm{q} = [q_1, \dots, q_6]^T$ & Vector de posiciones articulares generalizadas & $\text{rad}$ \\
+$\dot{\bm{q}} = [\dot{q}_1, \dots, \dot{q}_6]^T$ & Vector de velocidades articulares & $\text{rad/s}$ \\
+$\ddot{\bm{q}} = [\ddot{q}_1, \dots, \ddot{q}_6]^T$ & Vector de aceleraciones articulares & $\text{rad/s}^2$ \\
+$\bm{q}_d, \dot{\bm{q}}_d, \ddot{\bm{q}}_d$ & Trayectorias articular deseada (posición, velocidad y aceleración) & $\text{rad}, \text{rad/s}, \text{rad/s}^2$ \\
+$\bm{e} = \bm{q}_d - \bm{q}$ & Vector de error de seguimiento de posición articular & $\text{rad}$ \\
+$\dot{\bm{e}} = \dot{\bm{q}}_d - \dot{\bm{q}}$ & Vector de error de velocidad articular & $\text{rad/s}$ \\
+$\alpha_{i-1}$ & Parámetro DH modificado: ángulo de torsión de eslabón & $\text{rad}$ \\
+$a_{i-1}$ & Parámetro DH modificado: longitud de eslabón & $\text{m}$ \\
+$d_i$ & Parámetro DH modificado: desplazamiento en el eje articular & $\text{m}$ \\
+$\theta_i$ & Parámetro DH modificado: variable angular articular & $\text{rad}$ \\
+$\bm{R}_i^{i-1}$ & Matriz de rotación del marco coordenado $i$ respecto al marco $i-1$ & Adimensional \\
+$\bm{P}_i^{i-1}$ & Vector de traslación del origen $i-1$ al origen $i$ expresado en el marco $i$ & $\text{m}$ \\
+$\bm{z}_0$ & Vector unitario sobre el eje de rotación articular $[0, 0, 1]^T$ & Adimensional \\
+\midrule
+\multicolumn{3}{l}{\textit{\textbf{Cinemática Diferencial y Dinámica RNEA (Paso hacia Adelante):}}} \\
+$\bm{\omega}_i$ & Vector de velocidad angular del eslabón $i$ expresado en su propio marco & $\text{rad/s}$ \\
+$\dot{\bm{\omega}}_i$ & Vector de aceleración angular del eslabón $i$ & $\text{rad/s}^2$ \\
+$\dot{\bm{v}}_i$ & Vector de aceleración lineal del origen del marco coordenado $i$ & $\text{m/s}^2$ \\
+$\dot{\bm{v}}_{c,i}$ & Vector de aceleración lineal del centro de masa del eslabón $i$ & $\text{m/s}^2$ \\
+$\bm{r}_{c,i}$ & Vector de posición local del centro de masa del eslabón $i$ & $\text{m}$ \\
+$\bm{g} = [0, 0, 9.81]^T$ & Vector de aceleración de la gravedad terrestre & $\text{m/s}^2$ \\
+\midrule
+\multicolumn{3}{l}{\textit{\textbf{Dinámica Analítica y Esfuerzos RNEA (Paso hacia Atrás):}}} \\
+$m_i$ & Masa total del eslabón $i$ & $\text{kg}$ \\
+$\bm{I}_i$ & Tensor de inercia baricéntrico del eslabón $i$ expresado en su marco local & $\text{kg}\cdot\text{m}^2$ \\
+$\bm{F}_i$ & Fuerza inercial total que actúa sobre el eslabón $i$ & $\text{N}$ \\
+$\bm{N}_i$ & Momento inercial total que actúa sobre el eslabón $i$ & $\text{N}\cdot\text{m}$ \\
+$\bm{f}_i$ & Fuerza ejercida por el eslabón $i-1$ sobre el eslabón $i$ & $\text{N}$ \\
+$\bm{n}_i$ & Par/momento ejercido por el eslabón $i-1$ sobre el eslabón $i$ & $\text{N}\cdot\text{m}$ \\
+$\bm{\tau} = [\tau_1, \dots, \tau_6]^T$ & Vector de pares motores netos generalizados aplicados a las articulaciones & $\text{N}\cdot\text{m}$ \\
+$\bm{\tau}_{rnea}$ & Par dinámico de prealimentación calculado por RNEA & $\text{N}\cdot\text{m}$ \\
+$\bm{\tau}_{cmd}$ & Par de comando total enviado a las interfaces de esfuerzo de los motores & $\text{N}\cdot\text{m}$ \\
+$\bm{M}(\bm{q})$ & Matriz de masa e inercia del manipulador ($6 \times 6$) & $\text{kg}\cdot\text{m}^2$ \\
+$\bm{C}(\bm{q},\dot{\bm{q}})$ & Matriz de términos centrífugos y de Coriolis ($6 \times 6$) & $\text{N}\cdot\text{m}\cdot\text{s/rad}$ \\
+$\bm{g}(\bm{q})$ & Vector de pares gravitacionales articulares ($6 \times 1$) & $\text{N}\cdot\text{m}$ \\
+\midrule
+\multicolumn{3}{l}{\textit{\textbf{Control Automático y Parámetros de Redes Neuronales:}}} \\
+$\bm{K}_p, \bm{K}_d, \bm{K}_i$ & Matrices de ganancias de retroalimentación proporcional, derivativa e integral & $\text{N}\cdot\text{m/rad}, \text{N}\cdot\text{m}\cdot\text{s/rad}, \text{N}\cdot\text{m}/(\text{rad}\cdot\text{s})$ \\
+$\bm{a}_{cmd}$ & Vector de aceleración de control auxiliar desacoplada & $\text{rad/s}^2$ \\
+$\bm{X} \in \mathbb{R}^{42}$ & Vector de entrada a la red neuronal (7 subgrupos de 6 articulaciones) & Dimensiones mixtas \\
+$\bm{y} \in \mathbb{R}^{6}$ & Vector de salida predicho por la red (par estimado para 6 articulaciones) & $\text{N}\cdot\text{m}$ \\
+$\bm{\mu}_X, \bm{\sigma}_X$ & Vectores de media y desviación estándar para normalización de entrada & Dimensiones mixtas \\
+$\bm{\mu}_y, \bm{\sigma}_y$ & Vectores de media y desviación estándar para desnormalización de salida & $\text{N}\cdot\text{m}$ \\
+$S$ & Factor de escala de cuantización (\textit{Scale factor}) & Adimensional \\
+$Z$ & Punto cero entero de compensación de cuantización (\textit{Zero-point}) & Adimensional \\
+$q_{int8}$ & Valor entero cuantizado a 8 bits de un operando o peso & Adimensional \\
+$T_s$ & Periodo de muestreo del bucle de control de tiempo real ($10\text{ ms} = 100\text{ Hz}$) & $\text{s}$ \\
+\end{longtable}
 
 
 \newpage
@@ -312,18 +462,54 @@ La cinemática estudia la geometría del movimiento. La \textbf{cinemática dire
 
 \paragraph{Dinámica}
 \label{sssec:dinamica_robots}
-El modelo dinámico de un robot manipulador relaciona los pares/fuerzas articulares aplicados $\bm{\tau} \in \mathbb{R}^n$ con las posiciones $\bm{q}$, velocidades $\dot{\bm{q}}$ y aceleraciones $\ddot{\bm{q}}$ articulares. La ecuación general de la dinámica para un manipulador rígido es:
+El modelo dinámico de un robot manipulador relaciona los pares/fuerzas articulares aplicados $\bm{\tau} \in \mathbb{R}^n$ con las posiciones $\bm{q}$, velocidades $\dot{\bm{q}}$ y aceleraciones $\ddot{\bm{q}}$ articulares. La ecuación general de la dinámica en espacio de estados para un manipulador rígido de $n$ grados de libertad se expresa tradicionalmente mediante la formulación de Lagrange-Euler \cite{Spong, modern_robotics}:
 \begin{equation}
-\bm{\tau} = M(\bm{q})\ddot{\bm{q}} + \bm{c}(\bm{q},\dot{\bm{q}}) + \bm{g}(\bm{q})
+\bm{\tau} = \bm{M}(\bm{q})\ddot{\bm{q}} + \bm{C}(\bm{q},\dot{\bm{q}})\dot{\bm{q}} + \bm{g}(\bm{q})
 \label{eq:dinamica_robot}
 \end{equation}
-Donde:
+donde:
 \begin{itemize}
-    \item $M(\bm{q}) \in \mathbb{R}^{n \times n}$ es la matriz de inercia, simétrica y definida positiva.
-    \item $\bm{c}(\bm{q},\dot{\bm{q}}) \in \mathbb{R}^n$ es el vector de pares/fuerzas centrífugas y de Coriolis.
-    \item $\bm{g}(\bm{q}) \in \mathbb{R}^n$ es el vector de pares/fuerzas gravitacionales.
+    \item $\bm{M}(\bm{q}) \in \mathbb{R}^{n \times n}$ es la matriz de masa e inercia del manipulador, simétrica y estrictamente definida positiva ($\bm{M}(\bm{q}) = \bm{M}^T(\bm{q}) > 0$).
+    \item $\bm{C}(\bm{q},\dot{\bm{q}}) \in \mathbb{R}^{n \times n}$ es la matriz de efectos centrífugos y de Coriolis, la cual satisface la propiedad fundamental de que la matriz $\dot{\bm{M}}(\bm{q}) - 2\bm{C}(\bm{q},\dot{\bm{q}})$ es antisimétrica (\textit{skew-symmetric}).
+    \item $\bm{g}(\bm{q}) \in \mathbb{R}^n$ es el vector de fuerzas y pares generados por la atracción gravitatoria sobre los eslabones.
 \end{itemize}
-Obtener un modelo dinámico preciso es fundamental para el diseño de controladores avanzados \cite{modern_robotics}.
+
+Si bien la formulación explícita de Lagrange-Euler permite el análisis analítico formal de estabilidad, el cálculo simbólico de $\bm{M}(\bm{q})$ y $\bm{C}(\bm{q},\dot{\bm{q}})$ presenta una complejidad computacional de orden $\mathcal{O}(n^4)$ o $\mathcal{O}(n^3)$, lo cual resulta computacionalmente prohibitivo para bucles de control de alta frecuencia en robots de 6 GDL. Por esta razón, para el cálculo en tiempo real de la dinámica inversa se utiliza el \textbf{Algoritmo Recursivo de Newton-Euler (RNEA)}, desarrollado originalmente por Luh, Walker y Paul \cite{modern_robotics, Spong}. El RNEA reduce la complejidad a un orden lineal óptimo $\mathcal{O}(n)$, propagando las cinemáticas desde la base hasta el efector final y los balances de fuerza en sentido inverso.
+
+Bajo la convención de parámetros Denavit-Hartenberg modificados (Craig), el algoritmo se divide en dos fases iterativas:
+
+\textbf{1. Propagación Cinemática Hacia Adelante ($i = 1, \dots, n$):} \\
+Partiendo de las condiciones iniciales en la base inmóvil ($\bm{\omega}_0 = \bm{0}$, $\dot{\bm{\omega}}_0 = \bm{0}$), y considerando la aceleración gravitacional simulada en el marco inercial $\dot{\bm{v}}_0 = [0, 0, 9.81]^T\text{ m/s}^2$ para incorporar la gravedad intrínsecamente sin cálculos adicionales, se propagan las velocidades y aceleraciones hacia el extremo del robot:
+\begin{align}
+\bm{\omega}_i &= (\bm{R}_i^{i-1})^T \bm{\omega}_{i-1} + \dot{q}_i \bm{z}_0 \label{eq:rnea_omega} \\
+\dot{\bm{\omega}}_i &= (\bm{R}_i^{i-1})^T \dot{\bm{\omega}}_{i-1} + \left((\bm{R}_i^{i-1})^T \bm{\omega}_{i-1}\right) \times (\dot{q}_i \bm{z}_0) + \ddot{q}_i \bm{z}_0 \label{eq:rnea_domega} \\
+\dot{\bm{v}}_i &= (\bm{R}_i^{i-1})^T \dot{\bm{v}}_{i-1} + \dot{\bm{\omega}}_i \times \bm{P}_i^{i-1} + \bm{\omega}_i \times \left(\bm{\omega}_i \times \bm{P}_i^{i-1}\right) \label{eq:rnea_dv}
+\end{align}
+donde $\bm{R}_i^{i-1}$ es la matriz de orientación del marco $i$ respecto a $i-1$, $\bm{P}_i^{i-1}$ es el vector de traslación del origen $i-1$ al $i$ expresado en el marco $i$, y $\bm{z}_0 = [0, 0, 1]^T$ define el eje unitario de rotación articular.
+
+\textbf{2. Balance Dinámico Hacia Atrás ($i = n, \dots, 1$):} \\
+Calculada la cinemática de cada eslabón, se obtiene la aceleración lineal en su respectivo centro de masa $\bm{r}_{c,i}$:
+\begin{equation}
+\dot{\bm{v}}_{c,i} = \dot{\bm{v}}_i + \dot{\bm{\omega}}_i \times \bm{r}_{c,i} + \bm{\omega}_i \times \left(\bm{\omega}_i \times \bm{r}_{c,i}\right)
+\label{eq:rnea_dvcom}
+\end{equation}
+Aplicando las leyes de Newton y Euler, se determinan la fuerza inercial neta $\bm{F}_i$ y el momento inercial baricéntrico $\bm{N}_i$ sobre cada eslabón:
+\begin{align}
+\bm{F}_i &= m_i \dot{\bm{v}}_{c,i} \label{eq:rnea_Fi} \\
+\bm{N}_i &= \bm{I}_i \dot{\bm{\omega}}_i + \bm{\omega}_i \times \left(\bm{I}_i \bm{\omega}_i\right) \label{eq:rnea_Ni}
+\end{align}
+donde $m_i$ y $\bm{I}_i$ representan la masa y el tensor de inercia baricéntrico del eslabón $i$. Finalmente, el balance de fuerzas $\bm{f}_i$ y momentos $\bm{n}_i$ transmitidos a través de la articulación se propaga recursivamente desde el último eslabón hasta la base:
+\begin{align}
+\bm{f}_i &= \bm{R}_{i+1}^i \bm{f}_{i+1} + \bm{F}_i \label{eq:rnea_fi} \\
+\bm{n}_i &= \bm{N}_i + \bm{R}_{i+1}^i \bm{n}_{i+1} + \bm{r}_{c,i} \times \bm{F}_i + \bm{P}_{i+1}^i \times \left(\bm{R}_{i+1}^i \bm{f}_{i+1}\right) \label{eq:rnea_ni}
+\end{align}
+asumiendo que sobre el efector final no actúan fuerzas externas no compensadas ($\bm{f}_{n+1} = \bm{0}, \bm{n}_{n+1} = \bm{0}$). El par dinámico que debe suministrar el actuador de la articulación $i$ corresponde a la proyección del momento $\bm{n}_i$ sobre el eje de rotación:
+\begin{equation}
+\tau_{rnea, i} = \bm{n}_i^T \bm{z}_0
+\label{eq:rnea_tau}
+\end{equation}
+
+Esta formulación analítica recursiva es la que se ejecuta determinísticamente en el nodo de control en C++ a una frecuencia de $100\text{ Hz}$, proporcionando tanto el par de desacoplamiento para el control clásico como los vectores de referencia de pares $\bm{\tau}_{rnea}$ que enriquecen el espacio de características de entrada de la red neuronal.
 
 \paragraph{Estrategias de Control Clásicas}
 \label{sssec:control_clasico}
@@ -521,91 +707,202 @@ Esta adopcion de la metodologia \textit{Scrum} proporciona una planificacion est
 \section{Diseño del sistema}
 
 \subsection{Diseño conceptual}
+\label{sec:diseno_conceptual}
+
+El diseño conceptual representa la fase inicial del desarrollo mecatrónico en la cual se traducen las necesidades del problema en especificaciones técnicas formales y se definen las alternativas de solución bajo el marco metodológico ágil adoptado (\textit{Scrum}). A diferencia de los modelos lineales tradicionales que demandan una definición estática y exhaustiva antes de cualquier desarrollo, en este proyecto la arquitectura se concibe para evolucionar de manera incremental a través de \textit{Sprints}, manteniendo una clara separación de responsabilidades y facilitando la validación temprana mediante simulación fidedigna de alta fidelidad, con miras a una transferencia directa y desriesgada hacia la plataforma física en la fase subsecuente.
+
 \subsubsection{Necesidades - requerimientos}
+\label{sssec:necesidades_requerimientos}
+
+Con el propósito de garantizar un control articular preciso, estable y computacionalmente eficiente sobre el manipulador robótico de 6 grados de libertad (GDL), se establecieron los requerimientos de ingeniería que rigen el diseño del sistema. Estos se dividen en requerimientos funcionales (RF), que describen las operaciones y capacidades dinámicas que el sistema debe ejecutar, y requerimientos no funcionales (RNF), que imponen restricciones de tiempo real, seguridad, determinismo y compatibilidad con estándares industriales de robótica y aprendizaje profundo. La Tabla~\ref{tab:requerimientos_tt1} sintetiza estos requerimientos con sus correspondientes métricas y criterios de aceptación.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Requerimientos funcionales y no funcionales del sistema de control mecatrónico.}
+\label{tab:requerimientos_tt1}
+\begin{tabularx}{\textwidth}{l p{2.8cm} X p{3.2cm}}
+\toprule
+\textbf{ID} & \textbf{Requerimiento} & \textbf{Descripción Técnica} & \textbf{Criterio / Métrica} \\
+\midrule
+\multicolumn{4}{l}{\textit{\textbf{Requerimientos Funcionales (RF)}}} \\
+\midrule
+RF-01 & Cinemática de 6 GDL & Control articular coordinado de las 6 articulaciones rotacionales del robot en espacio articular ($\bm{q} \in \mathbb{R}^6$). & Grados de libertad: 6. Error de seguimiento $e_q < 0.05\text{ rad}$. \\
+RF-02 & Bucle de control en tiempo real & Ejecución periódica determinista del lazo cerrado de control a una tasa mínima de 100~Hz, con escalabilidad a 500~Hz. & Periodo $T_s \le 10\text{ ms}$ (diseño nominal $T_s = 2\text{ ms}$). \\
+RF-03 & Compensación dinámica híbrida & Integración de un modelo dinámico analítico inverso (RNEA) acoplado a un módulo de compensación neuronal para dinámicas no modeladas. & Cálculo en línea de $\bm{\tau}_{RNEA} + \bm{\tau}_{NN}$. \\
+RF-04 & Cuantización a INT8 & Compresión de pesos y activaciones a precisión entera de 8 bits (INT8) mediante cuantización post-entrenamiento (PTQ). & Reducción de tamaño $\ge 50\%$ (alcanzado: 74.4\%). \\
+RF-05 & Saturación de seguridad & Acotamiento físico riguroso del vector de pares de comando $\bm{\tau}_{cmd}$ para proteger la integridad estructural de los actuadores. & $|\tau_i| \le 55.0\text{ N}\cdot\text{m}$, $\forall i \in \{1,\dots,6\}$. \\
+RF-06 & Trayectorias suaves ($C^2$) & Generación de perfiles de referencia articular con continuidad de posición, velocidad y aceleración continuas mediante polinomios de 5to orden. & Continuidad matemática $C^2$, libre de discontinuidades de par. \\
+\midrule
+\multicolumn{4}{l}{\textit{\textbf{Requerimientos No Funcionales (RNF)}}} \\
+\midrule
+RNF-01 & Paridad Sim-to-Real & Compatibilidad nativa con ROS 2 Jazzy y el marco estándar \texttt{ros2\_control}, permitiendo intercambiar el gemelo digital por el robot físico sin alterar el código de control. & Soporte para el driver \texttt{Universal\_Robots\_}\linebreak\texttt{ROS2\_Driver} y \texttt{gz\_ros2\_control}. \\
+RNF-02 & Determinismo temporal C++ & Exclusión total de asignaciones dinámicas de memoria (\texttt{malloc}, \texttt{new}) en el método cíclico \texttt{update()} y uso de buffers no bloqueantes. & Jitter $< 100\,\mu\text{s}$, uso de \texttt{RealtimeBuffer}. \\
+RNF-03 & Interoperabilidad de ML & Adopción del estándar abierto ONNX (\textit{Open Neural Network Exchange}) y motor de inferencia C++ monohilo para erradicar latencias variables. & ONNX IR v9 / Opset 9, ejecución monohilo con ONNX Runtime. \\
+RNF-04 & Modularidad para plataforma neutra & Aislamiento funcional de los algoritmos para posibilitar su migración y benchmarking en hardware neutro (Microcontrolador vs. FPGA) en TT2. & Arquitectura desacoplada en librerías independientes y plugins. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \subsubsection{Arquitectura funcional (funciones)}
+\label{sssec:arquitectura_funcional}
+
+En congruencia con el marco ágil de desarrollo (\textit{Scrum}) y alejándose deliberadamente de los esquemas mecanicistas estáticos de la ingeniería tradicional (como la descomposición rígida en flujos de materia, energía e información de la norma VDI 2206), la arquitectura funcional de este sistema se concibe como un \textbf{pipeline desacoplado de procesamiento de datos y servicios en tiempo real}. Esta estructura permite que cada servicio opere como un incremento de software modular, verificable de forma independiente y coordinado a través de interfaces estandarizadas.
+
+La descomposición funcional del sistema se estructura en los siguientes cinco servicios esenciales:
+
+\begin{enumerate}
+    \item \textbf{Servicio de Planificación y Generación de Trayectorias:} Encargado de sintetizar las trayectorias articulares de referencia deseadas $(\bm{q}_d(t), \dot{\bm{q}}_d(t), \ddot{\bm{q}}_d(t))$. Emplea formulaciones polinomiales de quinto grado para garantizar que tanto la velocidad como la aceleración articular sean continuas ($C^2$), eliminando saltos bruscos en las fuerzas inerciales y preservando la vida mecánica de las transmisiones.
+    \item \textbf{Servicio de Supervisión y Bucle Crítico en Tiempo Real:} Núcleo central del controlador. En cada periodo de muestreo ($T_s = 2\text{ ms}$), este servicio adquiere el estado cinemático real del manipulador $(\bm{q}, \dot{\bm{q}})$ a través de las interfaces de hardware (\texttt{hardware\_interface::HW\_IF\_POSITION} y \texttt{HW\_IF\_VELOCITY}), calcula el vector de error articular $\bm{e} = \bm{q}_d - \bm{q}$ y su derivada $\dot{\bm{e}}$, y evalúa analíticamente las ecuaciones recursivas de Newton-Euler (RNEA) para obtener el vector de pares nominales $\bm{\tau}_{RNEA}(\bm{q}, \dot{\bm{q}}, \ddot{\bm{q}}_d)$.
+    \item \textbf{Servicio de Inferencia Inteligente Cuantizada:} Construye un vector de características normalizado de 42 dimensiones que condensa el estado cinemático actual, el estado deseado y la predicción física analítica. Mediante el motor de inferencia optimizado de ONNX Runtime ejecutado en modo monohilo dentro del espacio de memoria de C++, este servicio calcula la compensación de dinámica no modelada y fricción articular en precisión entera INT8, restituye la escala física de las magnitudes y aplica un esquema de saturación de seguridad acotado a $\pm 55.0\text{ N}\cdot\text{m}$.
+    \item \textbf{Capa de Abstracción de Hardware (\textit{Hardware Abstraction Layer}):} Gestionada a través de la interfaz estándar \texttt{ros2\_control}, esta capa envía los pares de esfuerzo comandados (\texttt{HW\_IF\_EFFORT}) hacia los actuadores articulares. Su diseño modular permite que la misma consigna de control sea consumida de manera idéntica por el simulador de física avanzada (Gazebo Harmonic en TT1) o por el manipulador físico real (UR3e en TT2), aislando completamente el algoritmo de control de los detalles de bajo nivel del hardware.
+    \item \textbf{Servicio Asíncrono de Telemetría y Monitoreo:} Opera fuera del hilo crítico de control mediante el mecanismo no bloqueante \texttt{realtime\_tools::}\linebreak\texttt{RealtimeBuffer}, publicando los vectores de estado y pares a 100~Hz hacia el sistema de registro en formato MCAP (\texttt{ros2 bag}) para su análisis posterior y cálculo de errores RMS, sin inducir retardos ni variaciones de latencia (\textit{jitter}) en el ciclo principal.
+\end{enumerate}
+
+En la Figura~\ref{fig:arquitectura_funcional} se ilustra el diagrama funcional del pipeline de datos y bucles de control mecatrónico.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{Imagenes/diagrama_funcional.png}
+\caption{Diagrama de la arquitectura funcional y flujo de datos en tiempo real del sistema de control inteligente bajo la metodología ágil.}
+\label{fig:arquitectura_funcional}
+\end{figure}
+
 \subsubsection{Arquitectura física (módulos)}
 \label{sssec:arquitectura_modular_scrum}
 
-Aunque los detalles finos de la arquitectura emergerán y se refinarán durante los \textit{Sprints}, se concibe una arquitectura modular general que facilite el desarrollo incremental y la integración. Los principales componentes que se desarrollarán o integrarán iterativamente son:
+Para habilitar un desarrollo ágil por \textit{Sprints} y facilitar la integración mecatrónica incremental, el sistema se divide físicamente en cuatro módulos cohesivos y desacoplados ($M_1$ a $M_4$). Esta división garantiza que las validaciones algorítmicas realizadas en TT1 constituyan la base directa para la transferencia física e integración en la plataforma neutra durante TT2:
 
 \begin{itemize}
-    \item \textbf{Componente Robot Manipulador (Simulado/Físico con Interfaz Hardware):} Como se describió en la sección \ref{sssec:vision_solucion_scrum}, será un robot sujeto a elección simulado en herramientas como CoppeliaSim, con una interfaz definida para recibir comandos de actuadores y enviar datos de sensores (posiciones articulares) hacia la FPGA.
-    \item \textbf{Componente FPGA (Núcleo de Control, Medición e Interfaz):} Este es el corazón del sistema y contendrá:
-        \begin{itemize}
-            \item \textit{Sub-componente de Interfaz con Robot:} Módulos HDL para la comunicación con los sensores (ej., lectura de encoders) y actuadores (ej., generación de señales PWM) del robot.
-            \item \textit{Sub-componente de Procesamiento de Control:} Bloques HDL intercambiables que implementarán la lógica de cada uno de los controladores: PID, FP12-NN (o su equivalente de alta precisión fija), y las variantes QNN (INT6, INT4). Estos bloques recibirán el estado del robot y generarán los comandos de actuación.
-            \item \textit{Sub-componente de Medición de Recursos y Estimación de Energía:} Lógica para medir latencias de cómputo, y puntos de acceso para que las herramientas de Vivado estimen el uso de recursos (LUTs, BRAMs, DSPs) y la potencia consumida por cada configuración de controlador activa.
-            \item \textit{Sub-componente de Comunicación con PC:} Interfaz (ej., UART, Ethernet simulada) para recibir comandos de alto nivel, parámetros de configuración, trayectorias, y para enviar datos de telemetría y resultados al PC.
-        \end{itemize}
-    \item \textbf{Componente PC (Entorno de Desarrollo, Orquestación, Entrenamiento y Análisis):}
-        \begin{itemize}
-            \item \textit{Sub-componente de Diseño y Síntesis FPGA:} Uso de Xilinx Vivado para el desarrollo HDL, simulación, síntesis, implementación y generación de bitstreams.
-            \item \textit{Sub-componente de Diseño, Entrenamiento y Cuantización de NN:} Uso de Python con TensorFlow/PyTorch para definir arquitecturas NN, entrenar modelos FP32, y aplicar cuantización (PTQ/QAT) para generar modelos QNN.
-            \item \textit{Sub-componente de Orquestación de Experimentos y Análisis:} Scripts en Python para controlar el flujo de los experimentos, enviar comandos a la FPGA, recolectar datos de rendimiento y energía, procesar estos datos y generar las gráficas y tablas comparativas.
-        \end{itemize}
+    \item \textbf{Módulo 1 ($M_1$) -- Planta Robótica y Entorno Sim-to-Real:} 
+    Comprende el manipulador robótico de 6 GDL Universal Robots UR3e (alcance de $500\text{ mm}$, carga útil nominal de $3\text{ kg}$) y su contraparte virtual de alta fidelidad. En TT1, la planta se modela rigurosamente en el simulador Gazebo Harmonic acoplado con el plugin \texttt{gz\_ros2\_control}, utilizando los descriptores cinemáticos y dinámicos oficiales (URDF/Xacro). Este entorno reproduce las inercias, masas y límites articulares reales del UR3e, garantizando que el controlador interactúe con interfaces de hardware idénticas a las del manipulador físico disponible para TT2.
+    
+    \item \textbf{Módulo 2 ($M_2$) -- Control Dinámico Analítico y Lógica de Tiempo Real:} 
+    Contiene la formulación analítica de la dinámica inversa implementada en C++17 mediante la librería de encabezados \texttt{ur3e\_dynamics.hpp}. Este módulo computa el algoritmo RNEA en un tiempo de ejecución determinista inferior a $50\,\mu\text{s}$, suministrando la base de par necesaria para linealizar el comportamiento dinámico del robot. Asimismo, aloja el controlador clásico por par computado (\texttt{ComputedTorqueController}) que sirve como referencia (*baseline*) experimental.
+    
+    \item \textbf{Módulo 3 ($M_3$) -- Inteligencia Artificial y Motor de Cuantización:} 
+    Abarca el ciclo de vida completo de la red neuronal compensadora: desde la arquitectura de perceptrón multicapa (MLP) diseñada y entrenada en PyTorch (42 entradas, capas densas intermedias de 256, 512, 256 y 128 neuronas con activaciones ReLU, y 6 salidas de par), hasta su exportación al formato estándar ONNX y su posterior cuantización dinámica post-entrenamiento (PTQ) a enteros de 8 bits (INT8) mediante \texttt{quantize\_model.py}. Este módulo integra el plugin de control \texttt{NeuralTorqueController}, el cual aloja una sesión persistente de la API C++ de ONNX Runtime configurada en modo monohilo (\texttt{SetIntraOpNumThreads(1)}) para garantizar latencias de inferencia ultra bajas e invariantes.
+    
+    \item \textbf{Módulo 4 ($M_4$) -- Supervisión, Telemetría y Adquisición:} 
+    Integra el software de generación de trayectorias aleatorias y deterministas con polinomios de quinto orden (\texttt{random\_trajectory\_generator.py}), el subsistema de registro de telemetría de alta frecuencia mediante \texttt{ros2 bag} en almacenamiento binario estructurado MCAP, y las rutinas de procesamiento y filtrado digital (\texttt{bag\_to\_csv.py}) basadas en el filtro de Savitzky-Golay para la estimación suave de velocidades y aceleraciones a partir de datos experimentales.
 \end{itemize}
 
 \subsubsection{Propuestas solución}
-\paragraph{Módulos ($M_1 \dots M_n$)}
-\label{sssec:vision_solucion_scrum}
+\label{sssec:propuestas_solucion}
 
-La \textbf{visión del producto} de este proyecto es desarrollar una plataforma experimental y un conjunto de resultados que demuestren cuantitativamente las ventajas y compromisos del uso de redes neuronales cuantizadas para el control de robots manipuladores, específicamente en términos de consumo energético y utilización de recursos de hardware, en comparación con controladores PID tradicionales y redes neuronales de punto flotante (FP12-NN), todos implementados y evaluados en una plataforma FPGA.
+En la concepción mecatrónica del sistema se analizaron diversas alternativas tecnológicas tanto a nivel de componentes individuales como de integración global del sistema.
 
-Para alcanzar esta visión, se utilizarán las siguientes \textbf{tecnologías y herramientas base} (sujetas a refinamiento durante los \textit{Sprints} iniciales de investigación):
-\begin{itemize}
-    \item \textbf{Robot Manipulador:} Se realizará la selección de un robot existente, para su caracterización y simulación con algún toolbox como el \textbf{Robotics, Vision and Control} o software como \textbf{CoppeliaSim (V-REP)}.
-    \item \textbf{Plataforma FPGA:} Una tarjeta de desarrollo \textbf{Xilinx Artix-7 (ej., Nexys A7 o Basys 3)} o una plataforma \textbf{Zynq (ej., PYNQ-Z2)} si se requiere un sistema de procesamiento ARM integrado. El diseño para la FPGA se realizará utilizando \textbf{VHDL o Verilog} y las herramientas del \textbf{Xilinx Vivado Design Suite}.
-    \item \textbf{PC para el desarrollo:}
-        \begin{itemize}
-            \item Lenguaje principal de scripting y desarrollo de alto nivel: \textbf{Python 3.x}.
-            \item Frameworks de Deep Learning para diseño, entrenamiento y cuantización de NNs: \textbf{TensorFlow 2.x (con TensorFlow Lite Quantization Toolkit) o PyTorch (con su Quantization API)}.
-            \item Software de comunicación y control de la FPGA desde el PC.
-            \item Herramientas de análisis de datos y visualización (ej., NumPy, Pandas, Matplotlib).
-        \end{itemize}
-    \item \textbf{Controladores a Implementar y Comparar:}
-        \begin{itemize}
-            \item Controlador Proporcional-Integral-Derivativo (PID) clásico.
-            \item Red Neuronal de Punto Flotante (FP12-NN) para control.
-            \item Redes Neuronales Cuantizadas (QNNs) con al menos dos niveles de precisión (ej., INT8 e INT6).
-        \end{itemize}
-    \item \textbf{Mecanismos de Interfaz y Medición:}
-        \begin{itemize}
-            \item Interfaz FPGA-Robot: Lógica para leer encoders simulados/reales y enviar comandos a actuadores simulados/reales.
-            \item Interfaz FPGA-PC: Para carga de configuraciones, envío de trayectorias, y recepción de datos de telemetría y resultados.
-            \item Sistema de estimación/medición de energía y recursos en FPGA: Utilizando reportes de Vivado (potencia estática y dinámica estimada, uso de LUTs, BRAMs, DSPs) y/o instrumentación para mediciones más directas.
-        \end{itemize}
-\end{itemize}
+\paragraph{Alternativas por Componente}
+\begin{enumerate}
+    \item \textbf{Entorno de Planta y Simulación ($M_1$):}
+    \begin{itemize}
+        \item \textit{Opción 1.1 (Simulación Cinemática en MATLAB):} Entorno accesible para validar cinemática teórica, pero carente de dinámica multicuerpo realista y sin compatibilidad nativa con bucles de tiempo real en C++.
+        \item \textit{Opción 1.2 (CoppeliaSim con API Remota):} Simulación física versátil, pero su comunicación basada en sockets TCP/IP externos induce fluctuaciones de latencia inaceptables para control a 500~Hz.
+        \item \textit{Opción 1.3 (Gazebo Harmonic con \texttt{gz\_ros2\_control}):} Integración nativa con la pila de control de ROS 2 en memoria compartida, resolución de contactos y total paridad de interfaces con el robot físico real.
+    \end{itemize}
+    \item \textbf{Estrategia de Control Dinámico ($M_2$):}
+    \begin{itemize}
+        \item \textit{Opción 2.1 (PID Articular Independiente Desacoplado):} Sencillo de implementar, pero incapaz de compensar el fuerte acoplamiento inercial, los efectos de Coriolis y la gravedad a velocidades moderadas o altas.
+        \item \textit{Opción 2.2 (Control por Par Computado Analítico RNEA):} Linealiza la dinámica en todo el espacio de trabajo; no obstante, es vulnerable a incertidumbres paramétricas, fricciones no modeladas y envejecimiento mecánico.
+        \item \textit{Opción 2.3 (Control Adaptable no Lineal Clásico):} Requiere derivar y calcular en línea matrices de regresores analíticos sumamente costosas computacionalmente para 6 GDL.
+    \end{itemize}
+    \item \textbf{Motor de Compensación Inteligente y Despliegue ($M_3$):}
+    \begin{itemize}
+        \item \textit{Opción 3.1 (Inferencia en Python mediante Nodos ROS):} Inviable para el lazo crítico de control debido a las interrupciones del recolector de basura (\textit{Garbage Collector}) y el bloqueo global de intérprete (GIL), generando retardos estocásticos de decenas de milisegundos.
+        \item \textit{Opción 3.2 (Red Neuronal FP32 en C++):} Despliegue en punto flotante tradicional; aunque determinista, demanda un mayor ancho de banda de memoria y mayor ocupación de caché de nivel 1 y 2.
+        \item \textit{Opción 3.3 (Red Neuronal Cuantizada a INT8 con ONNX Runtime C++):} Inferencia en precisión fija de 8 bits con operaciones aritméticas vectorizadas, reduciendo el tamaño del modelo en un 74.4\% y manteniendo una latencia determinista inferior a $300\,\mu\text{s}$.
+    \end{itemize}
+\end{enumerate}
 
-\paragraph{Integración (sistema)}
-\label{sssec:product_backlog_epicos}
-
-El trabajo necesario para desarrollar la solución se organizará en un \textit{Product Backlog}, que contendrá una lista priorizada de Épicos (grandes bloques de funcionalidad o investigación). Estos Épicos se descompondrán en \textit{Product Backlog} Items (PBIs) más pequeños y manejables durante la Planificación de cada \textit{Sprint}. A continuación, se presenta una lista preliminar de Épicos:
+\paragraph{Propuestas de Solución Integrada del Sistema}
+A partir del análisis de componentes y del propósito global del proyecto, se definieron tres propuestas de integración conceptual:
 
 \begin{description}[style=unboxed,leftmargin=0em]
-    \item[EP01: Configuración del Entorno de Desarrollo y Simulación Robótica.]
-        Incluye la selección final y configuración detallada del robot manipulador, el establecimiento de la comunicación entre Python y el simulador, y la definición de las tareas de control base (ej., seguimiento de trayectorias específicas).
-    \item[EP02: Diseño e Implementación del Controlador PID en FPGA.]
-        Involucra el diseño del algoritmo PID, su implementación en HDL (VHDL/Verilog), simulación HDL, síntesis para la FPGA objetivo, y pruebas de control con el robot simulado y fisico interactuando con la FPGA.
-    \item[EP03: Diseño y Entrenamiento del Modelo de Red Neuronal de Punto Flotante (FP12-NN) para Control.]
-        Cubre la definición de la arquitectura de la red neuronal (ej., MLP para cinemática inversa), la generación o adquisición de datos de entrenamiento, el proceso de entrenamiento, y la validación de su rendimiento en simulación.
-    \item[EP04: Diseño e Implementación del Controlador FP12-NN en FPGA.]
-        Implica el diseño de una arquitectura HDL para la inferencia del modelo FP12-NN, su simulación, síntesis, y pruebas de control con el robot interactuando con la FPGA. Se evaluará la viabilidad y los recursos consumidos por una implementación de alta precisión en FPGA.
-    \item[EP05: Investigación, Selección y Aplicación de Técnicas de Cuantización.]
-        Cubre el estudio de las herramientas de cuantización (TensorFlow Lite, PyTorch Quantization), la selección de estrategias PTQ y/o QAT, y la generación de modelos QNN con los niveles de precisión objetivo (ej., INT8, INT6) a partir del modelo FP12-NN entrenado.
-    \item[EP06: Diseño e Implementación de los Controladores QNN en FPGA.]
-        Involucra el diseño de arquitecturas HDL optimizadas para la inferencia de los modelos QNN (aprovechando operaciones enteras, menor ancho de banda de memoria), su simulación, síntesis, y pruebas de control con el robot interactuando con la FPGA para cada nivel de cuantización.
-    \item[EP07: Diseño e Implementación del Sistema de Medición/Estimación de Consumo Energético y Uso de Recursos en FPGA.]
-        Cubre el desarrollo de la lógica en HDL (si es necesaria para contadores o monitores internos) y/o la metodología para utilizar las herramientas del fabricante de la FPGA (ej., Vivado Power Estimator, reportes de utilización) para obtener datos fiables del consumo energético y los recursos lógicos (LUTs, BRAMs, DSPs) para cada controlador implementado.
-    \item[EP08: Diseño e Implementación del Sistema de Medición del Rendimiento del Control.]
-        Define e implementa los mecanismos para medir la precisión del control (ej., error de seguimiento de trayectoria, tiempo de establecimiento) en la FPGA.
-    \item[EP09: Desarrollo de la Interfaz de Orquestación de Pruebas y Recolección de Datos.]
-        Construcción de scripts o una interfaz simple en el PC para configurar y lanzar los experimentos comparativos de manera sistemática, enviar trayectorias a la FPGA y recolectar todos los datos de rendimiento, recursos y energía.
-    \item[EP10: Ejecución de Experimentos Comparativos Exhaustivos y Análisis de Resultados.]
-        Realización de las pruebas comparativas bajo condiciones controladas para los controladores PID, FP12-NN y QNNs en la FPGA. Análisis estadístico de los datos recolectados, interpretación de los resultados y elaboración de conclusiones sobre la eficiencia energética y los compromisos de rendimiento.
+    \item[\textbf{Propuesta A (Control Clásico Desacoplado en Entorno Estándar):}]
+    Consiste en la implementación de controladores PID individuales por articulación ejecutados en una arquitectura computacional genérica. Las trayectorias se generan de manera trapezoidal y no se incorpora ningún tipo de compensación analítica ni neuronal. Representa el esquema industrial más elemental y sirve como límite inferior de comparación.
+    
+    \item[\textbf{Propuesta B (Plataforma Neutra de Comparación Hardware -- Microcontrolador vs. FPGA):}]
+    Esta propuesta surge como la plataforma de evaluación hardware concebida para realizar una comparación científica neutra y cuantitativa entre el paradigma de control clásico y el control inteligente. En este esquema, el control clásico PID se implementa en un microcontrolador o procesador embebido convencional, mientras que la inferencia de la red neuronal se acelera en hardware dedicado dentro de una tarjeta FPGA (aprovechando el paralelismo espacial y operaciones aritméticas de enteros de bajo consumo). Esto permite medir objetivamente la latencia, el consumo de potencia eléctrica y la ocupación de recursos de silicio (LUTs, DSPs, memoria) bajo condiciones experimentales idénticas. Debido a que en la fase TT1 no se contaba con la planta física confirmada y la implementación directa en FPGA requería desviar recursos del modelado cinemático-dinámico, esta propuesta se establece formalmente como el marco experimental objetivo a consumar en la fase TT2.
+    
+    \item[\textbf{Propuesta C (Arquitectura Híbrida Cuantizada en Sim-to-Real -- Solución Seleccionada para TT1):}]
+    Plantea una arquitectura híbrida mecatrónica desarrollada en ROS 2 Jazzy y C++17, donde el algoritmo analítico RNEA proporciona el término principal de par nominal $\bm{\tau}_{RNEA}$, y una red neuronal cuantizada a INT8 desplegada mediante ONNX Runtime monohilo suministra la compensación de dinámicas residuales $\bm{\tau}_{NN}$. Todo el bucle se ejecuta dentro del marco determinista \texttt{ros2\_control} gobernando el gemelo digital del UR3e en Gazebo Harmonic, con trayectorias quínticas continuas ($C^2$) y telemetría en formato MCAP. Esta propuesta permite demostrar con rigor la viabilidad algorítmica, numérica y temporal en TT1, garantizando una transferencia directa (*Sim-to-Real*) al manipulador físico UR3e asegurado para TT2, previo a la instrumentación en la plataforma neutra.
 \end{description}
 
 \subsubsection{Validación}
+\label{sssec:validacion_conceptual}
+
+La validación conceptual de la arquitectura mecatrónica seleccionada (Propuesta C) se sustenta en tres análisis analíticos y de ingeniería que confirman su viabilidad para cumplir los requerimientos antes de su despliegue físico en TT2:
+
+\begin{enumerate}
+    \item \textbf{Análisis de Viabilidad y Desacoplamiento Dinámico:}
+    La dinámica articular de un manipulador rígido de 6 GDL viene dada por:
+    \begin{equation}
+        \bm{M}(\bm{q})\ddot{\bm{q}} + \bm{C}(\bm{q},\dot{\bm{q}})\dot{\bm{q}} + \bm{g}(\bm{q}) + \bm{\tau}_f(\dot{\bm{q}}) = \bm{\tau}
+    \end{equation}
+    Al implementar la ley de par híbrida $\bm{\tau} = \bm{\tau}_{RNEA}(\bm{q},\dot{\bm{q}},\ddot{\bm{q}}_d) + \bm{\tau}_{NN}(\bm{x})$, el término analítico $\bm{\tau}_{RNEA}$ cancela las no linealidades macroscópicas dominantes asociadas a la inercia nominal $\hat{\bm{M}}(\bm{q})$, fuerzas de Coriolis y centrífugas $\hat{\bm{C}}(\bm{q},\dot{\bm{q}})$ y pares gravitacionales $\hat{\bm{g}}(\bm{q})$. La red neuronal únicamente tiene la tarea acotada de aproximar la función de dinámicas residuales:
+    \begin{equation}
+        \bm{\tau}_{NN}(\bm{x}) \approx \Delta \bm{M}(\bm{q})\ddot{\bm{q}}_d + \Delta \bm{C}(\bm{q},\dot{\bm{q}})\dot{\bm{q}} + \Delta \bm{g}(\bm{q}) + \bm{\tau}_f(\dot{\bm{q}})
+    \end{equation}
+    Dado que las incertidumbres residuales $\Delta(\cdot)$ y la fricción $\bm{\tau}_f$ tienen cotas superiores estrictamente finitas en el espacio de trabajo acotado del robot, el término neuronal opera dentro de un dominio compacto, previniendo divergencias o inestabilidades numéricas en bucle cerrado.
+
+    \item \textbf{Presupuesto Temporal de Tiempo Real (\textit{Timing Budget}):}
+    Para una frecuencia de control objetivo de $f_s = 500\text{ Hz}$, el periodo máximo disponible por ciclo es $T_s = 2000\,\mu\text{s}$. Las mediciones de perfilado temporal en C++ arrojan los siguientes tiempos de ejecución en CPU monohilo:
+    \begin{itemize}
+        \item Adquisición y lectura de interfaces \texttt{ros2\_control}: $\approx 10\,\mu\text{s}$.
+        \item Cálculo dinámico analítico RNEA (\texttt{ur3e\_dynamics.hpp}): $\approx 35 - 50\,\mu\text{s}$.
+        \item Normalización de 42 características con escaladores precalculados: $\approx 5\,\mu\text{s}$.
+        \item Inferencia de red neuronal cuantizada INT8 en ONNX Runtime: $\approx 150 - 280\,\mu\text{s}$.
+        \item Desnormalización, saturación física y escritura de comandos de par: $\approx 10\,\mu\text{s}$.
+    \end{itemize}
+    El tiempo total de procesamiento en el método \texttt{update()} es inferior a $360\,\mu\text{s}$, lo que representa menos del $18\%$ del presupuesto total de $2000\,\mu\text{s}$. Esto certifica un margen de holgura temporal superior al $82\%$, garantizando determinismo estricto y total ausencia de violaciones de tiempo límite (\textit{deadline misses}).
+
+    \item \textbf{Preservación de Rango Dinámico en INT8:}
+    Al aplicar normalización estándar con media cero y desviación unitaria ($z$-score) a las 42 entradas y 6 salidas en el pipeline de entrenamiento:
+    \begin{equation}
+        \tilde{x}_i = \frac{x_i - \mu_{x_i}}{\sigma_{x_i}}, \quad \forall i \in \{1,\dots,42\}
+    \end{equation}
+    las distribuciones estadísticas quedan concentradas en el intervalo $[-3, 3]$ con una probabilidad superior al $99.7\%$. La cuantización dinámica uniforme a 8 bits provee $2^8 = 256$ niveles de discretización lineal, lo cual otorga una resolución efectiva por bit suficiente para representar los pares con un error de redondeo del orden de $10^{-3}\text{ N}\cdot\text{m}$, un valor varios órdenes de magnitud menor que la fricción estática de las articulaciones del UR3e.
+\end{enumerate}
+
 \subsubsection{Selección diseño conceptual}
+\label{sssec:seleccion_diseno_conceptual}
+
+Para formalizar la toma de decisiones ingenieriles y determinar la idoneidad técnica de la arquitectura para la fase TT1, se empleó una matriz de selección conceptual de Pugh ponderada. En este método, los criterios de evaluación reflejan los factores críticos de éxito del proyecto (viabilidad analítica, precisión dinámica, eficiencia computacional y preparación para hardware real en TT2). 
+
+Se asignó un peso relativo normalizado ($w_i \in [0, 1]$ con $\sum w_i = 1.0$) a cada criterio en función de su criticidad mecatrónica. Como solución de referencia (*Datum*, con puntaje base $0$), se seleccionó la **Propuesta B (Plataforma Neutra / FPGA)**, dado que representa el marco comparativo ideal proyectado. Las alternativas se calificaron con una escala relativa: $+2$ (significativamente mejor que la referencia), $+1$ (mejor), $0$ (equivalente), $-1$ (inferior) y $-2$ (significativamente inferior).
+
+En la Tabla~\ref{tab:matriz_pugh} se detallan los resultados de la evaluación conceptual.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Matriz de selección conceptual de Pugh para las alternativas del sistema de control.}
+\label{tab:matriz_pugh}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X c >{\centering\arraybackslash}p{2.2cm} >{\centering\arraybackslash}p{2.3cm} >{\centering\arraybackslash}p{2.5cm}}
+\toprule
+\textbf{Criterio de Evaluación} & \textbf{Peso ($w_i$)} & \textbf{Propuesta A (PID Clásico)} & \textbf{Propuesta B (Plat. Neutra)} & \textbf{Propuesta C (Híbrida INT8)} \\
+\midrule
+1. Viabilidad de validación algorítmica y desriesgo previo en TT1 & 0.25 & 0 & 0 (Datum) & +2 \\
+2. Paridad y facilidad de transferencia al robot físico UR3e (TT2) & 0.20 & 0 & 0 (Datum) & +2 \\
+3. Precisión de seguimiento ante dinámicas no lineales y fricción & 0.20 & -2 & 0 (Datum) & +1 \\
+4. Eficiencia de cómputo y reducción de huella de memoria (INT8) & 0.15 & +1 & 0 (Datum) & +1 \\
+5. Determinismo temporal y estabilidad en bucle cerrado & 0.10 & 0 & 0 (Datum) & +1 \\
+6. Simplicidad de desarrollo e integración en fase TT1 & 0.10 & +1 & 0 (Datum) & +1 \\
+\midrule
+\textbf{Puntaje Total Ponderado ($\sum w_i s_i$)} & \textbf{1.00} & \textbf{-0.20} & \textbf{0.00} & \textbf{+1.45} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Justificación de la Selección:}
+Como se aprecia en la matriz de Pugh, la \textbf{Propuesta C (Arquitectura Híbrida Cuantizada en Sim-to-Real)} obtiene la calificación más alta (+1.45), superando de manera contundente tanto al PID clásico (-0.20) como a la línea base de la Propuesta B (0.00).
+
+Las razones técnicas determinantes para esta elección en la fase TT1 radican en:
+\begin{enumerate}
+    \item \textbf{Desriesgo y Viabilidad Integral:} Permite validar matemáticamente y mediante software determinista todo el pipeline de control híbrido (RNEA + Red Cuantizada en INT8) sobre el gemelo digital en simulación antes de comprometer hardware físico.
+    \item \textbf{Transferencia Directa a la Planta Robótica Física:} Dado que ya se cuenta con la planta física real asegurada para TT2, el diseño basado en el ecosistema estándar \texttt{ros2\_control} garantiza que la migración desde la simulación hacia el manipulador UR3e físico no demandará reescribir la lógica de control, sino únicamente apuntar el archivo de configuración al driver oficial del robot (\texttt{Universal\_Robots\_ROS2\_Driver}).
+    \item \textbf{Cimiento Sólido para el Benchmarking en TT2:} Al completar y consolidar la viabilidad de la red neuronal cuantizada y del algoritmo RNEA en TT1, el proyecto dispondrá en TT2 de un modelo completamente validado y calibrado para desplegarse en la plataforma de hardware neutra (Microcontrolador vs. FPGA), logrando una comparativa experimental rigurosa y libre de incertidumbres algorítmicas.
+\end{enumerate}
 
 \subsection{Diseño detallado}
 \subsubsection{Detalle módulo 1 ($M_1$)}

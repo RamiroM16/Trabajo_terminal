@@ -67,6 +67,9 @@ secrets.yml
 *.glo
 *.gls
 
+# Artículos científicos y literatura de referencia (PDFs pesados)
+Documentacion/Articulos/
+
 # ==============================================================================
 # ROS 2, COLCON & COMPILACIÓN (C / C++)
 # ==============================================================================
