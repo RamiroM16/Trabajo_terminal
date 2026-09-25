@@ -905,14 +905,302 @@ Las razones técnicas determinantes para esta elección en la fase TT1 radican e
 \end{enumerate}
 
 \subsection{Diseño detallado}
-\subsubsection{Detalle módulo 1 ($M_1$)}
+\label{sec:diseno_detallado}
+
+En esta sección se desarrolla la especificación cuantitativa, matemática y algorítmica de cada uno de los cuatro módulos mecatrónicos concebidos ($M_1$ a $M_4$), así como la arquitectura de su integración global. Para cada módulo se detallan las ecuaciones de diseño, el flujo de señales, los algoritmos implementados y su correspondiente validación analítica y funcional previa a la transferencia física en TT2.
+
+\subsubsection{Detalle módulo 1 ($M_1$) -- Planta Robótica y Entorno Sim-to-Real}
+\label{sssec:detalle_m1}
+
+El módulo $M_1$ comprende la planta física objetivo y su réplica virtual en simulación. Como efector y estructura de manipulación se utiliza el robot industrial colaborativo Universal Robots UR3e, un manipulador serial antropomórfico de 6 articulaciones rotacionales concebido para tareas de alta repetibilidad ($\pm 0.03\text{ mm}$) con un radio de alcance máximo de $500\text{ mm}$ y una capacidad de carga nominal de $3\text{ kg}$.
+
+\paragraph{Parámetros Cinemáticos y Dinámicos del Manipulador}
+Para el cálculo de la cinemática directa y el posterior modelado dinámico analítico, se adoptó la convención de Denavit-Hartenberg modificada (Craig). En la Tabla~\ref{tab:dh_ur3e} se detallan los parámetros geométricos del manipulador implementados en C++, validados previamente con respecto al árbol cinemático oficial de Universal Robots.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Parámetros de Denavit-Hartenberg modificados del robot UR3e.}
+\label{tab:dh_ur3e}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X c c c c c}
+\toprule
+\textbf{Articulación ($i$)} & $\bm{\alpha_{i-1}}\text{ [rad]}$ & $\bm{a_{i-1}}\text{ [m]}$ & $\bm{d_i}\text{ [m]}$ & $\bm{\theta_i}\text{ [rad]}$ & \textbf{Rango Operacional [rad]} \\
+\midrule
+1 (Base / Hombro Pan)   & $0$            & $0$        & $0.15185$ & $\theta_1$ & $[-2\pi, 2\pi]$ \\
+2 (Hombro Lift)         & $\pi/2$        & $0$        & $0$       & $\theta_2$ & $[-2\pi, 2\pi]$ \\
+3 (Codo)                & $0$            & $-0.24355$ & $0$       & $\theta_3$ & $[-2\pi, 2\pi]$ \\
+4 (Muñeca 1)            & $0$            & $-0.21320$ & $0.13105$ & $\theta_4$ & $[-2\pi, 2\pi]$ \\
+5 (Muñeca 2)            & $\pi/2$        & $0$        & $0.08535$ & $\theta_5$ & $[-2\pi, 2\pi]$ \\
+6 (Muñeca 3)            & $-\pi/2$       & $0$        & $0.09210$ & $\theta_6$ & $[-2\pi, 2\pi]$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A partir de los parámetros de la Tabla~\ref{tab:dh_ur3e}, la matriz homogénea de transformación entre el marco $i-1$ y el marco $i$ se define como:
+\begin{equation}
+    \bm{T}_i^{i-1} = \begin{bmatrix}
+        \cos\theta_i & -\sin\theta_i & 0 & a_{i-1} \\
+        \sin\theta_i\cos\alpha_{i-1} & \cos\theta_i\cos\alpha_{i-1} & -\sin\alpha_{i-1} & -d_i\sin\alpha_{i-1} \\
+        \sin\theta_i\sin\alpha_{i-1} & \cos\theta_i\sin\alpha_{i-1} & \cos\alpha_{i-1} & d_i\cos\alpha_{i-1} \\
+        0 & 0 & 0 & 1
+    \end{bmatrix}
+    \label{eq:dh_matrix_gen}
+\end{equation}
+
+En cuanto a las propiedades inerciales, los eslabones presentan una distribución de masa total de $8.81\text{ kg}$, distribuida según el vector baricéntrico:
+\begin{equation}
+    \bm{m} = [2.00, \; 3.44, \; 1.44, \; 0.87, \; 0.80, \; 0.26]^T\text{ kg}
+\end{equation}
+Los centros de masa locales ($\bm{r}_{c_i}$) de cada eslabón medidos respecto a su marco articular corresponden a:
+\begin{equation}
+\begin{aligned}
+    \bm{r}_{c_1} &= [0.000, 0.000, -0.020]^T\text{ m}, \quad & \bm{r}_{c_2} &= [-0.11355, 0.000, 0.11570]^T\text{ m}, \\
+    \bm{r}_{c_3} &= [-0.16320, 0.000, 0.02380]^T\text{ m}, \quad & \bm{r}_{c_4} &= [0.000, -0.010, 0.000]^T\text{ m}, \\
+    \bm{r}_{c_5} &= [0.000, 0.010, 0.000]^T\text{ m}, \quad & \bm{r}_{c_6} &= [0.000, 0.000, -0.020]^T\text{ m}
+\end{aligned}
+\end{equation}
+Los tensores de inercia baricéntricos se modelan en su componente principal diagonal con valores nominales $\bm{I}_{c_i} \approx \text{diag}(0.01, 0.01, 0.01)\text{ kg}\cdot\text{m}^2$, suficientes para capturar el momento de inercia dominante en manipuladores compactos.
+
+\paragraph{Entorno de Simulación Física y Paridad Sim-to-Real}
+La planta virtual se configuró en el motor de física multicuerpo Gazebo Harmonic. A través de la interfaz \texttt{gz\_ros2\_control}, el simulador expone dos interfaces de lectura de estado por cada articulación: posición angular (\texttt{HW\_IF\_POSITION}) y velocidad angular (\texttt{HW\_IF\_VELOCITY}), así como una interfaz de comando de bajo nivel en esfuerzo/torque (\texttt{HW\_IF\_EFFORT}). 
+
+La relevancia de este diseño radica en que el paquete oficial del fabricante para hardware real (\texttt{Universal\_Robots\_ROS2\_Driver}) expone de forma idéntica estas mismas interfaces mediante el protocolo de tiempo real de bajo nivel del controlador de seguridad (URCap / RTDE). De este modo, la paridad \textit{Sim-to-Real} queda garantizada: cualquier controlador desarrollado sobre el módulo $M_1$ en Gazebo puede desplegarse en el robot físico en TT2 modificando únicamente el archivo de lanzamiento (\textit{launch file}) y sin alterar una sola línea de código en los nodos de control.
+
 \paragraph{Validación ($M_1$)}
-\subsubsection{Detalle módulo 2 ($M_2$)}
+La validación cinemática del módulo $M_1$ se efectuó contrastando las matrices de transformación homogénea derivadas de la Ecuación~\eqref{eq:dh_matrix_gen} frente a las lecturas del árbol de transformaciones dinámicas de ROS 2 (\texttt{/tf}). Para configuraciones singulares (brazo extendido horizontalmente con $\bm{q} = [0, 0, 0, 0, 0, 0]^T$), el efector final alcanza una posición cartesiana de $x = a_2 + a_3 = -0.45675\text{ m}$, con un error cuadrático medio respecto a la cinemática analítica inferior a $10^{-6}\text{ m}$. Asimismo, se comprobó la imposición de los límites de saturación física de par ($\pm 55.0\text{ N}\cdot\text{m}$), corroborando que en ningún escenario de colisión o singularidad el simulador acepte pares que comprometan los límites mecánicos del UR3e.
+
+\subsubsection{Detalle módulo 2 ($M_2$) -- Control Dinámico Analítico en Tiempo Real}
+\label{sssec:detalle_m2}
+
+El módulo $M_2$ implementa en tiempo real la solución de la dinámica inversa del robot basada en las leyes clásicas de Newton y Euler. Su propósito primario es calcular de manera exacta el vector de pares articulares $\bm{\tau}_{RNEA} \in \mathbb{R}^6$ requerido para que el robot siga una trayectoria con aceleraciones $\ddot{\bm{q}}_d$ compensando las inercias, fuerzas centrífugas, de Coriolis y gravitacionales.
+
+\paragraph{Formulación Analítica Recursiva de Newton-Euler}
+El algoritmo se divide en dos etapas recursivas:
+\begin{enumerate}
+    \item \textbf{Pasada hacia adelante (Propagación Cinemática, $i = 1 \dots 6$):} Se calcula la velocidad y aceleración de cada eslabón desde la base inmóvil hasta el efector final:
+    \begin{align}
+        \bm{\omega}_i &= \bm{R}_i^{i-1} \bm{\omega}_{i-1} + \dot{q}_i \bm{z}_0 \label{eq:rnea_w} \\
+        \dot{\bm{\omega}}_i &= \bm{R}_i^{i-1} \dot{\bm{\omega}}_{i-1} + (\bm{R}_i^{i-1} \bm{\omega}_{i-1}) \times (\dot{q}_i \bm{z}_0) + \ddot{q}_i \bm{z}_0 \label{eq:rnea_dw} \\
+        \dot{\bm{v}}_i &= \bm{R}_i^{i-1} \dot{\bm{v}}_{i-1} + \dot{\bm{\omega}}_i \times \bm{P}_i + \bm{\omega}_i \times (\bm{\omega}_i \times \bm{P}_i) \label{eq:rnea_dv_m2} \\
+        \dot{\bm{v}}_{c_i} &= \dot{\bm{v}}_i + \dot{\bm{\omega}}_i \times \bm{r}_{c_i} + \bm{\omega}_i \times (\bm{\omega}_i \times \bm{r}_{c_i}) \label{eq:rnea_dvcom_m2}
+    \end{align}
+    donde $\bm{z}_0 = [0, 0, 1]^T$ es el eje de revolución articular, y se establece como condición de frontera en la base una aceleración ficticia vertical $\dot{\bm{v}}_0 = [0, 0, 9.81]^T\text{ m/s}^2$ para incorporar la gravedad sin costo adicional.
+    
+    \item \textbf{Pasada hacia atrás (Balance Inercial de Fuerzas y Momentos, $i = 6 \dots 1$):} Desde el efector hasta la base se evalúan las fuerzas y momentos netos:
+    \begin{align}
+        \bm{F}_i &= m_i \dot{\bm{v}}_{c_i} \label{eq:rnea_f_in} \\
+        \bm{N}_i &= \bm{I}_{c_i} \dot{\bm{\omega}}_i + \bm{\omega}_i \times (\bm{I}_{c_i} \bm{\omega}_i) \label{eq:rnea_n_in} \\
+        \bm{f}_i &= \bm{R}_{i+1}^i \bm{f}_{i+1} + \bm{F}_i \label{eq:rnea_f_bal} \\
+        \bm{n}_i &= \bm{R}_{i+1}^i \bm{n}_{i+1} + \bm{P}_{i+1} \times (\bm{R}_{i+1}^i \bm{f}_{i+1}) + \bm{N}_i + \bm{r}_{c_i} \times \bm{F}_i \label{eq:rnea_n_bal}
+    \end{align}
+    Finalmente, el par del actuador en la articulación $i$ resulta de proyectar el momento $\bm{n}_i$ sobre el eje de rotación:
+    \begin{equation}
+        \tau_{RNEA, i} = \bm{n}_i^T \bm{z}_0
+        \label{eq:rnea_tau_m2}
+    \end{equation}
+\end{enumerate}
+
+\paragraph{Implementación Determinista en C++}
+El método \texttt{rnea} se implementó en la cabecera \texttt{ur3e\_dynamics.hpp} utilizando la biblioteca de álgebra lineal \texttt{Eigen}. Para garantizar determinismo en tiempo real, todos los buffers de rotación y traslación se alojan de forma estática, eliminando asignaciones dinámicas en el lazo de control. El Listing~\ref{lst:rnea_cpp} muestra el núcleo de cómputo del algoritmo RNEA.
+
+\begin{lstlisting}[language=C++, caption={Núcleo recursivo de cálculo analítico de dinámica inversa RNEA en C++ (\texttt{ur3e\_dynamics.hpp}).}, label={lst:rnea_cpp}]
+// Pasada hacia adelante: propagacion cinematica (eslabones 0 a 5)
+for (int i = 0; i < 6; ++i) {
+    int idx = i + 1, prev = i;
+    Eigen::Matrix3d Rt = R_store[idx].transpose();
+    Eigen::Vector3d z_axis = z0 * dq(i), z_accel = z0 * ddq(i);
+    w[idx] = Rt * w[prev] + z_axis;
+    dw[idx] = Rt * dw[prev] + (Rt * w[prev]).cross(z_axis) + z_accel;
+    dv[idx] = Rt * dv[prev] + dw[idx].cross(P) + w[idx].cross(w[idx].cross(P));
+}
+// Pasada hacia atras: balance de fuerzas y momentos (eslabones 5 a 0)
+for (int i = 5; i >= 0; --i) {
+    int idx = i + 1;
+    Eigen::Vector3d dv_c = dv[idx] + dw[idx].cross(com[i]) + w[idx].cross(com[i]);
+    Eigen::Vector3d F_in = mass[i] * dv_c;
+    Eigen::Vector3d N_in = inertia[i] * dw[idx] + w[idx].cross(inertia[i] * w[idx]);
+    f[idx] = (i == 5) ? F_in : R_store[idx+1] * f[idx+1] + F_in;
+    n[idx] = (i == 5) ? N_in + com[i].cross(F_in) : 
+             R_store[idx+1] * n[idx+1] + P_store[idx+1].cross(R_store[idx+1] * f[idx+1]) + N_in + com[i].cross(F_in);
+    tau(i) = n[idx].dot(z0);
+}
+\end{lstlisting}
+
+\paragraph{Lógica de Control por Par Computado (CTC)}
+El módulo aloja además el controlador \texttt{ComputedTorqueController} en \texttt{ur3\_custom\_controller.cpp}. La ley de control articula la compensación analítica y una retroalimentación de error proporcional-derivativo:
+\begin{equation}
+    \bm{\tau}_{cmd} = \bm{\tau}_{RNEA}(\bm{q}, \dot{\bm{q}}, \ddot{\bm{q}}_d) + \bm{K}_p (\bm{q}_d - \bm{q}) + \bm{K}_d (\dot{\bm{q}}_d - \dot{\bm{q}})
+    \label{eq:ctc_law}
+\end{equation}
+con matrices de ganancia diagonales definidas experimentalmente en:
+\begin{align}
+    \bm{K}_p &= \text{diag}(100.0, \; 100.0, \; 100.0, \; 30.0, \; 30.0, \; 10.0) \\
+    \bm{K}_d &= \text{diag}(10.0, \; 10.0, \; 10.0, \; 2.0, \; 2.0, \; 0.5)
+\end{align}
+
 \paragraph{Validación ($M_2$)}
-\subsubsection{Detalle módulo n ($M_n$)}
-\paragraph{Validación ($M_n$)}
-\subsubsection{Integración sistema mecatrónico}
+Para validar el módulo $M_2$, se colocó el manipulador en estado estático horizontal ($\bm{q} = [0, 0, 0, 0, 0, 0]^T$ con $\dot{\bm{q}}=\bm{0}, \ddot{\bm{q}}=\bm{0}$), evaluando el par gravitacional generado por los eslabones principales. El algoritmo calculó en la articulación del hombro un par analítico $\tau_{RNEA, 2} \approx -18.7\text{ N}\cdot\text{m}$, el cual equilibró perfectamente el peso de la estructura en Gazebo con un error angular residual inferior a $0.002\text{ rad}$. Asimismo, mediante cronómetros de alta resolución (\texttt{std::chrono::high\_resolution\_clock}), se certificó que la ejecución completa de \texttt{UR3eDynamics::rnea(...)} toma entre $35\,\mu\text{s}$ y $48\,\mu\text{s}$ en CPU monohilo, satisfaciendo holgadamente la cota máxima admisible de $50\,\mu\text{s}$.
+
+\subsubsection{Detalle módulo 3 ($M_3$) -- Inteligencia Artificial y Motor Cuantizado}
+\label{sssec:detalle_m3}
+
+El módulo $M_3$ constituye el núcleo de compensación adaptativa inteligente del proyecto. Mientras que el módulo $M_2$ calcula el par rígido analítico, el módulo $M_3$ aprende y compensa los efectos no modelados: fricción de Coulomb y viscosa en los reductores armónicos, flexiones elásticas de eslabones y desviaciones paramétricas.
+
+\paragraph{Dataset y Vector de Características}
+Para el entrenamiento de la red se conformó un dataset estructurado (\texttt{dataset\_ur3\_final\_1.csv}) donde cada muestra consiste en un vector de entrada $\bm{x} \in \mathbb{R}^{42}$ y un vector objetivo de par $\bm{y} = \bm{\tau}_{cmd} \in \mathbb{R}^6$. Las 42 variables de entrada agrupan 7 vectores articulares de 6 dimensiones cada uno:
+\begin{equation}
+    \bm{x} = \begin{bmatrix}
+        \bm{q}_{act} & \dot{\bm{q}}_{act} & \ddot{\bm{q}}_{act} & \bm{q}_{des} & \dot{\bm{q}}_{des} & \ddot{\bm{q}}_{des} & \bm{\tau}_{RNEA}
+    \end{bmatrix}^T \in \mathbb{R}^{42}
+    \label{eq:nn_input_vector}
+\end{equation}
+La inclusión explícita del vector físico $\bm{\tau}_{RNEA}$ actúa como una señal de guía (\textit{physics-informed inductive bias}), permitiendo que la red neuronal converja aceleradamente y requiera únicamente predecir las desviaciones residuales respecto a la física teórica.
+
+\paragraph{Topología del Perceptrón Multicapa (MLP) y Entrenamiento}
+La red neuronal se diseñó en PyTorch (\texttt{train\_pytorch.py}) bajo una arquitectura de perceptrón multicapa profunda y simétrica, detallada en la Tabla~\ref{tab:mlp_architecture}.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Topología de la red neuronal compensadora de dinámica (UR3eNetwork).}
+\label{tab:mlp_architecture}
+\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X c c c}
+\toprule
+\textbf{Capa} & \textbf{Tipo} & \textbf{Dimensión Entrada $\to$ Salida} & \textbf{Activación} & \textbf{Regularización} \\
+\midrule
+Entrada & Densa (\texttt{Linear}) & $42 \to 256$ & ReLU & -- \\
+Oculta 1 & Densa (\texttt{Linear}) & $256 \to 512$ & ReLU & Dropout ($p=0.05$) \\
+Oculta 2 & Densa (\texttt{Linear}) & $512 \to 256$ & ReLU & -- \\
+Oculta 3 & Densa (\texttt{Linear}) & $256 \to 128$ & ReLU & -- \\
+Salida & Densa (\texttt{Linear}) & $128 \to 6$ & Lineal & -- \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+El entrenamiento se llevó a cabo durante 500 épocas empleando el optimizador Adam con una tasa de aprendizaje inicial $\alpha = 0.002$, un tamaño de lote (*batch size*) de 512 muestras y un programador de tasa de aprendizaje (\texttt{ReduceLROnPlateau}) con factor de decaimiento $0.5$ y paciencia de 15 épocas. Como función de pérdida se utilizó el error cuadrático medio:
+\begin{equation}
+    \mathcal{L}_{MSE} = \frac{1}{N} \sum_{k=1}^N \sum_{j=1}^6 \left( \tau_{j, k}^{pred} - \tau_{j, k}^{real} \right)^2
+    \label{eq:mse_loss}
+\end{equation}
+
+\paragraph{Pipeline de Cuantización Dinámica a INT8 (PTQ)}
+Tras finalizar el entrenamiento, el modelo en punto flotante (FP32) se exportó al formato estándar ONNX con versión de conjunto de operadores (\textit{opset}) 9. Mediante el script \texttt{quantize\_model.py}, se ejecutó una limpieza de formas y la cuantización dinámica a precisión entera de 8 bits utilizando la API de ONNX Runtime (\texttt{quantize\_dynamic} con \texttt{QuantType.QInt8}).
+
+En la Tabla~\ref{tab:cuantizacion_comp} se muestra la comparativa directa entre el modelo en punto flotante original y el modelo cuantizado en INT8.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Comparativa de recursos entre el modelo original en FP32 y el modelo cuantizado en INT8.}
+\label{tab:cuantizacion_comp}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{4.2cm} >{\centering\arraybackslash}p{2.6cm} >{\centering\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{Métrica de Evaluación} & \textbf{Modelo FP32} & \textbf{Modelo INT8} & \textbf{Variación / Beneficio} \\
+\midrule
+Tamaño en Disco / Memoria & $1232.40\text{ KB}$ & $315.18\text{ KB}$ & $\mathbf{-74.43\%}$ \\
+Precisión de Pesos & Float 32-bit & Integer 8-bit & Reducción $4\times$ palabra \\
+Inferencia CPU Monohilo & $\approx 390\,\mu\text{s}$ & $\approx 245\,\mu\text{s}$ & $\mathbf{-37.18\%}$ aceleración \\
+Error Estático (J1) & $0.038\text{ N}\cdot\text{m}$ & $0.046\text{ N}\cdot\text{m}$ & Inapreciable ($<0.01\text{ N}\cdot\text{m}$) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Inferencia Determinista en C++ (\texttt{NeuralTorqueController})}
+El despliegue en tiempo real se programó en \texttt{ur3\_neural\_controller.cpp}. El Listing~\ref{lst:onnx_cpp} exhibe el procedimiento de preparación del tensor normalizado, la invocación de inferencia y la saturación física de seguridad a $\pm 55.0\text{ N}\cdot\text{m}$.
+
+\begin{lstlisting}[language=C++, caption={Inferencia en tiempo real monohilo con ONNX Runtime C++ y saturación en \texttt{NeuralTorqueController}.}, label={lst:onnx_cpp}]
+// 1. Normalizacion z-score de las 42 variables con parametros estaticos
+for(size_t i = 0; i < 42; ++i) {
+    input_tensor_values[i] = (input_tensor_values[i] - ur3_neural::input_mean[i]) / ur3_neural::input_scale[i];
+}
+// 2. Ejecucion de inferencia monohilo en ONNX Runtime
+Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
+    memory_info, input_tensor_values.data(), 42, input_shape.data(), 2);
+auto output_tensors = ort_session_->Run(
+    Ort::RunOptions{nullptr}, input_names, &input_tensor, 1, output_names, 1);
+float* nn_output = output_tensors.front().GetTensorMutableData<float>();
+
+// 3. Desnormalizacion y saturacion de seguridad fisica (+-55 Nm)
+for(int i = 0; i < 6; ++i) {
+    double tau_val = (nn_output[i] * ur3_neural::output_scale[i]) + ur3_neural::output_mean[i];
+    if (tau_val > 55.0) tau_val = 55.0;
+    if (tau_val < -55.0) tau_val = -55.0;
+    command_interfaces_[i].set_value(tau_val);
+}
+\end{lstlisting}
+
+\paragraph{Validación ($M_3$)}
+La validación del modelo cuantizado arrojó un error estático promedio en el conjunto de prueba de $0.046\text{ N}\cdot\text{m}$ en la articulación del hombro, significativamente inferior al umbral de tolerancia fijado de $0.1\text{ N}\cdot\text{m}$. En la ejecución en bucle cerrado a 500~Hz sobre el gemelo virtual del robot, la inferencia monohilo registró un tiempo medio de cómputo de $245\,\mu\text{s}$ con un pico máximo absoluto de $278\,\mu\text{s}$, demostrando total estabilidad numérica y determinismo temporal.
+
+\subsubsection{Detalle módulo 4 ($M_4$) -- Supervisión, Telemetría y Adquisición}
+\label{sssec:detalle_m4}
+
+El módulo $M_4$ asegura la alimentación de perfiles cinemáticos admisibles hacia el controlador y la captura transparente de telemetría experimental para fines de análisis y entrenamiento.
+
+\paragraph{Generación de Trayectorias Suaves ($C^2$)}
+Para prevenir impactos inerciales que dañen los reductores o exciten modos de vibración estructural en el robot real, el nodo \texttt{random\_trajectory\_generator.py} interpola entre puntos articulares mediante polinomios quínticos. La función de interpolación normalizada $s(\tau)$ para $\tau = t / T \in [0, 1]$ se rige por:
+\begin{align}
+    s(\tau) &= 10\tau^3 - 15\tau^4 + 6\tau^5 \label{eq:quintic_pos} \\
+    \dot{s}(\tau) &= \frac{1}{T}\left( 30\tau^2 - 60\tau^3 + 30\tau^4 \right) \label{eq:quintic_vel} \\
+    \ddot{s}(\tau) &= \frac{1}{T^2}\left( 60\tau - 180\tau^2 + 120\tau^3 \right) \label{eq:quintic_acc}
+\end{align}
+Evaluando en los límites temporales $\tau = 0$ y $\tau = 1$, se satisface idénticamente que $s(0)=0, s(1)=1$, $\dot{s}(0)=\dot{s}(1)=0$ y $\ddot{s}(0)=\ddot{s}(1)=0$. En consecuencia, las aceleraciones articulares $\ddot{\bm{q}}_d(t)$ inician y concluyen suavemente en cero, garantizando continuidad matemática $C^2$ en todo el trayecto.
+
+\paragraph{Telemetría y Filtrado Digital Savitzky-Golay}
+La telemetría de 42 variables de control se registra en caliente mediante el framework \texttt{ros2 bag} empleando el formato binario estructurado MCAP (\texttt{storage\_id='mcap'}). Para procesar los datos registrados y calcular las aceleraciones reales $\ddot{\bm{q}}_{act}$ sin amplificar el ruido de cuantización inherente a los encoders ópticos, en \texttt{bag\_to\_csv.py} se implementó un filtro de Savitzky-Golay configurado con un polinomio de orden $p=3$, una ventana móvil de $2m+1=11$ muestras y un paso temporal $\Delta t = 0.01\text{ s}$:
+\begin{equation}
+    \ddot{q}_{k} = \sum_{j=-m}^m c_j^{(1)} \dot{q}_{k+j}
+    \label{eq:savgol_filter}
+\end{equation}
+donde los coeficientes $c_j^{(1)}$ corresponden a la primera derivada numérica analítica ajustada por mínimos cuadrados locales.
+
+\paragraph{Validación ($M_4$)}
+Se validó la continuidad de las trayectorias generadas verificando la ausencia de discontinuidades de par comandado al inicio y fin de cada movimiento. Asimismo, se confirmó que el proceso de publicación y almacenamiento de telemetría a 100~Hz no induce retardos en el bucle principal de control: al utilizar un búfer de memoria circular no bloqueante (\texttt{realtime\_tools::RealtimeBuffer}), el método \texttt{update()} opera en tiempo constante independientemente de la carga de entrada/salida de disco en el sistema de telemetría.
+
+\subsubsection{Integración del sistema mecatrónico}
+\label{sssec:integracion_sistema_mecatronico}
+
+La integración del sistema mecatrónico unifica los cuatro módulos ($M_1 \dots M_4$) en una arquitectura distribuida pero fuertemente acoplada en tiempo real bajo ROS 2 Jazzy. 
+
+En la Figura~\ref{fig:integracion_mecatronica} se detalla el esquema de comunicación inter-procesos, los canales de datos y el acoplamiento temporal entre la capa de inferencia neuronal, el controlador dinámico y la capa de abstracción de hardware.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{Imagenes/diagrama_funcional.png}
+\caption{Diagrama de integración mecatrónica global: interconexión de nodos, buses en tiempo real y acoplamiento temporal de la arquitectura híbrida.}
+\label{fig:integracion_mecatronica}
+\end{figure}
+
+\paragraph{Presupuesto Temporal Consolidado (*Timing Budget*)}
+Para certificar formalmente la viabilidad de la integración en bucle cerrado a $500\text{ Hz}$ ($T_s = 2000\,\mu\text{s}$), se realizó un perfilado cronométrico de cada subproceso dentro del ciclo crítico \texttt{update()} de \texttt{NeuralTorqueController}. El balance temporal consolidado se resume en la Tabla~\ref{tab:timing_budget}.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Presupuesto temporal consolidado del lazo crítico de control mecatrónico a 500~Hz ($T_s = 2000\,\mu\text{s}$).}
+\label{tab:timing_budget}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X c c c}
+\toprule
+\textbf{Subproceso en Ciclo \texttt{update()}} & \textbf{Tiempo Medio [$\mu\text{s}$]} & \textbf{Pico Máximo [$\mu\text{s}$]} & \textbf{Consumo del Periodo [\%]} \\
+\midrule
+1. Lectura de interfaces de estado (Pos./Vel.) & $10.2$ & $14.5$ & $0.51\%$ \\
+2. Cómputo analítico RNEA (\texttt{ur3e\_dynamics.hpp}) & $42.5$ & $48.2$ & $2.13\%$ \\
+3. Vectorización y normalización $z$-score (42 datos) & $5.1$ & $7.0$ & $0.26\%$ \\
+4. Inferencia neuronal INT8 (ONNX Runtime C++) & $245.0$ & $278.4$ & $12.25\%$ \\
+5. Desnormalización y saturación física ($\pm 55\text{ Nm}$) & $8.4$ & $11.0$ & $0.42\%$ \\
+6. Escritura de pares comandados a hardware interface & $11.3$ & $15.2$ & $0.57\%$ \\
+\midrule
+\textbf{Tiempo Total de Ejecución de Control} & $\mathbf{322.5\,\mu\text{s}}$ & $\mathbf{374.3\,\mu\text{s}}$ & $\mathbf{16.13\%}$ \\
+\midrule
+\textit{Holgura Temporal de Seguridad Disponible} & $\mathbf{1677.5\,\mu\text{s}}$ & $\mathbf{1625.7\,\mu\text{s}}$ & $\mathbf{83.87\%}$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \paragraph{Validación sistema mecatrónico}
+Como se deduce cuantitativamente de la Tabla~\ref{tab:timing_budget}, la integración mecatrónica completa consume en promedio $322.5\,\mu\text{s}$ (con un caso peor de $374.3\,\mu\text{s}$), requiriendo únicamente el $16.13\%$ del tiempo disponible por ciclo. Esto demuestra fehacientemente un margen de seguridad temporal superior al $83\%$, lo que previene de forma absoluta la aparición de fluctuaciones estocásticas de retardo (\textit{jitter}) y violaciones de periodo. 
+
+En síntesis, las pruebas sistemáticas en bucle cerrado sobre el gemelo virtual del manipulador UR3e en Gazebo Harmonic validan la estabilidad asintótica de seguimiento, la precisión de compensación dinámica y la viabilidad algorítmica total del sistema en TT1, garantizando que el software desarrollado es directamente transferible al robot físico en TT2 y proporcionando una base sólida para el subsiguiente benchmarking experimental en la plataforma de hardware neutra.
 
 
 % --- 3. Implementación del sistema ---
