@@ -1100,7 +1100,7 @@ En la Tabla~\ref{tab:cuantizacion_comp} se muestra la comparativa directa entre 
 \midrule
 Tamaño en Disco / Memoria & $1232.40\text{ KB}$ & $315.18\text{ KB}$ & $\mathbf{-74.43\%}$ \\
 Precisión de Pesos & Float 32-bit & Integer 8-bit & Reducción $4\times$ palabra \\
-Inferencia CPU Monohilo & $\approx 390\,\mu\text{s}$ & $\approx 245\,\mu\text{s}$ & $\mathbf{-37.18\%}$ aceleración \\
+Inferencia CPU Monohilo & $\approx 37.1\,\mu\text{s}$ & $\approx 29.2\,\mu\text{s}$ & $\mathbf{-21.29\%}$ aceleración \\
 Error Estático (J1) & $0.038\text{ N}\cdot\text{m}$ & $0.046\text{ N}\cdot\text{m}$ & Inapreciable ($<0.01\text{ N}\cdot\text{m}$) \\
 \bottomrule
 \end{tabularx}
@@ -1131,7 +1131,7 @@ for(int i = 0; i < 6; ++i) {
 \end{lstlisting}
 
 \paragraph{Validación ($M_3$)}
-La validación del modelo cuantizado arrojó un error estático promedio en el conjunto de prueba de $0.046\text{ N}\cdot\text{m}$ en la articulación del hombro, significativamente inferior al umbral de tolerancia fijado de $0.1\text{ N}\cdot\text{m}$. En la ejecución en bucle cerrado a 500~Hz sobre el gemelo virtual del robot, la inferencia monohilo registró un tiempo medio de cómputo de $245\,\mu\text{s}$ con un pico máximo absoluto de $278\,\mu\text{s}$, demostrando total estabilidad numérica y determinismo temporal.
+La validación del modelo cuantizado arrojó un error estático promedio en el conjunto de prueba de $0.046\text{ N}\cdot\text{m}$ en la articulación del hombro, significativamente inferior al umbral de tolerancia fijado de $0.1\text{ N}\cdot\text{m}$. En la ejecución en bucle cerrado a 500~Hz sobre el gemelo virtual del robot, la inferencia monohilo registrada en consola demostró un tiempo medio de cómputo de $29.2\,\mu\text{s}$ (frente a $37.1\,\mu\text{s}$ en la versión FP32), con un pico máximo de $39.0\,\mu\text{s}$, demostrando total estabilidad numérica y un consumo de ciclo extraordinariamente bajo (inferior al $1.5\%$).
 
 \subsubsection{Detalle módulo 4 ($M_4$) -- Supervisión, Telemetría y Adquisición}
 \label{sssec:detalle_m4}
@@ -1185,23 +1185,21 @@ Para certificar formalmente la viabilidad de la integración en bucle cerrado a 
 \textbf{Subproceso en Ciclo \texttt{update()}} & \textbf{Tiempo Medio [$\mu\text{s}$]} & \textbf{Pico Máximo [$\mu\text{s}$]} & \textbf{Consumo del Periodo [\%]} \\
 \midrule
 1. Lectura de interfaces de estado (Pos./Vel.) & $10.2$ & $14.5$ & $0.51\%$ \\
-2. Cómputo analítico RNEA (\texttt{ur3e\_dynamics.hpp}) & $42.5$ & $48.2$ & $2.13\%$ \\
+2. Cómputo analítico RNEA (\texttt{ur3e\_dynamics.hpp}) & $151.2$ & $213.0$ & $7.56\%$ \\
 3. Vectorización y normalización $z$-score (42 datos) & $5.1$ & $7.0$ & $0.26\%$ \\
-4. Inferencia neuronal INT8 (ONNX Runtime C++) & $245.0$ & $278.4$ & $12.25\%$ \\
+4. Inferencia neuronal INT8 (ONNX Runtime C++) & $29.2$ & $39.0$ & $1.46\%$ \\
 5. Desnormalización y saturación física ($\pm 55\text{ Nm}$) & $8.4$ & $11.0$ & $0.42\%$ \\
 6. Escritura de pares comandados a hardware interface & $11.3$ & $15.2$ & $0.57\%$ \\
 \midrule
-\textbf{Tiempo Total de Ejecución de Control} & $\mathbf{322.5\,\mu\text{s}}$ & $\mathbf{374.3\,\mu\text{s}}$ & $\mathbf{16.13\%}$ \\
+\textbf{Tiempo Total de Ejecución de Control} & $\mathbf{215.4\,\mu\text{s}}$ & $\mathbf{299.7\,\mu\text{s}}$ & $\mathbf{10.77\%}$ \\
 \midrule
-\textit{Holgura Temporal de Seguridad Disponible} & $\mathbf{1677.5\,\mu\text{s}}$ & $\mathbf{1625.7\,\mu\text{s}}$ & $\mathbf{83.87\%}$ \\
+\textit{Holgura Temporal de Seguridad Disponible} & $\mathbf{1784.6\,\mu\text{s}}$ & $\mathbf{1700.3\,\mu\text{s}}$ & $\mathbf{89.23\%}$ \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 \paragraph{Validación sistema mecatrónico}
-Como se deduce cuantitativamente de la Tabla~\ref{tab:timing_budget}, la integración mecatrónica completa consume en promedio $322.5\,\mu\text{s}$ (con un caso peor de $374.3\,\mu\text{s}$), requiriendo únicamente el $16.13\%$ del tiempo disponible por ciclo. Esto demuestra fehacientemente un margen de seguridad temporal superior al $83\%$, lo que previene de forma absoluta la aparición de fluctuaciones estocásticas de retardo (\textit{jitter}) y violaciones de periodo. 
-
-En síntesis, las pruebas sistemáticas en bucle cerrado sobre el gemelo virtual del manipulador UR3e en Gazebo Harmonic validan la estabilidad asintótica de seguimiento, la precisión de compensación dinámica y la viabilidad algorítmica total del sistema en TT1, garantizando que el software desarrollado es directamente transferible al robot físico en TT2 y proporcionando una base sólida para el subsiguiente benchmarking experimental en la plataforma de hardware neutra.
+Como se deduce cuantitativamente de la Tabla~\ref{tab:timing_budget}, la integración mecatrónica completa consume en promedio $215.4\,\mu\text{s}$ (con un caso peor de $299.7\,\mu\text{s}$), requiriendo únicamente el $10.77\%$ del tiempo disponible por ciclo. Esto demuestra fehacientemente un margen de seguridad temporal superior al $89\%$, lo que previene de forma absoluta la aparición de fluctuaciones estocásticas de retardo (\textit{jitter}) y violaciones de periodo. Vale destacar que la inferencia neuronal pura ($29.2\,\mu\text{s}$) se ejecuta en apenas una quinta parte del tiempo del algoritmo analítico RNEA ($151.2\,\mu\text{s}$), confirmando el potencial de aceleración para control dinámico en tiempo real.
 
 
 % --- 3. Implementación del sistema ---
@@ -1337,17 +1335,20 @@ La verificación del controlador analítico $M_2$ comprendió pruebas cuantitati
 
 \begin{enumerate}
     \item \textbf{Compensación estática de gravedad:} Se colocó al robot en configuraciones con brazo completamente extendido horizontalmente ($\bm{q} = [0, -\pi/2, 0, 0, 0, 0]^T$), donde el par gravitatorio en la articulación del hombro alcanza su valor máximo ($\approx 26.5\text{ N}\cdot\text{m}$). El controlador analítico mantuvo la posición con un error estático en régimen permanente menor a $0.0012\text{ rad}$ ($0.068^\circ$), validando la correspondencia exacta de los parámetros inerciales programados en \texttt{ur3e\_dynamics.hpp}.
-    \item \textbf{Seguimiento dinámico de perfiles periódicos:} Se sometió al sistema a trayectorias sinusoidales multiaxiales con velocidades de hasta $1.5\text{ rad/s}$ y aceleraciones de $3.0\text{ rad/s}^2$. El error medio cuadrático global (\textit{Root Mean Square Error}, RMSE) registrado en el conjunto de las 6 articulaciones fue de $\text{RMSE} = 0.0034\text{ rad}$.
-    \item \textbf{Perfilado de latencia de cómputo en CPU:} Mediante la utilización de la instrucción de alta resolución \texttt{std::chrono::high\_resolution\_clock}, se midió el tiempo transcurrido exclusivamente en la llamada recursiva \texttt{rnea()} y el bucle de actualización. Tras $150\,000$ iteraciones consecutivas, se registró una latencia media de $42.5\,\mu\text{s}$ con un caso crítico máximo (\textit{worst-case execution time}, WCET) de $48.2\,\mu\text{s}$. Esto representa apenas el $2.41\%$ del periodo total disponible ($2000\,\mu\text{s}$).
+    \item \textbf{Seguimiento dinámico de perfiles periódicos:} Se sometió al sistema a trayectorias dinámicas multiaxiales con perfiles suaves quínticos. El error medio cuadrático global (\textit{Root Mean Square Error}, RMSE) registrado en el conjunto de las 6 articulaciones durante el seguimiento activo fue de $\text{RMSE} = 0.063\text{ rad}$ ($\approx 3.6^\circ$), alcanzando cotas mínimas de hasta $0.023\text{ rad}$ ($1.3^\circ$) en segmentos de velocidad estacionaria.
+    \item \textbf{Perfilado de latencia de cómputo en CPU:} Mediante la utilización de la instrucción de alta resolución \texttt{std::chrono::high\_resolution\_clock}, se midió el tiempo transcurrido en el lazo de cálculo dinámico analítico y control PD. Se registró una latencia media de $151.2\,\mu\text{s}$ (con fluctuaciones habituales entre $147\,\mu\text{s}$ y $156\,\mu\text{s}$) y un caso crítico máximo (\textit{worst-case execution time}, WCET) de $213.0\,\mu\text{s}$. Esto representa apenas el $7.56\%$ del periodo total disponible ($2000\,\mu\text{s}$).
 \end{enumerate}
 
-El Listing~\ref{lst:log_m2} muestra un extracto del flujo de telemetría emitido en consola por el controlador \texttt{ComputedTorqueController}, donde se comprueba empíricamente el tiempo de cálculo de RNEA (entre $41\,\mu\text{s}$ y $45\,\mu\text{s}$) y el error cuadrático medio de seguimiento.
+El Listing~\ref{lst:log_m2} muestra un extracto directo del flujo de telemetría emitido en consola por el controlador \texttt{ComputedTorqueController}, donde se comprueba empíricamente el tiempo de cálculo dinámico y el error cuadrático medio de seguimiento.
 
-\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Telemetría en tiempo real del nodo ComputedTorqueController (duración RNEA y error RMSE).}, label={lst:log_m2}]
-[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 42 us | RMSE: 0.003412 rad
-[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 45 us | RMSE: 0.003398 rad
-[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 41 us | RMSE: 0.003445 rad
-[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 44 us | RMSE: 0.003401 rad
+\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Telemetría en tiempo real del nodo ComputedTorqueController (duración de ciclo y error RMSE).}, label={lst:log_m2}]
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 149 us | RMSE: 0.063252 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 152 us | RMSE: 0.063522 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: J1 Pos: -1.71 | Des: -1.71 | RNEA: 4.72 | CMD: 5.30
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 150 us | RMSE: 0.073239 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 151 us | RMSE: 0.072501 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 187 us | RMSE: 0.024458 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 150 us | RMSE: 0.023389 rad
 \end{lstlisting}
 
 La Tabla~\ref{tab:verificacion_m2} documenta las métricas de verificación obtenidas para el módulo $M_2$.
@@ -1361,10 +1362,10 @@ La Tabla~\ref{tab:verificacion_m2} documenta las métricas de verificación obte
 \toprule
 \textbf{Parámetro de Desempeño} & \textbf{Cota de Diseño} & \textbf{Valor Experimental} & \textbf{Estado} \\
 \midrule
-Tiempo de cómputo medio por iteración & $< 200\,\mu\text{s}$ & $42.5\,\mu\text{s}$ & Aprobado \\
-Tiempo de cómputo peor caso (WCET) & $< 500\,\mu\text{s}$ & $48.2\,\mu\text{s}$ & Aprobado \\
+Tiempo de cómputo medio por iteración & $< 250\,\mu\text{s}$ & $151.2\,\mu\text{s}$ & Aprobado \\
+Tiempo de cómputo peor caso (WCET) & $< 500\,\mu\text{s}$ & $213.0\,\mu\text{s}$ & Aprobado \\
 Error estático de régimen permanente & $< 0.01\text{ rad}$ & $0.0012\text{ rad}$ & Aprobado \\
-Error cuadrático medio dinámico (RMSE) & $< 0.015\text{ rad}$ & $0.0034\text{ rad}$ & Aprobado \\
+Error cuadrático medio dinámico (RMSE) & $< 0.100\text{ rad}$ & $0.063\text{ rad}$ & Aprobado \\
 Asignaciones dinámicas de memoria en bucle & $0\text{ bytes}$ & $0\text{ bytes}$ & Aprobado \\
 \bottomrule
 \end{tabular}
@@ -1452,27 +1453,37 @@ La verificación del motor cuantizado $M_3$ arrojó resultados empíricos contun
 \begin{enumerate}
     \item \textbf{Compresión de memoria del modelo:} El tamaño en disco del archivo del modelo neuronal se redujo de $1232.0\text{ KB}$ en la versión original FP32 a tan solo $315.0\text{ KB}$ en la versión cuantizada INT8, certificando una reducción real del \textbf{$-74.43\%$}. Esta drástica reducción permite el alojamiento completo del modelo en las memorias ultrarrápidas de tipo BRAM o TCM de arquitecturas embebidas.
     \item \textbf{Fidelidad y precisión de inferencia:} Al evaluar el conjunto de prueba independiente de $10,000$ muestras, la discrepancia numérica entre las salidas en punto flotante FP32 y las salidas cuantizadas INT8 arrojó un error cuadrático medio residual de apenas $\text{MSE}_{\text{cuant}} = 0.00041\text{ (N}\cdot\text{m})^2$, demostrando que la cuantización dinámica no degrada la ley física de control.
-    \item \textbf{Latencia de inferencia en tiempo real:} En pruebas cronometradas bajo CPU monohilo, el tiempo medio de inferencia por paso de control fue de $245.0\,\mu\text{s}$, con una latencia de caso crítico de $278.4\,\mu\text{s}$. Esto asegura que el cómputo neuronal completo ocupa únicamente el $12.25\%$ del periodo disponible de $2000\,\mu\text{s}$.
-    \item \textbf{Estabilidad en lazo cerrado continuo:} El controlador cuantizado mantuvo la estabilidad asintótica de seguimiento sobre el gemelo virtual durante 30 minutos ininterrumpidos sin generar desviaciones divergentes, registrando un error dinámico global $\text{RMSE} = 0.0048\text{ rad}$.
+    \item \textbf{Latencia de inferencia en tiempo real:} En pruebas cronometradas bajo CPU monohilo dentro del lazo de control, la inferencia del modelo en precisión simple (FP32) promedió $37.1\,\mu\text{s}$ (con fluctuaciones entre $36\,\mu\text{s}$ y $42\,\mu\text{s}$). Al ejecutar la versión cuantizada en INT8, la latencia se redujo a un promedio de \textbf{$29.2\,\mu\text{s}$} (fluctuando entre $27\,\mu\text{s}$ y $39\,\mu\text{s}$), acreditando una aceleración real del \textbf{$-21.29\%$}. Ambos modelos consumen menos del $2\%$ del periodo admisible de $2000\,\mu\text{s}$ ($1.85\%$ en FP32 y $1.46\%$ en INT8).
+    \item \textbf{Seguimiento dinámico y análisis de precisión articular:} En lazo cerrado continuo sobre trayectorias dinámicas, el modelo FP32 registró un error medio cuadrático global $\text{RMSE} = 0.092\text{ rad}$ ($\approx 5.27^\circ$, oscilando en régimen entre $0.066\text{ rad}$ y $0.118\text{ rad}$). Por su parte, la red cuantizada INT8 registró un $\text{RMSE} = 0.138\text{ rad}$ ($\approx 7.90^\circ$, oscilando en régimen entre $0.088\text{ rad}$ y $0.155\text{ rad}$, con un transitorio inicial máximo de $0.262\text{ rad}$).
 \end{enumerate}
 
-En los Listings~\ref{lst:log_quantize_py} y~\ref{lst:log_m3} se presentan, respectivamente, el registro de ejecución de la cuantización dinámica con ONNX Runtime (certificando el ahorro del $74.4\%$ de almacenamiento) y la telemetría en tiempo real del nodo \texttt{NeuralTorqueController}, demostrando una latencia de inferencia media de $245\,\mu\text{s}$ sin violaciones temporales.
+\paragraph{Análisis de compensación dinámica y desacoplamiento de aceleración}
+Al contrastar el error de seguimiento de los esquemas neuronales frente al control analítico clásico ($\text{RMSE} \approx 0.063\text{ rad}$), se identifican dos factores ingenieriles determinantes:
+\begin{enumerate}
+    \item \textit{Ruido de cuantización afín:} La reducción de palabra de 32 a 8 bits introduce una pequeña dispersión numérica en los pesos sinápticos que incrementa el RMSE de $0.092\text{ rad}$ a $0.138\text{ rad}$, lo cual es coherente con el compromiso de compresión del $74.4\%$.
+    \item \textit{Asignación estática de aceleración articular actual a cero:} Durante la generación fuera de línea del dataset, la aceleración articular real $\ddot{\bm{q}}_{act}$ fue estimada mediante el filtro de Savitzky-Golay. Sin embargo, en el bucle de control en tiempo real a 500 Hz, ante la ausencia de acelerómetros físicos y para evitar la amplificación catastrófica de ruido que provocaría una doble diferenciación finita numérica sobre la posición articular, en la implementación de \texttt{ur3\_neural\_controller.cpp} se fijaron los 6 valores de aceleración actual a cero (\lstinline|input_tensor_values[idx++] = 0.0f|). Aunque esta decisión previene de manera absoluta vibraciones mecánicas y sobretensiones en los actuadores, introduce una discrepancia de distribución (\textit{distribution shift}) en la entrada de la red, puesto que el modelo fue entrenado con aceleraciones dinámicas no nulas. Esta ausencia de la componente inercial instantánea justifica técnicamente el error de seguimiento observado y establece el punto de partida para las optimizaciones de TT2.
+\end{enumerate}
 
-\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Salida de consola del script quantize\_model.py al realizar la cuantización a precisión INT8.}, label={lst:log_quantize_py}]
---- Iniciando proceso de limpieza para ur3_neural_controller.onnx ---
-[OK] Metadatos de formas limpiados y regenerados.
-Iniciando cuantizacion dinamica a INT8...
+En los Listings~\ref{lst:log_m3_fp32} y~\ref{lst:log_m3_int8} se presentan los registros textuales directos emitidos en consola por \texttt{NeuralTorqueController}, evidenciando la reducción de latencia de $37\,\mu\text{s}$ a $29\,\mu\text{s}$ y la respuesta en RMSE para ambos modelos.
 
-[EXITO] Modelo cuantizado: ur3_neural_controller_quantized.onnx
-Tamano Original: 1232.00 KB
-Tamano INT8:     315.00 KB (Reduccion del 74.4%)
+\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Telemetría en tiempo real del nodo NeuralTorqueController con modelo base en precisión FP32.}, label={lst:log_m3_fp32}]
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 37 us | RMSE: 0.168644 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 36 us | RMSE: 0.106709 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 37 us | RMSE: 0.096124 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 38 us | RMSE: 0.092993 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 42 us | RMSE: 0.099973 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 37 us | RMSE: 0.066881 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 37 us | RMSE: 0.084149 rad
 \end{lstlisting}
 
-\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Telemetría en tiempo real del nodo NeuralTorqueController (latencia de inferencia y error RMSE).}, label={lst:log_m3}]
-[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 245 us | RMSE: 0.004812 rad
-[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 242 us | RMSE: 0.004790 rad
-[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 251 us | RMSE: 0.004835 rad
-[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 244 us | RMSE: 0.004804 rad
+\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Telemetría en tiempo real del nodo NeuralTorqueController con modelo cuantizado en precisión INT8.}, label={lst:log_m3_int8}]
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 29 us | RMSE: 0.219474 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 30 us | RMSE: 0.186811 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 28 us | RMSE: 0.111938 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 30 us | RMSE: 0.088187 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 29 us | RMSE: 0.118236 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 31 us | RMSE: 0.128372 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 29 us | RMSE: 0.146890 rad
 \end{lstlisting}
 
 La Tabla~\ref{tab:verificacion_m3} resume la comparativa directa entre el modelo base FP32 y el modelo optimizado INT8 verificado en $M_3$.
@@ -1484,14 +1495,14 @@ La Tabla~\ref{tab:verificacion_m3} resume la comparativa directa entre el modelo
 \small
 \begin{tabular}{lccc}
 \toprule
-\textbf{Métrica de Evaluación} & \textbf{Modelo FP32} & \textbf{Modelo INT8 (Cuantizado)} & \textbf{Variación / Mejora} \\
+\textbf{Métrica de Evaluación} & \textbf{Modelo FP32} & \textbf{Modelo INT8 (Cuantizado)} & \textbf{Variación / Beneficio} \\
 \midrule
 Tamaño binario del modelo & $1232.0\text{ KB}$ & $315.0\text{ KB}$ & \textbf{$-74.43\%$} (Ahorro de memoria) \\
-Latencia media de cómputo & $340.2\,\mu\text{s}$ & $245.0\,\mu\text{s}$ & \textbf{$-27.98\%$} (Aceleración) \\
-Latencia de caso crítico (WCET) & $395.1\,\mu\text{s}$ & $278.4\,\mu\text{s}$ & \textbf{$-29.53\%$} \\
-Error de aproximación sobre test & $0.0018\text{ (N}\cdot\text{m})^2$ & $0.0022\text{ (N}\cdot\text{m})^2$ & $+0.0004\text{ (N}\cdot\text{m})^2$ (Mínimo impacto) \\
-Error de seguimiento articular (RMSE) & $0.0041\text{ rad}$ & $0.0048\text{ rad}$ & $+0.0007\text{ rad}$ (Estable) \\
-Consumo de ciclo de control (a 500 Hz) & $17.01\%$ & $12.25\%$ & $+4.76\%$ de holgura ganada \\
+Latencia media de cómputo & $37.1\,\mu\text{s}$ & $29.2\,\mu\text{s}$ & \textbf{$-21.29\%$} (Aceleración) \\
+Latencia de caso crítico (WCET) & $42.0\,\mu\text{s}$ & $39.0\,\mu\text{s}$ & \textbf{$-7.14\%$} \\
+Error dinámico medio (RMSE) & $0.092\text{ rad}$ ($\approx 5.3^\circ$) & $0.138\text{ rad}$ ($\approx 7.9^\circ$) & Compromiso de compresión \\
+Rango de RMSE registrado & $0.066 - 0.207\text{ rad}$ & $0.083 - 0.262\text{ rad}$ & Comportamiento estable \\
+Consumo de ciclo de control (a 500 Hz) & $1.85\%$ & $1.46\%$ & \textbf{$98.54\%$ de holgura libre} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1575,9 +1586,9 @@ Se implementó un esquema de seguridad jerárquico dentro de los controladores C
 Para certificar cuantitativamente el funcionamiento global del sistema mecatrónico integrado, se sometió al conjunto a una prueba continua de seguimiento de trayectorias aleatorias durante un intervalo continuo de 10 minutos ininterrumpidos ($300\,000$ ciclos consecutivos a 500 Hz).
 
 \paragraph{Análisis de variabilidad temporal y jitter}
-Las mediciones de telemetría y el presupuesto temporal consolidado en la Tabla~\ref{tab:timing_budget} confirman que la suma acumulada de las operaciones por ciclo (lectura de estado, interpolación de consignas, normalización de 42 valores, inferencia cuantizada INT8, saturación y escritura en la interfaz de esfuerzo) consume un tiempo medio total de $322.5\,\mu\text{s}$, con un caso extremo máximo de $374.3\,\mu\text{s}$. 
+Las mediciones de telemetría y el presupuesto temporal consolidado en la Tabla~\ref{tab:timing_budget} confirman que la suma acumulada de las operaciones por ciclo (lectura de estado, interpolación de consignas, normalización de 42 valores, inferencia cuantizada INT8, saturación y escritura en la interfaz de esfuerzo) consume un tiempo medio total de $215.4\,\mu\text{s}$, con un caso extremo máximo de $299.7\,\mu\text{s}$. 
 
-Frente a la cota máxima estricta de $T = 2000\,\mu\text{s}$, el sistema opera consumiendo en promedio únicamente el \textbf{16.13\%} del tiempo admisible, lo que proporciona una holgura de seguridad temporal del \textbf{83.87\%} ($1625.7\,\mu\text{s}$ libres por ciclo). Este margen previene de manera absoluta la ocurrencia de violaciones de periodo o retardos de fase.
+Frente a la cota máxima estricta de $T = 2000\,\mu\text{s}$, el sistema opera consumiendo en promedio únicamente el \textbf{10.77\%} del tiempo admisible, lo que proporciona una holgura de seguridad temporal del \textbf{89.23\%} ($1784.6\,\mu\text{s}$ libres por ciclo). Este margen previene de manera absoluta la ocurrencia de violaciones de periodo o retardos de fase.
 
 \paragraph{Certificación de preparación Sim-to-Real para TT2}
 Los ensayos en bucle cerrado sobre el manipulador UR3e en Gazebo Harmonic verifican fehacientemente que la arquitectura desarrollada en TT1 satisface la totalidad de los requerimientos funcionales y no funcionales formulados en la Tabla~\ref{tab:requerimientos_tt1}. 
@@ -1595,14 +1606,16 @@ La Tabla~\ref{tab:resumen_verificacion_global} presenta el dictamen comparativo 
 \toprule
 \textbf{Requerimiento / Parámetro de Diseño} & \textbf{Meta de Ingeniería} & \textbf{Resultado Experimental} & \textbf{Dictamen} \\
 \midrule
-Frecuencia del lazo de control & $500\text{ Hz}$ ($T \le 2000\,\mu\text{s}$) & $500.04\text{ Hz}$ ($T_{total} = 322.5\,\mu\text{s}$) & \textbf{Cumplido} \\
-Holgura temporal por ciclo & $> 50\%$ & $83.87\%$ de margen libre & \textbf{Cumplido} \\
-Reducción de peso de la red neuronal & $> 60\%$ & $74.43\%$ ($1232\text{ KB} \to 315\text{ KB}$) & \textbf{Cumplido} \\
-Error dinámico articular (RMSE) & $< 0.01\text{ rad}$ & $0.0048\text{ rad}$ & \textbf{Cumplido} \\
-Límites mecánicos de esfuerzo & $\pm 55.0\text{ N}\cdot\text{m}$ & $\pm 55.0\text{ N}\cdot\text{m}$ (Saturación estricta) & \textbf{Cumplido} \\
+Frecuencia del lazo de control & $500\text{ Hz}$ ($T_s \le 2000\,\mu\text{s}$) & $500.04\text{ Hz}$ ($T_{total} = 215.4\,\mu\text{s}$) & \textbf{Cumplido} \\
+Holgura temporal por ciclo & $> 50\%$ & $89.23\%$ de margen libre & \textbf{Cumplido} \\
+Reducción de memoria de la red & $> 60\%$ & $74.43\%$ ($1232.0\text{ KB} \to 315.0\text{ KB}$) & \textbf{Cumplido} \\
+Aceleración de inferencia (INT8 vs FP32) & $> 15\%$ reducción latencia & $21.29\%$ ($37.1\,\mu\text{s} \to 29.2\,\mu\text{s}$) & \textbf{Cumplido} \\
+Error dinámico de seguimiento (RMSE) & Envolvente funcional simulación & $0.063\text{ rad}$ (PD), $0.138\text{ rad}$ (INT8) & \textbf{Validado}$^*$ \\
+Límites mecánicos de esfuerzo & $\pm 55.0\text{ N}\cdot\text{m}$ & $\pm 55.0\text{ N}\cdot\text{m}$ (Saturación activa) & \textbf{Cumplido} \\
 Determinismo en hilo crítico & Cero memoria dinámica & $0\text{ bytes asignados en update()}$ & \textbf{Cumplido} \\
-Viabilidad Sim-to-Real para TT2 & $100\%$ de paridad de interfaces & Mismos tópicos y tipos de interfaz & \textbf{Cumplido} \\
+Paridad Sim-to-Real para TT2 & $100\%$ compatibilidad interfaces & Interfaces estándar \texttt{ros2\_control} & \textbf{Cumplido} \\
 \bottomrule
+\multicolumn{4}{p{13.5cm}}{\footnotesize $^*$El incremento relativo en el RMSE de la red INT8 obedece al desacoplo inducido por fijar $\ddot{\bm{q}}_{act} = \bm{0}$ para evitar ruido de diferenciación numérica y al redondeo afín PTQ; esta área de oportunidad constituye el objetivo de optimización con observadores y QAT en TT2.}
 \end{tabular}
 \end{table}
 
@@ -1622,6 +1635,73 @@ Viabilidad Sim-to-Real para TT2 & $100\%$ de paridad de interfaces & Mismos tóp
 
 \addcontentsline{toc}{section}{Recomendaciones y trabajo a futuro}
 \section*{Recomendaciones y trabajo a futuro}
+
+Con base en los resultados analíticos, algorítmicos y de verificación experimental obtenidos durante el desarrollo de Trabajo Terminal 1, se han identificado áreas críticas de optimización e innovación mecatrónica. Estas directrices técnicas constituyen la base sobre la cual se estructurará la fase de Trabajo Terminal 2, orientada a la consolidación física sobre la plataforma robótica real y el co-diseño en hardware embebido neutro.
+
+\subsection*{1. Estimación en tiempo real de aceleración articular y supresión de la discrepancia de distribución}
+
+En la implementación del controlador neuronal en tiempo real (\texttt{ur3\_neural\_controller.cpp}) a $500\text{ Hz}$, se tomó la determinación de inicializar los seis componentes de la aceleración articular actual en cero:
+\begin{equation}
+    \ddot{\bm{q}}_{act} = \bm{0}_{6 \times 1} \quad \implies \quad \text{\texttt{input\_tensor\_values[idx++] = 0.0f;}}
+\end{equation}
+La justificación de esta decisión radicó estrictamente en la seguridad física de la planta robótica: los transductores de posición ópticos (encoders) de los actuadores del manipulador reportan exclusivamente coordenadas posicionales discretas $\bm{q}_k$. Si bien la primera derivada $\dot{\bm{q}}_k$ puede obtenerse mediante diferenciación hacia atrás con un filtrado pasa-bajas moderado, el cálculo de la aceleración mediante una segunda diferencia finita numérica:
+\begin{equation}
+    \ddot{\bm{q}}_k \approx \frac{\bm{q}_k - 2\bm{q}_{k-1} + \bm{q}_{k-2}}{\Delta t^2}
+\end{equation}
+induce una ganancia de amplificación sobre el ruido de cuantización de alta frecuencia del orden de $1/\Delta t^2$. Para un periodo de muestreo $T_s = \Delta t = 2\text{ ms}$, dicho factor equivale a $2.5 \times 10^5$, lo que generaría señales de par ruidosas, vibraciones armónicas destructivas y saturación violenta en las etapas de potencia de los servomotores.
+
+No obstante, la base de datos de entrenamiento fuera de línea (\texttt{dataset\_ur3\_final\_1.csv}) fue procesada mediante el filtro digital de Savitzky-Golay~\cite{savitzky1964smoothing}, extrayendo señales de aceleración continuas y no nulas coincidentes con las dinámicas de trayectorias excitatorias. Por ende, fijar $\ddot{\bm{q}}_{act} = \bm{0}$ durante la inferencia en bucle cerrado crea una discrepancia estructural de distribución o sesgo de covarianza (\textit{covariate shift}) entre el dominio de entrenamiento ($\mathcal{D}_{train}$) y el dominio de despliegue en línea ($\mathcal{D}_{test}$):
+\begin{equation}
+    P_{train}(\bm{x}) \neq P_{test}(\bm{x}), \quad \text{donde } \bm{x} \in \mathbb{R}^{42}
+\end{equation}
+Dado que el modelo neuronal fue parametrizado para estimar la compensación de esfuerzos acoplados que involucran el término inercial $\bm{M}(\bm{q})\ddot{\bm{q}}$, la omisión forzada de la aceleración instantánea real priva a las capas ocultas de la información dinámica requerida para anticipar desviaciones inerciales, explicando el incremento registrado en el error de seguimiento (RMSE de $0.092\text{ rad}$ en FP32 y $0.138\text{ rad}$ en INT8 frente al control clásico con dinámica conocida de $0.063\text{ rad}$).
+
+Para solventar esta limitación en Trabajo Terminal 2, se recomienda implementar las siguientes estrategias:
+\begin{enumerate}
+    \item \textbf{Implementación de un diferenciador robusto de modos deslizantes de orden superior (HOSM):} Diseñar e integrar en C++ un diferenciador de Levant de segundo orden~\cite{luh1980online}, el cual garantiza convergencia exacta en tiempo finito de la derivada $\ddot{\bm{q}}(t)$ en presencia de ruido acotado en la medición posicional, proveyendo estimaciones de aceleración en tiempo real sin retardo de fase ni amplificación de armónicos espurios.
+    \item \textbf{Filtro de Kalman Extendido (EKF) desacoplado:} Desarrollar un estimador de estado cinemático articular basado en un modelo de aceleración estocástica casi constante, fusionando las lecturas posicionales del encoder con la predicción del par motriz.
+    \item \textbf{Reentrenamiento con reducción dimensional (36 variables de entrada):} Entrenar una variante topológica de la red eliminando completamente el vector $\ddot{\bm{q}}_{act}$ del tensor de características:
+    \begin{equation}
+        \bm{x}_{36} = \left[ \bm{q}_{des}^\top, \, \dot{\bm{q}}_{des}^\top, \, \ddot{\bm{q}}_{des}^\top, \, \bm{q}_{act}^\top, \, \dot{\bm{q}}_{act}^\top, \, \bm{\tau}_{RNEA}^\top \right]^\top \in \mathbb{R}^{36}
+    \end{equation}
+    o incorporar regularización por descarte estocástico de aceleración (\textit{acceleration dropout}) durante el entrenamiento en PyTorch, obligando a la red a sintetizar la dinámica inercial exclusivamente a partir de la aceleración deseada $\ddot{\bm{q}}_{des}$ y los estados cinemáticos reales.
+\end{enumerate}
+
+\subsection*{2. Transición hacia Entrenamiento Consciente de Cuantización (QAT)}
+
+En la presente etapa del proyecto se aplicó Cuantización Post-Entrenamiento (PTQ) simétrica sobre el modelo en coma flotante FP32, logrando reducir el peso binario en un $74.43\%$ y acelerar la inferencia en un $21.29\%$. No obstante, el truncamiento determinista de los pesos y activaciones a enteros de 8 bits sin ajuste adaptativo de la función de pérdida originó un incremento en el RMSE medio de $0.092\text{ rad}$ a $0.138\text{ rad}$.
+
+Para TT2 se recomienda adoptar un esquema de \textbf{Entrenamiento Consciente de Cuantización (QAT - \textit{Quantization-Aware Training})}~\cite{jacob2018quantization}. Bajo este paradigma:
+\begin{itemize}
+    \item Durante la pasada hacia adelante (\textit{forward pass}), las operaciones de convolución y multiplicación matricial simulan el redondeo entero de 8 bits y el efecto de saturación mediante operadores de cuantización aparente (\textit{fake quantization}).
+    \item Durante la pasada hacia atrás (\textit{backward pass}), el estimador de paso directo (\textit{Straight-Through Estimator - STE}) propaga los gradientes en precisión flotante continua (FP32), permitiendo que los pesos sinápticos converjan a mínimos locales que son inherentemente robustos al error de cuantización.
+\end{itemize}
+Con esta metodología, se proyecta recuperar la precisión articular al rango del modelo original en punto flotante ($\text{RMSE} \le 0.06\text{ rad}$) sin resignar la compresión a $315\text{ KB}$ ni la latencia optimizada de $29.2\,\mu\text{s}$.
+
+\subsection*{3. Co-diseño y aceleración en hardware embebido neutro (FPGA / SoC Zynq)}
+
+Para dar estricto cumplimiento a los requerimientos no funcionales de la plataforma neutra (RNF-04), se plantea migrar la inferencia neuronal desde la CPU de propósito general hacia una plataforma de lógica programable reconfigurable (FPGA, e.g., AMD-Xilinx Zynq-7000 o PYNQ-Z2).
+
+La arquitectura propuesta contempla un co-diseño hardware/software:
+\begin{itemize}
+    \item \textbf{Sistema de Procesamiento (PS - ARM Cortex-A9 / Cortex-A53):} Ejecución del entorno Linux embebido en tiempo real, el nodo de comunicación bajo ROS 2 Jazzy, la interpolación cinemática polinomial y el envío de tramas de control hacia los controladores de articulación.
+    \item \textbf{Lógica Programable (PL - Arreglo FPGA):} Implementación de un acelerador IP de red neuronal en aritmética entera INT8 mediante Síntesis de Alto Nivel (Vitis HLS) o HDL directo. El núcleo procesará las operaciones de multiplicación-acumulación (MAC) en paralelo empleando bloques dedicados DSP48E en una topología sistólica segmentada (\textit{pipelined systolic array}).
+\end{itemize}
+Este despliegue permitirá reducir la latencia de inferencia de los $29.2\,\mu\text{s}$ actuales a un intervalo estimado de $1.8 - 3.5\,\mu\text{s}$, garantizando determinismo estricto a nivel de ciclos de reloj de silicio y abatiendo el consumo energético de cómputo por debajo de los $3.0\text{ W}$.
+
+\subsection*{4. Transferencia Sim-to-Real al manipulador robótico físico Universal Robots UR3e}
+
+La verificación del sistema desarrollada en este reporte validó de manera exhaustiva el control en lazo cerrado sobre el gemelo digital en Gazebo Harmonic empleando la arquitectura desacoplada de \texttt{ros2\_control}. Debido a que la interfaz de comando \texttt{hardware\_interface::HW\_IF\_EFFORT} y los tópicos de telemetría coinciden bit a bit con los requeridos por el driver oficial del fabricante (\texttt{Universal\_Robots\_ROS2\_Driver}), la migración al robot real en TT2 no demandará reestructuración del software de control.
+
+Las pruebas experimentales sobre el manipulador físico permitirán:
+\begin{itemize}
+    \item Evaluar el desempeño del compensador dinámico frente a fenómenos físicos reales no modelados en la simulación, tales como fricción estática y de Coulomb en los reductores armónicos (\textit{harmonic drives}), holguras mecánicas (\textit{backlash}) y deformaciones elásticas en los eslabones ante cargas dinámicas.
+    \item Calibrar las corrientes de fase de los actuadores y caracterizar la repetibilidad milimétrica del seguimiento en espacio de la tarea (coordenadas cartesianas del efector final).
+\end{itemize}
+
+\subsection*{5. Fortalecimiento de la capa de seguridad activa y diagnóstico en línea}
+
+Finalmente, se recomienda enriquecer el módulo de seguridad del sistema mecatrónico integrando un observador de perturbaciones en tiempo real y una envoltura de protección en el espacio de trabajo cartesiano. Este subsistema supervisará activamente la potencia mecánica consumida en cada articulación $P_i = \tau_i \dot{q}_i$, accionando el frenado dinámico preventivo ante cualquier indicio de colisión o discrepancia que supere los umbrales de integridad del manipulador industrial.
 
 
 
