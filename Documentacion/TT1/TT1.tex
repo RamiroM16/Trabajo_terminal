@@ -1215,10 +1215,10 @@ Dado el carácter progresivo e incremental del desarrollo, la fase de Trabajo Te
 \subsection{Implementación módulo 1 ($M_1$): Planta robótica y entorno Sim-to-Real}
 \label{sec:imp_m1}
 
-La materialización de la planta robótica en TT1 se basó en el desarrollo de un gemelo digital de alta fidelidad dentro del simulador Gazebo Harmonic (versión 8), interconectado de manera transparente con ROS 2 Jazzy Jalisco a través del puente de hardware provisto por el paquete \texttt{gz\_ros2\_control}.
+La materialización de la planta robótica en TT1 se basó en el desarrollo de un gemelo digital de alta fidelidad dentro del simulador Gazebo Harmonic (versión 8), interconectado de manera transparente con ROS 2 Jazzy Jalisco a través del puente de hardware provisto por el paquete \texttt{gz\_ros2\_control}~\cite{macenski2022robot}.
 
 \paragraph{Configuración cinemática y dinámica URDF/Xacro}
-Se estructuró el árbol cinemático del robot a partir de las mallas visuales y de colisión provistas por Universal Robots, incorporando los tensores de inercia y centros de masa exactos especificados en la Sección~\ref{sssec:detalle_m1} (Tabla~\ref{tab:dh_ur3e}). Para permitir la inyección directa de señales de par en cada una de las 6 articulaciones rotoides, se configuró el bloque de hardware de ROS 2 Control dentro del archivo descriptivo del robot (\texttt{ur.urdf.xacro}):
+Se estructuró el árbol cinemático del robot a partir de las mallas visuales y de colisión provistas por Universal Robots~\cite{universal_robots_ur3e_manual}, incorporando los tensores de inercia y centros de masa exactos especificados en la Sección~\ref{sssec:detalle_m1} (Tabla~\ref{tab:dh_ur3e}). Para permitir la inyección directa de señales de par en cada una de las 6 articulaciones rotoides, se configuró el bloque de hardware de ROS 2 Control dentro del archivo descriptivo del robot (\texttt{ur.urdf.xacro}):
 
 \begin{lstlisting}[language=XML, caption={Configuración de interfaces de esfuerzo y estado en ros2\_control para Gazebo Harmonic.}, label={lst:urdf_control_m1}]
 <ros2_control name="UR3eGazeboSystem" type="system">
@@ -1282,15 +1282,15 @@ Estabilidad numérica en integración continua & $\ge 30\text{ min sin derivas}$
 \subsection{Implementación módulo 2 ($M_2$): Control dinámico analítico en tiempo real}
 \label{sec:imp_m2}
 
-El módulo $M_2$ se implementó en C++ bajo el estándar ISO C++17 como un plugin dinámico compatible con \texttt{controller\_interface::ControllerInterface} del framework \texttt{ros2\_control}, denominado \texttt{ComputedTorqueController} dentro del paquete \texttt{ur3\_custom\_control}.
+El módulo $M_2$ se implementó en C++ bajo el estándar ISO C++17 como un plugin dinámico compatible con \texttt{controller\_interface::ControllerInterface} del framework \texttt{ros2\_control}~\cite{macenski2022robot}, denominado \texttt{ComputedTorqueController} dentro del paquete \texttt{ur3\_custom\_control}.
 
 \paragraph{Algoritmo recursivo RNEA vectorizado}
-Para evitar cualquier cuello de botella de memoria dinámica en el ciclo de control crítico, se implementó la clase de dinámica analítica \texttt{UR3eDynamics} en la cabecera \texttt{ur3e\_dynamics.hpp}. Dicha clase utiliza matrices y vectores de dimensión fija provistos por la biblioteca de álgebra lineal Eigen3 (\texttt{Eigen::Matrix3d}, \texttt{Eigen::Vector3d} y \texttt{Eigen::VectorXd}). El cálculo de las velocidades angulares $\bm{\omega}_i$, aceleraciones $\dot{\bm{\omega}}_i$, aceleraciones lineales de los centros de masa $\ddot{\bm{p}}_{Ci}$, fuerzas de enlace $\bm{f}_i$, momentos $\bm{n}_i$ y pares generalizados $\tau_i$ se ejecuta de forma completamente secuencial sin invocar llamadas al sistema operativo (\texttt{malloc}, \texttt{new} o redimensionamiento de vectores STL).
+Para evitar cualquier cuello de botella de memoria dinámica en el ciclo de control crítico, se implementó la clase de dinámica analítica \texttt{UR3eDynamics} en la cabecera \texttt{ur3e\_dynamics.hpp}. Dicha clase utiliza matrices y vectores de dimensión fija provistos por la biblioteca de álgebra lineal Eigen3 (\texttt{Eigen::Matrix3d}, \texttt{Eigen::Vector3d} y \texttt{Eigen::VectorXd}), evaluando las ecuaciones recursivas de Newton-Euler (RNEA)~\cite{luh1980online, spong2006robot}. El cálculo de las velocidades angulares $\bm{\omega}_i$, aceleraciones $\dot{\bm{\omega}}_i$, aceleraciones lineales de los centros de masa $\ddot{\bm{p}}_{Ci}$, fuerzas de enlace $\bm{f}_i$, momentos $\bm{n}_i$ y pares generalizados $\tau_i$ se ejecuta de forma completamente secuencial sin invocar llamadas al sistema operativo (\texttt{malloc}, \texttt{new} o redimensionamiento de vectores STL).
 
 \paragraph{Desacoplamiento asíncrono con RealtimeBuffer}
 El controlador debe suscribirse al tópico de trayectorias deseadas \texttt{/joint\_trajectory\_cmd} (publicado desde nodos Python de usuario) sin comprometer el determinismo del hilo de tiempo real. Para resolver la concurrencia de lectura y escritura entre el callback del middleware y el bucle de actuación a 500 Hz, se implementó un búfer circular de doble almacenamiento con exclusión mutua de bajo nivel (\lstinline|realtime_tools::RealtimeBuffer<std::vector<double>>|).
 
-El Listing~\ref{lst:cpp_update_m2} exhibe la implementación del método crítico \texttt{update()} del controlador analítico, demostrando la integración limpia de la dinámica inversa con el lazo de estabilización PD.
+El Listing~\ref{lst:cpp_update_m2} exhibe la implementación del método crítico \texttt{update()} del controlador analítico, demostrando la integración limpia de la dinámica inversa con el lazo de estabilización PD conforme al esquema de par computado~\cite{craig2005introduction, spong2006robot}.
 
 \begin{lstlisting}[language=C++, caption={Implementación del método de actualización determinista en ComputedTorqueController.}, label={lst:cpp_update_m2}]
 controller_interface::return_type ComputedTorqueController::update(
@@ -1460,7 +1460,14 @@ Para comprender por qué esta arquitectura preserva la precisión del controlado
     \end{itemize}
 \end{enumerate}
 
-La sinergia entre la normalización $z$-score previa, la simetría de pesos y el punto cero asimétrico para activaciones ReLU asegura que los 8 bits se distribuyan con máxima densidad de entropía en las zonas de mayor probabilidad de los estados dinámicos, logrando una representación compacta de $315\text{ KB}$ que preserva con fidelidad la ley de control del manipulador.
+La sinergia entre la normalización $z$-score previa, la simetría de pesos y el punto cero asimétrico para activaciones ReLU asegura que los 8 bits se distribuyan con máxima densidad de entropía en las zonas de mayor probabilidad de los estados dinámicos, logrando una representación compacta de $315\text{ KB}$ que preserva con fidelidad la ley de control del manipulador. La Figura~\ref{fig:distribucion_cuantizacion_int8} ilustra gráficamente este mecanismo de concentración frente a la dispersión ineficiente de un mapeo lineal fijo.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{Imagenes/distribucion_cuantizacion_int8.png}
+\caption{Comparativa de distribución y aprovechamiento del espacio discreto de 8 bits (INT8): (a) Distribución normal de los pesos sinápticos y concentración en el soporte útil mediante cuantización simétrica $S_w$, frente al desperdicio en colas de una partición lineal fija; (b) Activaciones no negativas tras funciones ReLU y alineación de cota inferior con punto cero móvil $Z_a = -128$.}
+\label{fig:distribucion_cuantizacion_int8}
+\end{figure}
 
 \paragraph{Implementación del motor de inferencia en C++}
 El controlador \texttt{NeuralTorqueController} ([Listing~\ref{lst:cpp_update_m3}]) inicializa la sesión \texttt{Ort::Session} configurada con políticas deterministas estrictas: se deshabilita la paralelización interna fijando el número de hilos de cómputo en uno (\texttt{options.SetIntraOpNumThreads(1)}), eliminando las conmutaciones de contexto del planificador del sistema operativo.
@@ -1564,7 +1571,14 @@ Se implementó el script \texttt{random\_trajectory\_generator.py}, el cual publ
     q_i(t) = q_{0,i} + (q_{f,i} - q_{0,i}) \left[ 10\left(\frac{t}{T}\right)^3 - 15\left(\frac{t}{T}\right)^4 + 6\left(\frac{t}{T}\right)^5 \right]
     \label{eq:quintic_imp}
 \end{equation}
-asegurando que tanto la velocidad inicial y final como la aceleración inicial y final sean idénticamente nulas ($\dot{q}_i(0) = \dot{q}_i(T) = 0$, $\ddot{q}_i(0) = \ddot{q}_i(T) = 0$). Esto elimina discontinuidades cinemáticas que provocarían saltos de par impulsivos.
+asegurando que tanto la velocidad inicial y final como la aceleración inicial y final sean idénticamente nulas ($\dot{q}_i(0) = \dot{q}_i(T) = 0$, $\ddot{q}_i(0) = \ddot{q}_i(T) = 0$). Esto elimina discontinuidades cinemáticas que provocarían saltos de par impulsivos. En la Figura~\ref{fig:perfil_quintico_c2} se aprecia el comportamiento suave y libre de discontinuidades de las tres derivadas cinemáticas durante una transición articular representativa.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\textwidth]{Imagenes/perfil_quintico_c2.png}
+\caption{Perfiles cinemáticos suaves de posición, velocidad y aceleración articular generados mediante interpolación polinomial quíntica de clase $\mathcal{C}^2$, evidenciando derivadas continuas y nulas en los extremos temporales.}
+\label{fig:perfil_quintico_c2}
+\end{figure}
 
 \paragraph{Telemetría en formato binario MCAP y filtrado Savitzky-Golay}
 La adquisición de datos durante la operación del manipulador se gestionó mediante el grabador nativo de ROS 2 (\texttt{ros2 bag}) empleando el formato de almacenamiento de alto rendimiento MCAP (\texttt{storage\_id='mcap'}). Para extraer las derivadas de aceleración real $\ddot{\bm{q}}_{act}$ (las cuales no son reportadas directamente por los sensores posicionales y cuya derivación finita cruda introduce ruido de cuantización severo), se implementó en \texttt{bag\_to\_csv.py} un filtro digital de Savitzky-Golay~\cite{savitzky1964smoothing} de grado 3 con una ventana móvil de 11 muestras temporales ($\Delta t = 0.01\text{ s}$). El resultado consolidado generó el archivo de datos estructurado \texttt{dataset\_ur3\_final\_1.csv} compuesto por 42 columnas físicas perfectamente alineadas en el tiempo.
@@ -1633,12 +1647,19 @@ Para certificar cuantitativamente el funcionamiento global del sistema mecatrón
 \paragraph{Análisis de variabilidad temporal y jitter}
 Las mediciones de telemetría y el presupuesto temporal consolidado en la Tabla~\ref{tab:timing_budget} confirman que la suma acumulada de las operaciones por ciclo (lectura de estado, interpolación de consignas, normalización de 42 valores, inferencia cuantizada INT8, saturación y escritura en la interfaz de esfuerzo) consume un tiempo medio total de $215.4\,\mu\text{s}$, con un caso extremo máximo de $299.7\,\mu\text{s}$. 
 
-Frente a la cota máxima estricta de $T = 2000\,\mu\text{s}$, el sistema opera consumiendo en promedio únicamente el \textbf{10.77\%} del tiempo admisible, lo que proporciona una holgura de seguridad temporal del \textbf{89.23\%} ($1784.6\,\mu\text{s}$ libres por ciclo). Este margen previene de manera absoluta la ocurrencia de violaciones de periodo o retardos de fase.
+Frente a la cota máxima estricta de $T = 2000\,\mu\text{s}$, el sistema opera consumiendo en promedio únicamente el \textbf{10.77\%} del tiempo admisible, lo que proporciona una holgura de seguridad temporal del \textbf{89.23\%} ($1784.6\,\mu\text{s}$ libres por ciclo). Este margen previene de manera absoluta la ocurrencia de violaciones de periodo o retardos de fase. La Figura~\ref{fig:timing_budget_500hz} desglosa analíticamente la distribución temporal de cada subetapa computacional y la holgura de seguridad remanente dentro del presupuesto disponible por ciclo.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{Imagenes/timing_budget_500hz.png}
+\caption{Presupuesto y distribución temporal del ciclo de control a $500\text{ Hz}$ ($T_s = 2000\,\mu\text{s}$): Desglose de latencias por subproceso dentro del bucle de control de par neuronal INT8 ($215.4\,\mu\text{s}$ de cómputo activo total) y margen determinista de holgura libre del $89.23\%$ ($1784.6\,\mu\text{s}$).}
+\label{fig:timing_budget_500hz}
+\end{figure}
 
 \paragraph{Certificación de preparación Sim-to-Real para TT2}
 Los ensayos en bucle cerrado sobre el manipulador UR3e en Gazebo Harmonic verifican fehacientemente que la arquitectura desarrollada en TT1 satisface la totalidad de los requerimientos funcionales y no funcionales formulados en la Tabla~\ref{tab:requerimientos_tt1}. 
 
-La modularidad del software bajo \texttt{ros2\_control}, el determinismo de la librería RNEA en C++, la robustez del motor cuantizado INT8 y la ausencia de memoria dinámica en los métodos críticos garantizan que la arquitectura se encuentra plenamente validada y verificada, dejando el sistema en un estado óptimo de madurez técnica para su transferencia inmediata a la planta robótica real y al despliegue en la plataforma neutra de hardware (FPGA) durante Trabajo Terminal 2.
+La modularidad del software bajo \texttt{ros2\_control}, el determinismo de la librería RNEA en C++, la robustez del motor cuantizado INT8 y la ausencia de memoria dinámica en los métodos críticos garantizan que la arquitectura se encuentra plenamente validada y verificada, dejando el sistema en un estado óptimo de madurez técnica para su transferencia inmediata a la planta robótica real y al despliegue en la plataforma neutra de hardware (FPGA)~\cite{JuarezLora2024Thesis} durante Trabajo Terminal 2.
 
 La Tabla~\ref{tab:resumen_verificacion_global} presenta el dictamen comparativo formal del sistema mecatrónico implementado frente a las especificaciones originales del proyecto.
 
