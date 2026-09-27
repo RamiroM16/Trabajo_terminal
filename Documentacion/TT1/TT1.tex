@@ -1106,6 +1106,15 @@ Error Estático (J1) & $0.038\text{ N}\cdot\text{m}$ & $0.046\text{ N}\cdot\text
 \end{tabularx}
 \end{table}
 
+En la Figura~\ref{fig:arquitectura_red_cuantizada} se presenta la síntesis visual del diseño de $M_3$: en la parte superior (a) se esquematiza la topología completa de capas de la red neuronal compensadora \texttt{UR3eNetwork}, especificando el número de neuronas por capa, las dimensiones de las matrices de pesos sinápticos y el desglose funcional de los tensores de entrada y salida; en la parte inferior se contrasta la estructura del registro de bits y la respuesta perceptual continua del modelo base FP32 (b1, b2) frente a la discretización en malla afín entera del modelo optimizado INT8 (c1, c2).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{Imagenes/arquitectura_red_cuantizada.png}
+\caption{Diseño del módulo de compensación inteligente ($M_3$): (a) Arquitectura y topología de capas del perceptrón multicapa $\mathtt{UR3eNetwork}$ ($42 \to 256 \to 512 \to 256 \to 128 \to 6$); (b1, b2) Estructura del registro IEEE 754 de 32 bits y percepción de resolución continua en punto flotante FP32; (c1, c2) Formato de registro afín de 8 bits y percepción de malla discreta escalonada en enteros INT8 ($\mathtt{QInt8}$), con resumen comparativo de recursos en tiempo real.}
+\label{fig:arquitectura_red_cuantizada}
+\end{figure}
+
 \paragraph{Inferencia Determinista en C++ (\texttt{NeuralTorqueController})}
 El despliegue en tiempo real se programó en \texttt{ur3\_neural\_controller.cpp}. El Listing~\ref{lst:onnx_cpp} exhibe el procedimiento de preparación del tensor normalizado, la invocación de inferencia y la saturación física de seguridad a $\pm 55.0\text{ N}\cdot\text{m}$.
 
