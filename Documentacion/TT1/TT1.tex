@@ -1397,7 +1397,7 @@ namespace ur3_neural {
 \end{lstlisting}
 
 \paragraph{Cuantización afín a enteros de 8 bits (INT8)}
-Una vez exportado el modelo entrenado a formato ONNX en precisión simple (\texttt{ur3\_neural\_controller.onnx}), se ejecutó el proceso de cuantización mediante el script \texttt{quantize\_model.py}. Debido a discrepancias comunes en los metadatos de dimensiones simbólicas en modelos densos, se aplicó una etapa de limpieza e inferencia de formas con \texttt{onnx.shape\_inference}. Posteriormente, se aplicó cuantización dinámica con el backend de ONNX Runtime~\cite{jacob2018quantization}:
+Una vez exportado el modelo entrenado a formato ONNX en precisión simple (\texttt{ur3\_neural\_controller.onnx}), se ejecutó el proceso de cuantización mediante el script \texttt{quantize\_model.py}. Debido a discrepancias comunes en los metadatos de dimensiones simbólicas en modelos densos, se aplicó una etapa previa de limpieza e inferencia de formas con \texttt{onnx.shape\_inference}. Posteriormente, se aplicó cuantización dinámica con el backend de ONNX Runtime~\cite{jacob2018quantization}:
 
 \begin{lstlisting}[language=Python, caption={Procedimiento de cuantización dinámica a precisión INT8.}, label={lst:py_quantize}]
 import onnx
@@ -1416,6 +1416,51 @@ quantize_dynamic(
     weight_type=QuantType.QInt8
 )
 \end{lstlisting}
+
+\paragraph{Mecanismo de cuantización y distribución de datos en el espacio de 8 bits}
+El procedimiento implementado corresponde formalmente a una \textbf{Cuantización Dinámica Post-Entrenamiento (Dynamic PTQ - \textit{Post-Training Quantization})} con formato de enteros de 8 bits con signo (\texttt{QuantType.QInt8}), donde el rango de cuantización discreto abarca $2^8 = 256$ niveles enteros:
+\begin{equation}
+    q \in \{-128, -127, \dots, 0, \dots, 126, 127\} \subset \mathbb{Z}
+\end{equation}
+A diferencia de una cuantización estática que calibra todas las variables fuera de línea, el esquema dinámico realiza una diferenciación funcional entre parámetros fijos y estados transitorios:
+\begin{itemize}
+    \item \textbf{Pesos sinápticos ($\bm{W}$):} Se cuantizan de forma estática fuera de línea, fijando factores de escala simétricos invariantes para cada matriz de pesos.
+    \item \textbf{Activaciones intermedias ($\bm{a}$):} Se cuantizan dinámicamente en tiempo de ejecución durante cada ciclo de control a $500\text{ Hz}$, evaluando en línea el rango dinámico del vector de entrada antes de ejecutar las multiplicaciones matriciales en aritmética entera.
+\end{itemize}
+
+\paragraph{Distribución adaptativa frente a una distribución lineal ingenua}
+Para comprender por qué esta arquitectura preserva la precisión del controlador con un error cuadrático residual de apenas $\text{MSE}_{cuant} = 0.00041\text{ (N}\cdot\text{m})^2$, resulta imprescindible contrastar el esquema adoptado frente a una distribución lineal uniforme fija o ingenua:
+
+\begin{enumerate}
+    \item \textbf{Limitaciones de la partición lineal fija sobre datos heterogéneos:}
+    Si se aplicara una partición lineal uniforme simple dividiendo un rango físico estático en 256 escalones equiespaciados, surgirían dos problemas de distorsión numérica:
+    \begin{itemize}
+        \item \textit{Heterogeneidad de escalas físicas:} El tensor de entrada integra magnitudes físicas con rangos y unidades completamente dispares: ángulos articulares $\bm{q} \in [-3.14, 3.14]\text{ rad}$, velocidades $\dot{\bm{q}} \in [-3.0, 3.0]\text{ rad/s}$, aceleraciones $\ddot{\bm{q}} \in [-15.0, 15.0]\text{ rad/s}^2$ y pares analíticos RNEA $\bm{\tau}_{RNEA} \in [-55.0, 55.0]\text{ N}\cdot\text{m}$. En una escala lineal no normalizada, el paso de discretización estaría dominado por el rango mayor de los pares ($110\text{ N}\cdot\text{m} / 256 \approx 0.43$). Bajo este tamaño de paso, las variables cinemáticas de menor amplitud angular quedarían confinadas a un puñado insignificante de niveles discretos, destruyendo la sensibilidad de las primeras capas neuronales ante pequeños desplazamientos.
+        \item \textit{Concentración estadística no uniforme de los pesos (campana gaussiana):} Tras optimizar la red con el algoritmo Adam~\cite{kingma2014adam} y regularización de decaimiento de pesos ($L_2$), la densidad de probabilidad de los pesos $\bm{W}$ no se distribuye de forma homogénea, sino que exhibe una distribución en forma de campana casi normal centrada en cero ($\mu_w \approx 0$). Más del $95\%$ de los pesos se concentran densamente en un intervalo estrecho (típicamente $[-0.25, 0.25]$), existiendo únicamente unos pocos valores atípicos dispersos en las colas que alcanzan $[-1.2, 1.2]$. Si se repartieran los 256 niveles de manera lineal fija a lo largo del soporte total $[-1.2, 1.2]$, el paso sería $\Delta = 2.4 / 256 \approx 0.0094$. Como consecuencia, la enorme mayoría de los 256 estados enteros se desperdiciaría en las regiones vacías de las colas, mientras que el núcleo denso de pesos (donde reside la información dinámica del robot) se representaría con un número extremadamente reducido de niveles, elevando drásticamente el ruido de cuantización (\textit{quantization noise}).
+    \end{itemize}
+
+    \item \textbf{Estrategia de concentración y asignación adaptativa en 8 bits:}
+    Para contrarrestar estas pérdidas de información, el sistema implementado articula dos etapas complementarias de mapeo:
+    \begin{itemize}
+        \item \textit{Normalización estadística z-score en C++:} Antes de entrar a la red, cada una de las 42 variables físicas es normalizada en tiempo de ejecución mediante los parámetros estáticos precalculados en \texttt{neural\_parameters.hpp}:
+        \begin{equation}
+            \tilde{x}_i = \frac{x_i - \mu_i}{\sigma_i}, \quad \forall i \in \{1, \dots, 42\}
+        \end{equation}
+        Esta transformación lineal desacopla las dimensiones físicas y proyecta todas las entradas a una distribución normal estándar con media cero y varianza unitaria ($\mathcal{N}(0, 1)$). Con ello, conforme a la regla empírica normal, el $99.73\%$ de los valores de todas las variables queda confinado exactamente en el intervalo $[-3\sigma, +3\sigma] = [-3, 3]$, eliminando el problema de dominancia de escalas.
+        \item \textit{Mapeo afín simétrico para pesos ($Z_w = 0$):} Para las matrices de pesos, se utiliza una cuantización simétrica con signo:
+        \begin{equation}
+            W_q = \text{clamp}\left( \text{round}\left( \frac{W}{S_w} \right), \quad -128, \quad 127 \right)
+        \end{equation}
+        donde la escala $S_w = \frac{\max(|W|)}{127}$ ajusta el rango de los 256 niveles directamente a la envolvente real de los pesos. Al fijar el punto cero estrictamente en $Z_w = 0$, se garantiza que el valor nulo real coincida exactamente con el cero entero, impidiendo derivas de polarización (*zero-point drift*) en las acumulaciones numéricas.
+        \item \textit{Mapeo afín asimétrico dinámico para activaciones:} Para los tensores de activación $\bm{a}$ generados en las capas ocultas, el runtime calcula dinámicamente en cada ciclo:
+        \begin{equation}
+            S_a = \frac{a_{max} - a_{min}}{255}, \qquad Z_a = \text{round}\left( -\frac{a_{min}}{S_a} \right) - 128
+        \end{equation}
+        Esta propiedad es de trascendental importancia mecatrónica: debido a que las capas intermedias utilizan funciones de activación de tipo ReLU, las activaciones resultantes son estrictamente no negativas ($a \ge 0$). Al disponer de un punto cero móvil $Z_a$, el valor $a = 0.0$ se asigna al nivel entero inferior $-128$, permitiendo que la \textbf{totalidad de los 256 niveles de INT8 se destine exclusivamente a discretizar el rango positivo $[0, a_{max}]$}. Si se hubiera empleado una distribución lineal simétrica centrada en cero, la mitad de los niveles (128 estados correspondientes a valores negativos) se habrían desperdiciado por completo, reduciendo la resolución útil a la mitad (equivalente a cuantizar a solo 7 bits).
+    \end{itemize}
+\end{enumerate}
+
+La sinergia entre la normalización $z$-score previa, la simetría de pesos y el punto cero asimétrico para activaciones ReLU asegura que los 8 bits se distribuyan con máxima densidad de entropía en las zonas de mayor probabilidad de los estados dinámicos, logrando una representación compacta de $315\text{ KB}$ que preserva con fidelidad la ley de control del manipulador.
 
 \paragraph{Implementación del motor de inferencia en C++}
 El controlador \texttt{NeuralTorqueController} ([Listing~\ref{lst:cpp_update_m3}]) inicializa la sesión \texttt{Ort::Session} configurada con políticas deterministas estrictas: se deshabilita la paralelización interna fijando el número de hilos de cómputo en uno (\texttt{options.SetIntraOpNumThreads(1)}), eliminando las conmutaciones de contexto del planificador del sistema operativo.
