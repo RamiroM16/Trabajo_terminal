@@ -752,10 +752,10 @@ En congruencia con el marco ágil de desarrollo (\textit{Scrum}) y alejándose d
 La descomposición funcional del sistema se estructura en los siguientes cinco servicios esenciales:
 
 \begin{enumerate}
-    \item \textbf{Servicio de Planificación y Generación de Trayectorias:} Encargado de sintetizar las trayectorias articulares de referencia deseadas $(\bm{q}_d(t), \dot{\bm{q}}_d(t), \ddot{\bm{q}}_d(t))$. Emplea formulaciones polinomiales de quinto grado para garantizar que tanto la velocidad como la aceleración articular sean continuas ($C^2$), eliminando saltos bruscos en las fuerzas inerciales y preservando la vida mecánica de las transmisiones.
-    \item \textbf{Servicio de Supervisión y Bucle Crítico en Tiempo Real:} Núcleo central del controlador. En cada periodo de muestreo ($T_s = 2\text{ ms}$), este servicio adquiere el estado cinemático real del manipulador $(\bm{q}, \dot{\bm{q}})$ a través de las interfaces de hardware (\texttt{hardware\_interface::HW\_IF\_POSITION} y \texttt{HW\_IF\_VELOCITY}), calcula el vector de error articular $\bm{e} = \bm{q}_d - \bm{q}$ y su derivada $\dot{\bm{e}}$, y evalúa analíticamente las ecuaciones recursivas de Newton-Euler (RNEA) para obtener el vector de pares nominales $\bm{\tau}_{RNEA}(\bm{q}, \dot{\bm{q}}, \ddot{\bm{q}}_d)$.
-    \item \textbf{Servicio de Inferencia Inteligente Cuantizada:} Construye un vector de características normalizado de 42 dimensiones que condensa el estado cinemático actual, el estado deseado y la predicción física analítica. Mediante el motor de inferencia optimizado de ONNX Runtime ejecutado en modo monohilo dentro del espacio de memoria de C++, este servicio calcula la compensación de dinámica no modelada y fricción articular en precisión entera INT8, restituye la escala física de las magnitudes y aplica un esquema de saturación de seguridad acotado a $\pm 55.0\text{ N}\cdot\text{m}$.
-    \item \textbf{Capa de Abstracción de Hardware (\textit{Hardware Abstraction Layer}):} Gestionada a través de la interfaz estándar \texttt{ros2\_control}, esta capa envía los pares de esfuerzo comandados (\texttt{HW\_IF\_EFFORT}) hacia los actuadores articulares. Su diseño modular permite que la misma consigna de control sea consumida de manera idéntica por el simulador de física avanzada (Gazebo Harmonic en TT1) o por el manipulador físico real (UR3e en TT2), aislando completamente el algoritmo de control de los detalles de bajo nivel del hardware.
+    \item \textbf{Servicio de Planificación y Generación de Trayectorias:} Encargado de sintetizar las trayectorias articulares de referencia deseadas $(\bm{q}_d(t), \dot{\bm{q}}_d(t), \ddot{\bm{q}}_d(t))$. Emplea formulaciones polinomiales de quinto grado \cite{biagiotti2008trajectory} para garantizar que tanto la velocidad como la aceleración articular sean continuas ($C^2$), eliminando saltos bruscos en las fuerzas inerciales y preservando la vida mecánica de las transmisiones.
+    \item \textbf{Servicio de Supervisión y Bucle Crítico en Tiempo Real:} Núcleo central del controlador. En cada periodo de muestreo ($T_s = 2\text{ ms}$), este servicio adquiere el estado cinemático real del manipulador $(\bm{q}, \dot{\bm{q}})$ a través de las interfaces de hardware (\texttt{hardware\_interface::HW\_IF\_POSITION} y \texttt{HW\_IF\_VELOCITY}), calcula el vector de error articular $\bm{e} = \bm{q}_d - \bm{q}$ y su derivada $\dot{\bm{e}}$, y evalúa analíticamente las ecuaciones recursivas de Newton-Euler (RNEA) \cite{luh1980online} para obtener el vector de pares nominales $\bm{\tau}_{RNEA}(\bm{q}, \dot{\bm{q}}, \ddot{\bm{q}}_d)$.
+    \item \textbf{Servicio de Inferencia Inteligente Cuantizada:} Construye un vector de características normalizado de 42 dimensiones que condensa el estado cinemático actual, el estado deseado y la predicción física analítica. Mediante el motor de inferencia optimizado de ONNX Runtime ejecutado en modo monohilo dentro del espacio de memoria de C++, este servicio calcula la compensación de dinámica no modelada y fricción articular en precisión entera INT8 mediante cuantización afín \cite{jacob2018quantization}, restituye la escala física de las magnitudes y aplica un esquema de saturación de seguridad acotado a $\pm 55.0\text{ N}\cdot\text{m}$.
+    \item \textbf{Capa de Abstracción de Hardware (\textit{Hardware Abstraction Layer}):} Gestionada a través de la interfaz estándar \texttt{ros2\_control} sobre el ecosistema ROS 2 \cite{macenski2022robot}, esta capa envía los pares de esfuerzo comandados (\texttt{HW\_IF\_EFFORT}) hacia los actuadores articulares. Su diseño modular permite que la misma consigna de control sea consumida de manera idéntica por el simulador de física avanzada (Gazebo Harmonic en TT1) o por el manipulador físico real (UR3e en TT2), aislando completamente el algoritmo de control de los detalles de bajo nivel del hardware.
     \item \textbf{Servicio Asíncrono de Telemetría y Monitoreo:} Opera fuera del hilo crítico de control mediante el mecanismo no bloqueante \texttt{realtime\_tools::}\linebreak\texttt{RealtimeBuffer}, publicando los vectores de estado y pares a 100~Hz hacia el sistema de registro en formato MCAP (\texttt{ros2 bag}) para su análisis posterior y cálculo de errores RMS, sin inducir retardos ni variaciones de latencia (\textit{jitter}) en el ciclo principal.
 \end{enumerate}
 
@@ -775,16 +775,16 @@ Para habilitar un desarrollo ágil por \textit{Sprints} y facilitar la integraci
 
 \begin{itemize}
     \item \textbf{Módulo 1 ($M_1$) -- Planta Robótica y Entorno Sim-to-Real:} 
-    Comprende el manipulador robótico de 6 GDL Universal Robots UR3e (alcance de $500\text{ mm}$, carga útil nominal de $3\text{ kg}$) y su contraparte virtual de alta fidelidad. En TT1, la planta se modela rigurosamente en el simulador Gazebo Harmonic acoplado con el plugin \texttt{gz\_ros2\_control}, utilizando los descriptores cinemáticos y dinámicos oficiales (URDF/Xacro). Este entorno reproduce las inercias, masas y límites articulares reales del UR3e, garantizando que el controlador interactúe con interfaces de hardware idénticas a las del manipulador físico disponible para TT2.
+    Comprende el manipulador robótico de 6 GDL Universal Robots UR3e (alcance de $500\text{ mm}$, carga útil nominal de $3\text{ kg}$) \cite{universal_robots_ur3e_manual} y su contraparte virtual de alta fidelidad. En TT1, la planta se modela rigurosamente en el simulador Gazebo Harmonic acoplado con el plugin \texttt{gz\_ros2\_control}, utilizando los descriptores cinemáticos y dinámicos oficiales (URDF/Xacro). Este entorno reproduce las inercias, masas y límites articulares reales del UR3e, garantizando que el controlador interactúe con interfaces de hardware idénticas a las del manipulador físico disponible para TT2.
     
     \item \textbf{Módulo 2 ($M_2$) -- Control Dinámico Analítico y Lógica de Tiempo Real:} 
-    Contiene la formulación analítica de la dinámica inversa implementada en C++17 mediante la librería de encabezados \texttt{ur3e\_dynamics.hpp}. Este módulo computa el algoritmo RNEA en un tiempo de ejecución determinista inferior a $50\,\mu\text{s}$, suministrando la base de par necesaria para linealizar el comportamiento dinámico del robot. Asimismo, aloja el controlador clásico por par computado (\texttt{ComputedTorqueController}) que sirve como referencia (*baseline*) experimental.
+    Contiene la formulación analítica de la dinámica inversa implementada en C++17 mediante la librería de encabezados \texttt{ur3e\_dynamics.hpp}. Este módulo computa el algoritmo RNEA \cite{luh1980online} en un tiempo de ejecución determinista inferior a $50\,\mu\text{s}$, suministrando la base de par necesaria para linealizar el comportamiento dinámico del robot. Asimismo, aloja el controlador clásico por par computado (\texttt{ComputedTorqueController}) \cite{spong2006robot} que sirve como referencia (*baseline*) experimental.
     
     \item \textbf{Módulo 3 ($M_3$) -- Inteligencia Artificial y Motor de Cuantización:} 
-    Abarca el ciclo de vida completo de la red neuronal compensadora: desde la arquitectura de perceptrón multicapa (MLP) diseñada y entrenada en PyTorch (42 entradas, capas densas intermedias de 256, 512, 256 y 128 neuronas con activaciones ReLU, y 6 salidas de par), hasta su exportación al formato estándar ONNX y su posterior cuantización dinámica post-entrenamiento (PTQ) a enteros de 8 bits (INT8) mediante \texttt{quantize\_model.py}. Este módulo integra el plugin de control \texttt{NeuralTorqueController}, el cual aloja una sesión persistente de la API C++ de ONNX Runtime configurada en modo monohilo (\texttt{SetIntraOpNumThreads(1)}) para garantizar latencias de inferencia ultra bajas e invariantes.
+    Abarca el ciclo de vida completo de la red neuronal compensadora: desde la arquitectura de perceptrón multicapa (MLP) diseñada y entrenada en PyTorch (42 entradas, capas densas intermedias de 256, 512, 256 y 128 neuronas con activaciones ReLU, y 6 salidas de par), hasta su exportación al formato estándar ONNX y su posterior cuantización dinámica post-entrenamiento (PTQ) a enteros de 8 bits (INT8) mediante \texttt{quantize\_model.py} \cite{jacob2018quantization}. Este módulo integra el plugin de control \texttt{NeuralTorqueController}, el cual aloja una sesión persistente de la API C++ de ONNX Runtime configurada en modo monohilo (\texttt{SetIntraOpNumThreads(1)}) para garantizar latencias de inferencia ultra bajas e invariantes.
     
     \item \textbf{Módulo 4 ($M_4$) -- Supervisión, Telemetría y Adquisición:} 
-    Integra el software de generación de trayectorias aleatorias y deterministas con polinomios de quinto orden (\texttt{random\_trajectory\_generator.py}), el subsistema de registro de telemetría de alta frecuencia mediante \texttt{ros2 bag} en almacenamiento binario estructurado MCAP, y las rutinas de procesamiento y filtrado digital (\texttt{bag\_to\_csv.py}) basadas en el filtro de Savitzky-Golay para la estimación suave de velocidades y aceleraciones a partir de datos experimentales.
+    Integra el software de generación de trayectorias aleatorias y deterministas con polinomios de quinto orden (\texttt{random\_trajectory\_generator.py}) \cite{biagiotti2008trajectory}, el subsistema de registro de telemetría de alta frecuencia mediante \texttt{ros2 bag} en almacenamiento binario estructurado MCAP, y las rutinas de procesamiento y filtrado digital (\texttt{bag\_to\_csv.py}) basadas en el filtro de Savitzky-Golay \cite{savitzky1964smoothing} para la estimación suave de velocidades y aceleraciones a partir de datos experimentales.
 \end{itemize}
 
 \subsubsection{Propuestas solución}
@@ -867,7 +867,7 @@ La validación conceptual de la arquitectura mecatrónica seleccionada (Propuest
 \subsubsection{Selección diseño conceptual}
 \label{sssec:seleccion_diseno_conceptual}
 
-Para formalizar la toma de decisiones ingenieriles y determinar la idoneidad técnica de la arquitectura para la fase TT1, se empleó una matriz de selección conceptual de Pugh ponderada. En este método, los criterios de evaluación reflejan los factores críticos de éxito del proyecto (viabilidad analítica, precisión dinámica, eficiencia computacional y preparación para hardware real en TT2). 
+Para formalizar la toma de decisiones ingenieriles y determinar la idoneidad técnica de la arquitectura para la fase TT1, se empleó una matriz de selección conceptual de Pugh ponderada \cite{pugh1991total}. En este método, los criterios de evaluación reflejan los factores críticos de éxito del proyecto (viabilidad analítica, precisión dinámica, eficiencia computacional y preparación para hardware real en TT2). 
 
 Se asignó un peso relativo normalizado ($w_i \in [0, 1]$ con $\sum w_i = 1.0$) a cada criterio en función de su criticidad mecatrónica. Como solución de referencia (*Datum*, con puntaje base $0$), se seleccionó la **Propuesta B (Plataforma Neutra / FPGA)**, dado que representa el marco comparativo ideal proyectado. Las alternativas se calificaron con una escala relativa: $+2$ (significativamente mejor que la referencia), $+1$ (mejor), $0$ (equivalente), $-1$ (inferior) y $-2$ (significativamente inferior).
 
@@ -912,10 +912,10 @@ En esta sección se desarrolla la especificación cuantitativa, matemática y al
 \subsubsection{Detalle módulo 1 ($M_1$) -- Planta Robótica y Entorno Sim-to-Real}
 \label{sssec:detalle_m1}
 
-El módulo $M_1$ comprende la planta física objetivo y su réplica virtual en simulación. Como efector y estructura de manipulación se utiliza el robot industrial colaborativo Universal Robots UR3e, un manipulador serial antropomórfico de 6 articulaciones rotacionales concebido para tareas de alta repetibilidad ($\pm 0.03\text{ mm}$) con un radio de alcance máximo de $500\text{ mm}$ y una capacidad de carga nominal de $3\text{ kg}$.
+El módulo $M_1$ comprende la planta física objetivo y su réplica virtual en simulación. Como efector y estructura de manipulación se utiliza el robot industrial colaborativo Universal Robots UR3e \cite{universal_robots_ur3e_manual}, un manipulador serial antropomórfico de 6 articulaciones rotacionales concebido para tareas de alta repetibilidad ($\pm 0.03\text{ mm}$) con un radio de alcance máximo de $500\text{ mm}$ y una capacidad de carga nominal de $3\text{ kg}$.
 
 \paragraph{Parámetros Cinemáticos y Dinámicos del Manipulador}
-Para el cálculo de la cinemática directa y el posterior modelado dinámico analítico, se adoptó la convención de Denavit-Hartenberg modificada (Craig). En la Tabla~\ref{tab:dh_ur3e} se detallan los parámetros geométricos del manipulador implementados en C++, validados previamente con respecto al árbol cinemático oficial de Universal Robots.
+Para el cálculo de la cinemática directa y el posterior modelado dinámico analítico, se adoptó la convención de Denavit-Hartenberg modificada propuesta por Craig \cite{craig2005introduction}. En la Tabla~\ref{tab:dh_ur3e} se detallan los parámetros geométricos del manipulador implementados en C++, validados previamente con respecto al árbol cinemático oficial de Universal Robots.
 
 \begin{table}[htbp]
 \centering
@@ -972,7 +972,7 @@ La validación cinemática del módulo $M_1$ se efectuó contrastando las matric
 \subsubsection{Detalle módulo 2 ($M_2$) -- Control Dinámico Analítico en Tiempo Real}
 \label{sssec:detalle_m2}
 
-El módulo $M_2$ implementa en tiempo real la solución de la dinámica inversa del robot basada en las leyes clásicas de Newton y Euler. Su propósito primario es calcular de manera exacta el vector de pares articulares $\bm{\tau}_{RNEA} \in \mathbb{R}^6$ requerido para que el robot siga una trayectoria con aceleraciones $\ddot{\bm{q}}_d$ compensando las inercias, fuerzas centrífugas, de Coriolis y gravitacionales.
+El módulo $M_2$ implementa en tiempo real la solución de la dinámica inversa del robot basada en las leyes clásicas de Newton y Euler mediante la formulación recursiva de Luh, Walker y Paul (RNEA) \cite{luh1980online}. Su propósito primario es calcular de manera exacta el vector de pares articulares $\bm{\tau}_{RNEA} \in \mathbb{R}^6$ requerido para que el robot siga una trayectoria con aceleraciones $\ddot{\bm{q}}_d$ compensando las inercias, fuerzas centrífugas, de Coriolis y gravitacionales.
 
 \paragraph{Formulación Analítica Recursiva de Newton-Euler}
 El algoritmo se divide en dos etapas recursivas:
@@ -1027,7 +1027,7 @@ for (int i = 5; i >= 0; --i) {
 \end{lstlisting}
 
 \paragraph{Lógica de Control por Par Computado (CTC)}
-El módulo aloja además el controlador \texttt{ComputedTorqueController} en \texttt{ur3\_custom\_controller.cpp}. La ley de control articula la compensación analítica y una retroalimentación de error proporcional-derivativo:
+El módulo aloja además el controlador \texttt{ComputedTorqueController} en \texttt{ur3\_custom\_controller.cpp}. La ley de control por par computado (CTC) \cite{spong2006robot, craig2005introduction} articula la compensación analítica y una retroalimentación de error proporcional-derivativo:
 \begin{equation}
     \bm{\tau}_{cmd} = \bm{\tau}_{RNEA}(\bm{q}, \dot{\bm{q}}, \ddot{\bm{q}}_d) + \bm{K}_p (\bm{q}_d - \bm{q}) + \bm{K}_d (\dot{\bm{q}}_d - \dot{\bm{q}})
     \label{eq:ctc_law}
@@ -1077,14 +1077,14 @@ Salida & Densa (\texttt{Linear}) & $128 \to 6$ & Lineal & -- \\
 \end{tabularx}
 \end{table}
 
-El entrenamiento se llevó a cabo durante 500 épocas empleando el optimizador Adam con una tasa de aprendizaje inicial $\alpha = 0.002$, un tamaño de lote (*batch size*) de 512 muestras y un programador de tasa de aprendizaje (\texttt{ReduceLROnPlateau}) con factor de decaimiento $0.5$ y paciencia de 15 épocas. Como función de pérdida se utilizó el error cuadrático medio:
+El entrenamiento se llevó a cabo durante 500 épocas empleando el optimizador estocástico adaptativo Adam \cite{kingma2014adam} con una tasa de aprendizaje inicial $\alpha = 0.002$, un tamaño de lote (*batch size*) de 512 muestras y un programador de tasa de aprendizaje (\texttt{ReduceLROnPlateau}) con factor de decaimiento $0.5$ y paciencia de 15 épocas. Como función de pérdida se utilizó el error cuadrático medio:
 \begin{equation}
     \mathcal{L}_{MSE} = \frac{1}{N} \sum_{k=1}^N \sum_{j=1}^6 \left( \tau_{j, k}^{pred} - \tau_{j, k}^{real} \right)^2
     \label{eq:mse_loss}
 \end{equation}
 
 \paragraph{Pipeline de Cuantización Dinámica a INT8 (PTQ)}
-Tras finalizar el entrenamiento, el modelo en punto flotante (FP32) se exportó al formato estándar ONNX con versión de conjunto de operadores (\textit{opset}) 9. Mediante el script \texttt{quantize\_model.py}, se ejecutó una limpieza de formas y la cuantización dinámica a precisión entera de 8 bits utilizando la API de ONNX Runtime (\texttt{quantize\_dynamic} con \texttt{QuantType.QInt8}).
+Tras finalizar el entrenamiento, el modelo en punto flotante (FP32) se exportó al formato estándar ONNX con versión de conjunto de operadores (\textit{opset}) 9. Mediante el script \texttt{quantize\_model.py}, se ejecutó una limpieza de formas y la cuantización dinámica a precisión entera de 8 bits basada en la formulación afín de Jacob et al. \cite{jacob2018quantization} utilizando la API de ONNX Runtime (\texttt{quantize\_dynamic} con \texttt{QuantType.QInt8}).
 
 En la Tabla~\ref{tab:cuantizacion_comp} se muestra la comparativa directa entre el modelo en punto flotante original y el modelo cuantizado en INT8.
 
@@ -1138,7 +1138,7 @@ La validación del modelo cuantizado arrojó un error estático promedio en el c
 El módulo $M_4$ asegura la alimentación de perfiles cinemáticos admisibles hacia el controlador y la captura transparente de telemetría experimental para fines de análisis y entrenamiento.
 
 \paragraph{Generación de Trayectorias Suaves ($C^2$)}
-Para prevenir impactos inerciales que dañen los reductores o exciten modos de vibración estructural en el robot real, el nodo \texttt{random\_trajectory\_generator.py} interpola entre puntos articulares mediante polinomios quínticos. La función de interpolación normalizada $s(\tau)$ para $\tau = t / T \in [0, 1]$ se rige por:
+Para prevenir impactos inerciales que dañen los reductores o exciten modos de vibración estructural en el robot real, el nodo \texttt{random\_trajectory\_generator.py} interpola entre puntos articulares mediante polinomios quínticos \cite{biagiotti2008trajectory}. La función de interpolación normalizada $s(\tau)$ para $\tau = t / T \in [0, 1]$ se rige por:
 \begin{align}
     s(\tau) &= 10\tau^3 - 15\tau^4 + 6\tau^5 \label{eq:quintic_pos} \\
     \dot{s}(\tau) &= \frac{1}{T}\left( 30\tau^2 - 60\tau^3 + 30\tau^4 \right) \label{eq:quintic_vel} \\
@@ -1147,7 +1147,7 @@ Para prevenir impactos inerciales que dañen los reductores o exciten modos de v
 Evaluando en los límites temporales $\tau = 0$ y $\tau = 1$, se satisface idénticamente que $s(0)=0, s(1)=1$, $\dot{s}(0)=\dot{s}(1)=0$ y $\ddot{s}(0)=\ddot{s}(1)=0$. En consecuencia, las aceleraciones articulares $\ddot{\bm{q}}_d(t)$ inician y concluyen suavemente en cero, garantizando continuidad matemática $C^2$ en todo el trayecto.
 
 \paragraph{Telemetría y Filtrado Digital Savitzky-Golay}
-La telemetría de 42 variables de control se registra en caliente mediante el framework \texttt{ros2 bag} empleando el formato binario estructurado MCAP (\texttt{storage\_id='mcap'}). Para procesar los datos registrados y calcular las aceleraciones reales $\ddot{\bm{q}}_{act}$ sin amplificar el ruido de cuantización inherente a los encoders ópticos, en \texttt{bag\_to\_csv.py} se implementó un filtro de Savitzky-Golay configurado con un polinomio de orden $p=3$, una ventana móvil de $2m+1=11$ muestras y un paso temporal $\Delta t = 0.01\text{ s}$:
+La telemetría de 42 variables de control se registra en caliente mediante el framework \texttt{ros2 bag} empleando el formato binario estructurado MCAP (\texttt{storage\_id='mcap'}). Para procesar los datos registrados y calcular las aceleraciones reales $\ddot{\bm{q}}_{act}$ sin amplificar el ruido de cuantización inherente a los encoders ópticos, en \texttt{bag\_to\_csv.py} se implementó un filtro de Savitzky-Golay \cite{savitzky1964smoothing} configurado con un polinomio de orden $p=3$, una ventana móvil de $2m+1=11$ muestras y un paso temporal $\Delta t = 0.01\text{ s}$:
 \begin{equation}
     \ddot{q}_{k} = \sum_{j=-m}^m c_j^{(1)} \dot{q}_{k+j}
     \label{eq:savgol_filter}
@@ -1160,7 +1160,7 @@ Se validó la continuidad de las trayectorias generadas verificando la ausencia 
 \subsubsection{Integración del sistema mecatrónico}
 \label{sssec:integracion_sistema_mecatronico}
 
-La integración del sistema mecatrónico unifica los cuatro módulos ($M_1 \dots M_4$) en una arquitectura distribuida pero fuertemente acoplada en tiempo real bajo ROS 2 Jazzy. 
+La integración del sistema mecatrónico unifica los cuatro módulos ($M_1 \dots M_4$) en una arquitectura distribuida pero fuertemente acoplada en tiempo real bajo ROS 2 Jazzy \cite{macenski2022robot}. 
 
 En la Figura~\ref{fig:integracion_mecatronica} se detalla el esquema de comunicación inter-procesos, los canales de datos y el acoplamiento temporal entre la capa de inferencia neuronal, el controlador dinámico y la capa de abstracción de hardware.
 
