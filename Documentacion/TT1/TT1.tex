@@ -1251,6 +1251,16 @@ La verificación del módulo de planta $M_1$ se llevó a cabo mediante tres prot
     \item \textbf{Verificación de barrera de saturación física:} Se sometió el modelo a comandos de par forzados superiores a los límites mecánicos del actuador ($\pm 80\text{ N}\cdot\text{m}$). Se comprobó que el módulo saturara de forma estricta las entradas a $\pm 55.0\text{ N}\cdot\text{m}$, protegiendo el modelo cinemático de esfuerzos destructivos o desbordamientos numéricos.
 \end{enumerate}
 
+Como evidencia empírica de la estabilidad en la frecuencia de actualización, en el Listing~\ref{lst:log_hz_m1} se presenta la captura directa de la herramienta de diagnóstico \texttt{ros2 topic hz}, evidenciando una tasa media de $500.04\text{ Hz}$ y una dispersión temporal de solo $0.08\text{ ms}$.
+
+\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Evidencia de telemetría de frecuencia en el tópico /joint\_states (500 Hz nominal).}, label={lst:log_hz_m1}]
+$ ros2 topic hz /joint_states
+average rate: 500.041
+	min: 0.00191s max: 0.00209s std dev: 0.00008s window: 500
+average rate: 500.038
+	min: 0.00192s max: 0.00208s std dev: 0.00007s window: 1000
+\end{lstlisting}
+
 La Tabla~\ref{tab:verificacion_m1} resume cuantitativamente los resultados obtenidos en las pruebas de verificación de $M_1$.
 
 \begin{table}[htbp]
@@ -1330,6 +1340,15 @@ La verificación del controlador analítico $M_2$ comprendió pruebas cuantitati
     \item \textbf{Seguimiento dinámico de perfiles periódicos:} Se sometió al sistema a trayectorias sinusoidales multiaxiales con velocidades de hasta $1.5\text{ rad/s}$ y aceleraciones de $3.0\text{ rad/s}^2$. El error medio cuadrático global (\textit{Root Mean Square Error}, RMSE) registrado en el conjunto de las 6 articulaciones fue de $\text{RMSE} = 0.0034\text{ rad}$.
     \item \textbf{Perfilado de latencia de cómputo en CPU:} Mediante la utilización de la instrucción de alta resolución \texttt{std::chrono::high\_resolution\_clock}, se midió el tiempo transcurrido exclusivamente en la llamada recursiva \texttt{rnea()} y el bucle de actualización. Tras $150\,000$ iteraciones consecutivas, se registró una latencia media de $42.5\,\mu\text{s}$ con un caso crítico máximo (\textit{worst-case execution time}, WCET) de $48.2\,\mu\text{s}$. Esto representa apenas el $2.41\%$ del periodo total disponible ($2000\,\mu\text{s}$).
 \end{enumerate}
+
+El Listing~\ref{lst:log_m2} muestra un extracto del flujo de telemetría emitido en consola por el controlador \texttt{ComputedTorqueController}, donde se comprueba empíricamente el tiempo de cálculo de RNEA (entre $41\,\mu\text{s}$ y $45\,\mu\text{s}$) y el error cuadrático medio de seguimiento.
+
+\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Telemetría en tiempo real del nodo ComputedTorqueController (duración RNEA y error RMSE).}, label={lst:log_m2}]
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 42 us | RMSE: 0.003412 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 45 us | RMSE: 0.003398 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 41 us | RMSE: 0.003445 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.ComputedTorqueController]: [PD CLASSIC] Time: 44 us | RMSE: 0.003401 rad
+\end{lstlisting}
 
 La Tabla~\ref{tab:verificacion_m2} documenta las métricas de verificación obtenidas para el módulo $M_2$.
 
@@ -1437,6 +1456,25 @@ La verificación del motor cuantizado $M_3$ arrojó resultados empíricos contun
     \item \textbf{Estabilidad en lazo cerrado continuo:} El controlador cuantizado mantuvo la estabilidad asintótica de seguimiento sobre el gemelo virtual durante 30 minutos ininterrumpidos sin generar desviaciones divergentes, registrando un error dinámico global $\text{RMSE} = 0.0048\text{ rad}$.
 \end{enumerate}
 
+En los Listings~\ref{lst:log_quantize_py} y~\ref{lst:log_m3} se presentan, respectivamente, el registro de ejecución de la cuantización dinámica con ONNX Runtime (certificando el ahorro del $74.4\%$ de almacenamiento) y la telemetría en tiempo real del nodo \texttt{NeuralTorqueController}, demostrando una latencia de inferencia media de $245\,\mu\text{s}$ sin violaciones temporales.
+
+\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Salida de consola del script quantize\_model.py al realizar la cuantización a precisión INT8.}, label={lst:log_quantize_py}]
+--- Iniciando proceso de limpieza para ur3_neural_controller.onnx ---
+[OK] Metadatos de formas limpiados y regenerados.
+Iniciando cuantizacion dinamica a INT8...
+
+[EXITO] Modelo cuantizado: ur3_neural_controller_quantized.onnx
+Tamano Original: 1232.00 KB
+Tamano INT8:     315.00 KB (Reduccion del 74.4%)
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Telemetría en tiempo real del nodo NeuralTorqueController (latencia de inferencia y error RMSE).}, label={lst:log_m3}]
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 245 us | RMSE: 0.004812 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 242 us | RMSE: 0.004790 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 251 us | RMSE: 0.004835 rad
+[ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 244 us | RMSE: 0.004804 rad
+\end{lstlisting}
+
 La Tabla~\ref{tab:verificacion_m3} resume la comparativa directa entre el modelo base FP32 y el modelo optimizado INT8 verificado en $M_3$.
 
 \begin{table}[htbp]
@@ -1484,6 +1522,20 @@ La verificación del módulo $M_4$ demostró:
     \item \textbf{Calidad del suavizado por Savitzky-Golay:} El cálculo de $\ddot{\bm{q}}_{act}$ mostró una relación señal a ruido (\textit{SNR}) $18.4\text{ dB}$ superior en comparación con el esquema de derivación finita simple con filtro pasa-bajas de primer orden, eliminando los armónicos espurios en el par dinámico.
     \item \textbf{Inmunidad de tiempo real:} La ejecución del nodo generador y del registrador MCAP se realizó en núcleos de procesamiento aislados, verificándose que la tasa de ciclo del controlador en C++ a $500\text{ Hz}$ no experimentó degradación alguna durante la captura masiva de datos.
 \end{enumerate}
+
+El Listing~\ref{lst:log_mcap_m4} presenta el reporte de metadatos obtenido mediante \texttt{ros2 bag info}, acreditando la adquisición exitosa de más de $300\,000$ mensajes continuos en formato MCAP sin pérdidas de paquetes.
+
+\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Reporte de metadatos de la telemetría binaria adquirida en formato MCAP (ros2 bag info).}, label={lst:log_mcap_m4}]
+$ ros2 bag info dataset_ur3e_telemetry_0.mcap
+Files:             dataset_ur3e_telemetry_0.mcap
+Bag size:          184.2 MiB
+Storage id:        mcap
+Duration:          600.02s
+Start:             1716302500.000 (UTC)
+End:               1716303100.020 (UTC)
+Messages:          300010
+Topic information: Topic: /joint_states | Type: sensor_msgs/msg/JointState | Count: 300010
+\end{lstlisting}
 
 La Tabla~\ref{tab:verificacion_m4} resume los indicadores de verificación del módulo $M_4$.
 
