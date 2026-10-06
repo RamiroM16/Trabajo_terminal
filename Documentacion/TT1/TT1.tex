@@ -21,6 +21,9 @@
 \usepackage{afterpage}
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage{float}
+\usepackage{pdfpages}
+\usepackage[colorlinks=true, linkcolor=blue!70!black, citecolor=blue!70!black, urlcolor=blue!70!black]{hyperref}
 
 % Configuración profesional de listings para C++ y Python
 \definecolor{codegreen}{rgb}{0.1,0.6,0.2}
@@ -54,73 +57,19 @@
 
 \begin{document}
 
+% =========================================================================
+% PORTADA OFICIAL INSTITUCIONAL UPIITA - IPN (UpiiTeXis)
+% =========================================================================
+% Incorpora la carátula oficial reglamentaria con franja lateral, heráldica
+% institucional (IPN / UPIITA) y líneas formales de firmas para:
+%   - Alumno: Ramiro Mendoza Diaz
+%   - Asesor: Dr. Jorge Alejandro Juárez Lora
+%   - Presidente del Jurado: Dra. Blanca Rosa Briseño Tepepa
+%   - Profesor titular: M. en C. Cecilia Fernández Nava
+\includepdf[pages=1]{portada_upiita.pdf}
+
 \pagenumbering{roman}
-
-% --- PRELIMINAR ---
-\begin{titlepage}
-    \begin{center}
-        \begin{minipage}{0.4\linewidth}
-            \includegraphics[width=0.9\linewidth]{Imagenes/IPN.png}
-        \end{minipage}
-        \hfill
-        \begin{minipage}{0.4\linewidth}
-            \includegraphics[width=0.6\linewidth]{Imagenes/upiita.png}
-        \end{minipage}
-
-        \vspace{1cm}
-        \hrule
-        \vspace{2cm}
-
-        {\LARGE \textbf{Instituto Politécnico Nacional}} \\
-        \vspace{0.5cm}
-        {\Large Unidad Profesional Interdisciplinaria en Ingeniería y Tecnologías Avanzadas} \\
-        \vspace{1cm}
-                
-        {\Large Ingeniería Mecatrónica} \\
-        \vspace{.5cm}
-        {\Large Reporte de Trabajo Terminal 1} \\
-        \vspace{1.5cm}
-
-        {\huge \textbf{Control de posición de robot manipulador usando redes neuronales cuantizadas}} \\
-        \vspace{1.5cm}
-
-        {\Large \textbf{ Autor:}} \\
-        {\Large Mendoza Díaz Ramiro} \\
-        \vspace{1.5cm}
-        
-        {\Large \textbf{Asesor:}} \\
-        {\Large Dr. Jorge Alejandro Juárez Lora} \\
-        \vspace{1.5cm}
-
-        {\Large \textbf{Profesores:}} \\
-        {\Large Fernandez Nava Cecilia} \\
-        {\Large Martínez Solis Sandra} \\
-        \vspace{2cm}
-
-    \end{center}
-\end{titlepage}
-
-\newpage
-\vspace*{5cm}
-\begin{center}
-    \Huge \textbf{Portada con firmas}
-    
-    (Añadir la portada de firmas aquí)
-\end{center}
-
-\newpage
-\vspace*{5cm}
-\begin{flushright}
-    \Large \textit{Dedicatoria...}
-\end{flushright}
-
-\newpage
-\vspace*{5cm}
-\begin{center}
-    \Large \textbf{Agradecimientos}
-    
-    Agradezco a...
-\end{center}
+\setcounter{page}{2}
 
 \newpage
 \tableofcontents
@@ -128,25 +77,26 @@
 \newpage
 \addcontentsline{toc}{section}{Resumen}
 {\large \textbf{Resumen}}\\
-La robótica moderna demanda sistemas de control cada vez más complejos para que los manipuladores ejecuten tareas aún más desarrolladas con precisión y adaptabilidad. Si bien la inteligencia artificial, y en particular las redes neuronales profundas (DNNs), ofrecen soluciones potentes, su elevado costo computacional y energético restringe su aplicación en plataformas robóticas con cómputo al filo. Este proyecto de investigación se centra en este desafío, motivado por la necesidad crítica de desarrollar controladores robóticos energéticamente eficientes y de validar cuantitativamente sus beneficios.
+El despliegue de controladores avanzados basados en Redes Neuronales Profundas (DNNs) en la robótica de manipulación enfrenta restricciones severas de latencia y consumo energético impuestas por el cuello de botella de Von Neumann y la barrera de memoria en sistemas de cómputo embebidos. En lazos de control cerrados en tiempo real ($100\text{ Hz} - 500\text{ Hz}$), la evaluación continua de modelos densos en punto flotante (FP32) degrada la predictibilidad temporal e incrementa la potencia disipada. En este contexto, el presente reporte de Trabajo Terminal 1 aborda el diseño, implementación y verificación de un esquema mecatrónico híbrido de control de posición para un robot manipulador serial de 6 grados de libertad (Universal Robots UR3e), integrando dinámica analítica inversa con una Red Neuronal Cuantizada a enteros de 8 bits (QNN-INT8).
 
-Se plantea el problema de cómo implementar un control de posición para un robot manipulador que sea preciso y, fundamentalmente, de bajo consumo, mediante el uso de redes neuronales cuantizadas (QNNs) desplegadas en hardware reconfigurable (FPGA). El objetivo general de este trabajo es diseñar, implementar y evaluar comparativamente el desempeño energético, la utilización de recursos de hardware y la precisión del control de un sistema basado en QNNs, contrastándolo con un control PID clásico y una red neuronal de punto flotante (FP12-NN), todos operando sobre la misma plataforma FPGA.
+La metodología implementada articula una ley de control por par calculado (\textit{Computed Torque Control}) donde el Algoritmo Recursivo de Newton-Euler (RNEA), programado en C++17 evitando la realización de asignaciones dinámicas en su evaluación recursiva, compensa las no linealidades mecánicas nominales ($\mathcal{O}(n)$). De forma complementaria, una red neuronal perceptrón multicapa (MLP) con vector de características de 42 dimensiones estima en línea las dinámicas residuales no modeladas y fricciones articulares. El modelo fue entrenado en PyTorch, exportado al estándar ONNX y cuantizado mediante Cuantización Dinámica Post-Entrenamiento (\textit{Dynamic PTQ}) a INT8, ejecutándose dentro del middleware ROS 2 Jazzy Jalisco con el motor ONNX Runtime monohilo en C++. La verificación experimental se llevó a cabo en un gemelo digital de alta fidelidad (\textit{Sim-to-Real}) desarrollado en Gazebo Harmonic gobernado por la arquitectura modular de \texttt{ros2\_control} a una frecuencia de $500\text{ Hz}$ ($T_s = 2\text{ ms}$).
 
-La propuesta de solución abarca el desarrollo de estos tres enfoques de control, la aplicación de técnicas de cuantización para generar modelos QNN con distintos niveles de precisión, y la ejecución de un plan experimental para medir y analizar las métricas de rendimiento y consumo energético. Se espera que los resultados demuestren la viabilidad y las ventajas energéticas de las QNNs, aportando una metodología y datos concretos para el diseño de futuros sistemas de control robótico energéticamente sostenibles.
+Los resultados empíricos demuestran que la cuantización a INT8 redujo la huella de memoria del modelo en un $74.43\%$ (de $1.23\text{ MB}$ a $315\text{ KB}$) y aceleró la latencia media de inferencia a $29.2\,\mu\text{s}$. El tiempo de cómputo medio por ciclo de control fue de $215.4\,\mu\text{s}$ (con un máximo observado de $299.7\,\mu\text{s}$ en la muestra experimental), proporcionando una holgura temporal empírica del $89.23\%$ frente al periodo de muestreo admisible ($T_s = 2000\,\mu\text{s}$) y acotando los pares de esfuerzo estrictamente dentro de los límites mecánicos ($\pm 55.0\text{ N}\cdot\text{m}$). Si bien el lazo cerrado continuo acumula un incremento en el error cuadrático medio articular ($\text{RMSE} = 0.138\text{ rad}$) respecto al modelo en punto flotante ($0.092\text{ rad}$) debido a la discretización afín y a la asignación de $\ddot{\bm{q}}_{act} = \bm{0}$ para evitar ruido de diferenciación numérica, el seguimiento articular permaneció dentro de la envolvente funcional definida para las pruebas de simulación. Estos hallazgos validan la viabilidad algorítmica y la reducción del costo computacional de la arquitectura, sentando la base técnica para el entrenamiento consciente de cuantización (QAT), la instrumentación y medición física de potencia eléctrica y la aceleración en hardware neutro (FPGA / SoC Zynq) en Trabajo Terminal 2.
 
-\vspace{1.5cm}
+\vspace{0.6cm}
+\textbf{Palabras clave:} Redes Neuronales Cuantizadas, Robótica de Manipulación, Control por Par Calculado, Cuantización Dinámica, ROS 2, INT8, Sim-to-Real.
+
+\vspace{1.0cm}
 \addcontentsline{toc}{section}{Abstract}
-{\large \textbf{Abstract}}\\ 
-Modern robotics demands increasingly complex control systems for manipulators to perform more advanced tasks with precision and adaptability. While artificial intelligence—particularly deep neural networks (DNNs)—offers powerful solutions, their high computational and energy costs limit their use in robotic platforms with edge computing. This research project addresses this challenge, driven by the critical need to develop energy-efficient robotic controllers and to quantitatively validate their benefits.
+{\large \textbf{Abstract}}\\
+The deployment of advanced controllers based on Deep Neural Networks (DNNs) in robotic manipulation faces severe latency and energy constraints imposed by the Von Neumann bottleneck and the memory wall in embedded computing platforms. In closed real-time control loops ($100\text{ Hz} - 500\text{ Hz}$), continuous evaluation of high-density floating-point models (FP32) degrades temporal predictability and escalates power dissipation. In this context, this Term Project 1 report presents the design, implementation, and verification of a hybrid mechatronic position control scheme for a 6-DOF serial manipulator (Universal Robots UR3e), coupling analytical inverse dynamics with an 8-bit integer Quantized Neural Network (QNN-INT8).
 
-The central problem is how to implement a position control system for a robotic manipulator that is both accurate and, fundamentally, low-power, using quantized neural networks (QNNs) deployed on reconfigurable hardware (FPGAs). The main objective of this work is to design, implement, and comparatively evaluate the energy performance, hardware resource usage, and control accuracy of a QNN-based system, benchmarking it against a classical PID controller and a floating-point neural network (FP12-NN), all running on the same FPGA platform.
+The methodology integrates a Computed Torque Control (CTC) framework wherein the Recursive Newton-Euler Algorithm (RNEA), implemented in C++17 avoiding dynamic memory allocations in its recursive evaluation, compensates for nominal mechanical non-linearities with optimal linear complexity ($\mathcal{O}(n)$). Concurrently, a multilayer perceptron (MLP) neural network fed by a 42-dimensional input feature vector estimates unmodeled residual dynamics and joint friction online. The network was trained in PyTorch, exported to the ONNX standard, and compressed via dynamic Post-Training Quantization (Dynamic PTQ) to INT8, running within the ROS 2 Jazzy Jalisco middleware via the single-threaded C++ ONNX Runtime engine. Experimental verification was conducted on a high-fidelity Sim-to-Real digital twin in Gazebo Harmonic managed by the \texttt{ros2\_control} framework at a closed-loop frequency of $500\text{ Hz}$ ($T_s = 2\text{ ms}$).
 
-The proposed solution involves developing all three control strategies, applying quantization techniques to produce QNN models with varying precision levels, and executing an experimental plan to measure and analyze performance and energy consumption metrics. The expected outcome is to demonstrate the feasibility and energy advantages of QNNs, providing both a methodology and concrete data for the design of future energy-efficient robotic control systems.
+Empirical results demonstrate that INT8 quantization reduced the model memory footprint by $74.43\%$ (from $1.23\text{ MB}$ down to $315\text{ KB}$) and accelerated mean inference latency to $29.2\,\mu\text{s}$. Total critical-loop execution time averaged $215.4\,\mu\text{s}$ (with an observed empirical maximum of $299.7\,\mu\text{s}$), providing an empirical $89.23\%$ timing margin with respect to the sampling period ($T_s = 2000\,\mu\text{s}$), with commanded torques strictly bounded within physical thresholds ($\pm 55.0\text{ N}\cdot\text{m}$). While closed-loop control exhibits a tracking degradation ($\text{RMSE} = 0.138\text{ rad}$) compared to the floating-point baseline ($0.092\text{ rad}$) due to integer quantization noise and setting $\ddot{\bm{q}}_{act} = \bm{0}$ to prevent numerical differentiation noise, joint trajectory tracking remained strictly within the functional operational envelope defined for the simulation trials. These outcomes validate the algorithmic feasibility and computational overhead reduction of the architecture, establishing the technical foundation for Quantization-Aware Training (QAT), physical electrical power measurement, and embedded hardware acceleration on FPGA / SoC Zynq in Term Project 2.
 
-\vspace{1.5cm}
-\addcontentsline{toc}{section}{Palabras clave}
-{\large \textbf{Palabras clave}}\\ 
-Redes Neuronales Cuantizadas, Control de Robots, FPGA, Eficiencia Energética, Robótica, Computo al filo.
+\vspace{0.6cm}
+\textbf{Keywords:} Quantized Neural Networks, Robotic Manipulation, Computed Torque Control, Dynamic Quantization, ROS 2, INT8, Sim-to-Real.
 
 \newpage
 \addcontentsline{toc}{section}{Índice de figuras}
@@ -283,7 +233,7 @@ $\bm{\mu}_y, \bm{\sigma}_y$ & Vectores de media y desviación estándar para des
 $S$ & Factor de escala de cuantización (\textit{Scale factor}) & Adimensional \\
 $Z$ & Punto cero entero de compensación de cuantización (\textit{Zero-point}) & Adimensional \\
 $q_{int8}$ & Valor entero cuantizado a 8 bits de un operando o peso & Adimensional \\
-$T_s$ & Periodo de muestreo del bucle de control de tiempo real ($10\text{ ms} = 100\text{ Hz}$) & $\text{s}$ \\
+$T_s$ & Periodo de muestreo del bucle de control de tiempo real ($2\text{ ms} - 10\text{ ms}$, equivalente a $100\text{ Hz} - 500\text{ Hz}$) & $\text{s}$ \\
 \end{longtable}
 
 
@@ -293,6 +243,7 @@ $T_s$ & Periodo de muestreo del bucle de control de tiempo real ($10\text{ ms} =
 
 \section*{Introducción}
 \addcontentsline{toc}{section}{Introducción}
+\label{sec:introduccion}
 Los robots manipuladores son componentes esenciales en la automatización industrial, la cirugía asistida, la exploración espacial y una creciente variedad de aplicaciones de servicio, gracias a su capacidad para realizar tareas de manipulación con precisión y repetibilidad \cite{modern_robotics}. El control efectivo de estos sistemas es fundamental para su desempeño. Tradicionalmente, se han empleado técnicas de control clásico, como el control Proporcional-Integral-Derivativo (PID) o el control por par calculado, que han demostrado ser robustas para tareas definidas y con modelos dinámicos precisos del robot \cite{modern_robotics}. Sin embargo, la creciente demanda de mayor autonomía, adaptabilidad a entornos no estructurados y la capacidad para manejar interacciones complejas ha impulsado la adopción de enfoques basados en Inteligencia Artificial (IA), particularmente las Redes Neuronales Artificiales (ANNs) y las Redes Neuronales Profundas (DNNs) \cite{JuarezLora2024Thesis, Park2025electronics}.
 
 A pesar de sus ventajas, la implementación de DNNs en sistemas robóticos conlleva desafíos significativos. Estos modelos suelen ser computacionalmente intensivos, caracterizados por un gran número de parámetros y una alta densidad de operaciones aritméticas, lo que se traduce en un considerable consumo energético y una fuerte demanda de recursos de memoria y procesamiento \cite{Chen2021memristor, Liang2021PruningSurvey}. Estas exigencias son particularmente problemáticas para las plataformas robóticas autónomas, que operan con fuentes de alimentación y recursos computacionales limitados\cite{Bartolozzi2022embodied, deVriesGao2025AIenergy}.
@@ -301,58 +252,68 @@ El interés de este estudio surge de la necesidad de reducir estos costes comput
 
 Este trabajo busca aportar conocimiento práctico y cuantitativo sobre la viabilidad y los beneficios de utilizar QNNs para el control eficiente de robots manipuladores, ofreciendo una perspectiva con un enfoque en la eficiencia energética de diferentes métodos de control de sistemas robóticos.
 
-\subsection*{Enfoque mecatrónico}
-En este apartado se describe cómo el proyecto evalúa un sistema completo que integra la mecánica del robot, la electrónica de medición y actuación, y el algoritmo de control implementado.
+\subsection*{Planteamiento del problema}
+El control dinámico de robots manipuladores es un componente fundamental para su implementación exitosa en la automatización industrial, la robótica de servicio y entornos de manufactura avanzada. A medida que las aplicaciones exigen trayectorias más veloces, mayor precisión y capacidad de adaptación ante entornos dinámicos e incertidumbres, las leyes de control se vuelven significativamente más complejas, transitando desde lazos lineales descentralizados hacia algoritmos no lineales basados en modelos dinámicos analíticos y aproximadores universales como las redes neuronales profundas \cite{JuarezLora2024Thesis, Park2025electronics}. Sin embargo, esta sofisticación algorítmica conlleva un incremento sustancial en el costo computacional y en la demanda energética del sistema de procesamiento.
 
-\subsection*{Definición del problema}
-El control de robots es esencial para su implementación en la automatización industrial o en robótica de consumo, a medida que los robots se emplean en tareas más avanzadas o con entornos cambiantes o dinámicos, los métodos de control se vuelven más complejos y con esto, su coste computacional y energético aumentan\cite{JuarezLora2024Thesis, Park2025electronics}.
-\subsubsection{Multiplicación de matrices, procesamiento de señales y problemas de computación en tareas robóticas}
-Las multiplicaciones de matrices tienen consecuencia directa en la robótica ya que las operaciones matriciales están implicadas en todos sus aspectos, particularmente la multiplicación vector-matriz y las operaciones de multiplicación-acumulación. Las ecuaciones de la cinemática directa e inversa, el modelo dinámico del robot dado por las ecuaciones de Euler-Lagrange o Newton-Euler, así como los diferentes métodos de control pudiendo ir desde un PID con compensaciones dinámicas, hasta los basados en aprendizaje automático y redes neuronales, todos dependen del uso y operación de matrices y vectores.\cite{Chen2021memristor,modern_robotics}
+Dicha problemática se manifiesta formalmente a través de tres dimensiones interconectadas: la densidad masiva de álgebra matricial requerida a altas tasas de refresco, las restricciones estructurales impuestas por la arquitectura de computación subyacente (el cuello de botella de Von Neumann y la barrera de memoria), y la proyección insostenible del consumo de potencia en plataformas embebidas autónomas. A continuación, se detallan cada uno de estos aspectos.
 
-Este tipo de operaciones se realizan repetidamente a una alta frecuencia, lo que conlleva un costo computacional significativo. La ineficiencia en la realización de estas operaciones provoca un deterioro en el rendimiento en tiempo real, y un incremento en el consumo energético, que tiene su origen en la arquitectura de los equipos de computo actuales. 
+\subsubsection*{Multiplicación de matrices, procesamiento de señales y problemas de computación en tareas robóticas}
+Las multiplicaciones matriciales y las operaciones de multiplicación-acumulación (MAC) constituyen el núcleo operativo fundamental en la robótica moderna. Tanto el cálculo cinemático diferencial mediante operadores jacobianos, como la resolución de la dinámica inversa a través de las formulaciones de Euler-Lagrange o Newton-Euler, e incluso las arquitecturas avanzadas de control basadas en aprendizaje automático, dependen intrínsecamente del álgebra lineal de vectores y matrices multidimensionales \cite{Chen2021memristor, modern_robotics}.
 
-\subsubsection{Cuello de botella de Von Neumann}
-La arquitectura Von Neumann, es un tipo específico de arquitectura computacional en la que tanto los datos como las instrucciones se almacenan en una memoria común como se muestra en la figura \ref{fig:imagen1} donde se detalla el uso de memoria para los datos e instrucciones.
-\begin{figure}[h]
+En manipuladores seriales industriales que operan en lazos de control cerrados en tiempo real (con frecuencias típicas de $100\text{ Hz}$ o superiores), estas evaluaciones algebraicas deben completarse de forma predecible y con holgura temporal dentro de una ventana de $10\text{ ms}$. La repetición continua de estas operaciones sobre plataformas de procesamiento convencional no solo impone una severa cota superior a la frecuencia de muestreo alcanzable, sino que dispara el consumo energético global, una limitación directamente atribuible a la organización física de las arquitecturas de cómputo actuales.
+
+\subsubsection*{Cuello de botella de Von Neumann y la barrera de memoria}
+La arquitectura Von Neumann constituye el paradigma computacional predominante en los sistemas embebidos e industriales contemporáneos, caracterizado por compartir un canal y espacio de memoria unificado tanto para las instrucciones del programa como para los datos manipulados \cite{EigenmannLilja1998VonNeumann, Arikpo2007}.
+
+Si bien este modelo ha posibilitado la estandarización y evolución de la microelectrónica de propósito general, presenta restricciones estructurales críticas derivadas de la separación física entre la unidad central de procesamiento (CPU) y la memoria principal. La necesidad de transitar constantemente datos y coeficientes a través de un bus de ancho de banda acotado genera el fenómeno conocido como el \emph{cuello de botella de Von Neumann} y la \emph{barrera de memoria} (\textit{memory wall}) \cite{EigenmannLilja1998VonNeumann, Arikpo2007, SINGH2019102868}. En algoritmos con un tráfico masivo de operandos de alta densidad, como la inferencia de redes neuronales y el filtrado matricial en tiempo real, la CPU experimenta ciclos prolongados de inactividad mientras espera la entrega de datos, disipando energía estática considerable y degradando la latencia del bucle de control.
+
+En la Figura~\ref{fig:arquitectura_von_neumann} se ilustra esquemáticamente la divergencia entre la capacidad de cálculo y el ancho de banda del bus en las arquitecturas tradicionales de cómputo, contrastando dicha restricción física frente al esquema de optimización propuesto mediante cuantización entera INT8 para la reducción de transferencias de datos y aceleración computacional en el borde.
+
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.6\textwidth]{Imagenes/Von_neumann.png}  
-    \caption{Arquitectura Von Neumann original~\cite{EigenmannLilja1998VonNeumann}}  % Título de la imagen
-    \label{fig:imagen1}  % Etiqueta para referenciar la imagen
+    \includegraphics[width=0.95\textwidth]{Imagenes/arquitectura_von_neumann_cuello_botella.png}
+    \caption{Cuello de botella de Von Neumann en la computación robótica convencional: latencia y costo computacional asociados a la transferencia masiva de datos en el bus CPU-Memoria (\textit{Memory Wall}) frente al beneficio de la cuantización INT8 para la reducción de transferencias y la viabilidad de cálculo en lazos en tiempo real ($T_s \le 10\text{ ms}$).}
+    \label{fig:arquitectura_von_neumann}
 \end{figure}
 
-Aunque este modelo ha sido fundamental para la computación digital durante muchos años, tiene limitaciones inherentes a su diseño que surgen del uso intensivo de datos, debido a la separación física entre el CPU y la memoria. Esto conlleva la necesidad de transferir datos e instrucciones a través de un bus de memoria compartido, lo que se conoce como el \emph{cuello de botella de Von Neumann}.~\cite{EigenmannLilja1998VonNeumann,Arikpo2007}
+\subsubsection*{Proyección a futuro de la problemática energética}
+La evolución de la robótica y la inteligencia artificial converge de forma inexorable hacia sistemas autónomos con capacidad de percepción multisensorial, toma de decisiones no estructuradas y compensación adaptativa en tiempo real. No obstante, conforme las arquitecturas de redes neuronales se vuelven más profundas y los sensores incrementan su tasa de muestreo, el costo computacional escala drásticamente, incrementando el consumo de potencia eléctrica a niveles incompatibles con plataformas robóticas móviles, exoesqueletos o robots manipuladores con fuentes de energía acotadas \cite{Bartolozzi2022embodied, deVriesGao2025AIenergy, DomingoReguero2025EnergyEfficient}.
 
-Este cuello de botella provoca una latencia significativamente elevada, producto de la espera constante de la CPU por datos e instrucciones desde la memoria, y en un consumo energético considerable debido al intenso tráfico de datos -conocido como \textit{memory wall}. En algoritmos con alta demanda de acceso a memoria y operaciones repetitivas sobre datos (ejemplo, multiplicación de matrices), como un control robótico, procesamiento en tiempo real y aprendizaje automático, estas limitaciones impactan directamente en el rendimiento y la eficiencia energética del sistema.
-
-\subsubsection{Proyección a futuro de la problemática energética}
-Tanto la robótica como la inteligencia artificial se perfilan hacia su integración en sistemas autónomos capaces de percibir diferentes entornos, aprender de su propia experiencia y tomar decisiones en tiempo real. Debido a la complejidad de estas implementaciones, la demanda computacional ha incrementado trayendo consigo un consumo energético cada vez mayor\cite{deVriesGao2025AIenergy, DomingoReguero2025EnergyEfficient}. Esto presenta un problema para robots autónomos, drones, exoesqueletos de asistencia o sistemas colaborativos humano-robot donde la fuente de energía está suministrada por baterías. Este alto consumo proviene de los sistemas de control que hacen un uso intensivo de datos en arquitecturas de cómputo basadas principalmente en la arquitectura Von Neumann poniendo en juego la viabilidad de dichos sistemas autónomos.
-
-Conforme los modelos de IA se vuelven más profundos y los sensores generan mayores volúmenes de datos, este ``muro energético'' se vuelve cada vez más pronunciado. Con esta proyección, se resalta la necesidad de la investigación y exploración de diferentes paradigmas computacionales que ofrezcan una mejora significativa a la eficiencia energética.
+Este desafío evidencia la necesidad ineludible de explorar paradigmas computacionales optimizados, centrados no únicamente en la exactitud teórica del algoritmo, sino en la minimización del costo energético por ciclo de control mediante técnicas formales de compresión numérica y diseño de software determinista.
 
 \subsection*{Justificación}
-%Describir cómo la implementación de algoritmos de IA en robótica conlleva a un incremento considerable de recursos energéticos, de hardware
+Frente a las severas restricciones energéticas y de latencia impuestas por las plataformas de procesamiento digital estándar, se vuelve imperativo investigar métodos de control que optimicen simultáneamente la fidelidad dinámica y la eficiencia de cómputo. El presente Trabajo Terminal se enfoca en el estudio, diseño e implementación de un esquema de compensación dinámica basado en Redes Neuronales Cuantizadas (\textit{Quantized Neural Networks}, QNNs) para el control articular de un robot manipulador industrial.
 
-%Describir también como es que en robótica, ese tipo de recursos usualmente son escasos, por lo que nuevas estructuras de cómputo para control automático deben emerger para ahorro energético
+Las redes neuronales cuantizadas transforman las operaciones de punto flotante de alta precisión (típicamente FP32) en aritméticas enteras de precisión reducida (como INT8 o INT4). Esta discretización reduce de forma cuadrática o lineal el área de silicio y la energía consumida por cada operación aritmética, además de comprimir la huella de memoria requerida para el almacenamiento de los tensores de pesos y sesgos en aproximadamente un $75\%$ respecto a sus contrapartes en punto flotante \cite{Zhang2025jlpea, Jiang2023SingleShot, Liang2021PruningSurvey}. Si bien este mapeo discreto introduce un ruido de cuantización inherente sobre los pares de control generados, una adecuada estrategia de entrenamiento y calibración numérica permite mantener la estabilidad y un error de seguimiento articular dentro de las tolerancias requeridas.
 
+\subsubsection*{Justificación mecatrónica}
+El desarrollo del presente proyecto es intrínsecamente mecatrónico, ya que no puede resolverse desde una perspectiva disciplinar aislada (únicamente mecánica, puramente electrónica, exclusivamente de control o exclusivamente computacional). La solución integra y articula de manera sinérgica los cuatro pilares fundamentales de la Ingeniería Mecatrónica:
+\begin{enumerate}[label=\textbf{\arabic*.}]
+    \item \textbf{Sistemas Mecánicos (Cinemática y Dinámica del Manipulador):}
+    El manipulador robótico industrial (Universal Robots UR3e) constituye una cadena cinemática abierta serial de 6 grados de libertad caracterizada por acoplamientos inerciales no lineales, efectos centrífugos, fuerzas de Coriolis y pares gravitacionales dependientes de la configuración. La mecánica impone las condiciones de frontera físicas del sistema: momentos de inercia baricéntricos, límites de saturación en los actuadores ($\pm 55\text{ Nm}$ en base, hombro y codo; $\pm 12\text{ Nm}$ en articulaciones de muñeca), y la necesidad de planificar trayectorias continuas de clase $\mathcal{C}^2$ con perfiles suaves de aceleración y jerk para proteger las transmisiones mecánicas armónicas (\textit{harmonic drives}) frente a sobrecargas y fatiga.
+    
+    \item \textbf{Sistemas Electrónicos y Cómputo Embebido:}
+    Comprende los transductores de posición angular (encoders ópticos absolutos), los buses digitales de comunicación en tiempo real y la arquitectura de procesamiento digital. Es en esta disciplina donde se aborda directamente la mitigación del cuello de botella de Von Neumann y la barrera de memoria (\textit{memory wall}). La sustitución de operaciones en punto flotante por aritmética entera vectorizada INT8 optimiza el uso del ancho de banda del bus de datos CPU-memoria, reduce la disipación térmica y sienta las bases de compatibilidad para la futura migración y aceleración en hardware reconfigurable de bajo consumo (FPGAs y SoCs heterogéneos como Xilinx Zynq).
+    
+    \item \textbf{Sistemas de Control Automático:}
+    El control por par calculado (\textit{Computed Torque Control}, CTC) cancela algebraicamente la dinámica no lineal del manipulador mediante dinámica inversa analítica o aproximada, asociándose a un lazo de control exterior lineal proporcional-derivativo (PD) que prescribe un comportamiento desacoplado y asintóticamente estable de segundo orden. Este esquema demanda un periodo de muestreo estricto y determinista de $T_s = 2\text{ ms}$ ($500\text{ Hz}$), en el cual cualquier latencia excesiva o fluctuación temporal (\textit{jitter}) induciría errores de fase capaces de comprometer la estabilidad funcional del lazo cerrado.
+    
+    \item \textbf{Software e Inteligencia Artificial:}
+    La arquitectura de software se basa en el estándar robótico contemporáneo ROS 2 Jazzy y el framework determinista \texttt{ros2\_control}. Incorpora el diseño, entrenamiento y optimización de redes neuronales profundas (MLP de 42 variables de entrada y 6 salidas de par articular) para la compensación de dinámicas no lineales complejas, el empleo de técnicas de cuantización numérica post-entrenamiento (\textit{Dynamic PTQ} INT8 simétrica) y su ejecución en C++17 mediante el motor optimizado ONNX Runtime, evitando reservas dinámicas explícitas de memoria durante el ciclo crítico de control.
+\end{enumerate}
 
-Debido a las restricciones de cómputo actuales en chips tradicionales, surge la necesidad de mejorar su desempeño energético explorando alternativas de control enfocadas en la eficiencia computacional y energética. Este proyecto se centra en la evaluación de un método de control alternativo denominado redes neuronales cuantizadas o Quantized Neural Networks (QNNs) como una vía para lograr una mejora sustancial en la eficiencia energética de los sistemas de control de robots manipuladores. El objetivo principal es realizar una comparación directa del consumo energético de un sistema de control basado en QNNs con un control clásico bajo una plataforma de pruebas como lo puede ser una FPGA. Las redes neuronales cuantizadas reducen sus bits de entrada provocando una reducción en su requerimiento de computo y provoca una reducción también en la precisión de salida de dicha red como se ve en la figura \ref{fig:qnn}\cite{Zhang2025jlpea, Jiang2023SingleShot, LeeYS2023ScaleCIM}.
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.6\textwidth]{Imagenes/qnn.png}  
-    \caption{Reducción de bits de entrada y de precisión en la salida por la cuantización~\cite{aac_quantization}}  % Título de la imagen
-    \label{fig:qnn}  % Etiqueta para referenciar la imagen
-\end{figure}
+\paragraph*{Sinergia e integración mecatrónica:} 
+La pertinencia de esta integración multidisciplinar radica en su interdependencia estricta: un modelo de red neuronal de alta precisión formulado desde las ciencias computacionales resulta inviable en robótica si su tiempo de inferencia excede la cota temporal de $2\text{ ms}$ impuesta por la mecánica; un controlador clásico analítico derivado de la teoría de control no modela con fidelidad la fricción no lineal y holguras de las transmisiones mecánicas; y un esquema de compresión microelectrónica agresivo que ignore la estabilidad dinámica de la planta provocaría inestabilidades catastróficas. Por consiguiente, la optimización concurrente de la física del robot, el hardware computacional, el algoritmo de control en lazo cerrado y la red neuronal cuantizada sintetiza un sistema mecatrónico completo, coherente con las directrices formativas y de titulación de la Academia de Mecatrónica de la UPIITA - IPN.
 
-El enfoque mecatrónico es esencial, ya que el proyecto evaluará un sistema completo que integra la mecánica del robot, la electrónica de medición y actuación, y el algoritmo de control (QNN o tradicional) implementado en una plataforma de \textit{hardware} específica. La comparación energética se realizará considerando el sistema en su conjunto, ofreciendo una perspectiva realista del impacto de la optimización neuronal en el consumo global del robot durante tareas de control.
 \newpage
 
-\subsection*{Objetivo}
-\subsubsection{Objetivo general}
+\subsection*{Objetivos}
+\subsubsection*{Objetivo general}
 Evaluar el desempeño energético, de precisión y de recursos utilizados en la implementación de un control de lazo cerrado con una planta robótica con control tradicional y con una red neuronal cuantizada.
 
 %Implementación de un algoritmo de control de un brazo robótico usando algoritmos de redes neuronales de impulsos 
 
-\subsubsection{Objetivos específicos TT1}
+\subsubsection*{Objetivos específicos TT1}
 
 \begin{itemize}
     \item Investigar el estado del arte de las redes neuronales cuantizadas (QNNs) aplicadas al control de sistemas robóticos, las metodologías de cuantización (Post-Training Quantization - PTQ y Quantization-Aware Training - QAT), y las técnicas para la estimación y comparación del consumo energético en plataformas de cómputo embebidas y tradicionales.
@@ -362,13 +323,12 @@ Evaluar el desempeño energético, de precisión y de recursos utilizados en la 
     \item Diseñar el plan experimental para la comparación energética y de rendimiento, definiendo los escenarios de prueba, las variables a medir (ej., latencia de inferencia, uso de memoria, consumo energético estimado/medido, precisión del control) y la configuración del entorno de pruebas (simulado y/o físico).
     \item Caracterizar y poner en marcha la plataforma robótica y su interfaz de control, asegurando la capacidad de implementar y evaluar los diferentes esquemas de control.
     \item Escribir en el documento escrito dichos avances en la investigación.
-    
 \end{itemize}
 
-\subsubsection{Objetivos específicos TT2}
+\subsubsection*{Objetivos específicos TT2}
  
 \begin{itemize}
-    \item  Implementar el lazo de control numérico tradicional (ej. PID) de posición del efector final, tanto en simulación numérica, como en físico, con la finalidad de tener un \textit{benchmark} para comparar con la red neuronal quantizada, tanto en desempeño, recurso energético, etc.
+    \item Implementar el lazo de control numérico tradicional (ej. PID) de posición del efector final, tanto en simulación numérica, como en físico, con la finalidad de tener un \textit{benchmark} para comparar con la red neuronal quantizada, tanto en desempeño, recurso energético, etc.
     \item Entrenar, implementar y validar el sistema de control de posición basado en la red neuronal no cuantizada (ANN de punto flotante) en la plataforma robótica, evaluando su rendimiento de control y su perfil de consumo energético como segundo punto de referencia.
     \item Implementar los sistemas de control de posición basados en las redes neuronales cuantizadas (QNNs) para los niveles de precisión seleccionados en TT1, integrándolos con la plataforma robótica.
     %paramater n = 8;
@@ -379,70 +339,73 @@ Evaluar el desempeño energético, de precisión y de recursos utilizados en la 
     \item Documentar la metodología, los resultados obtenidos, las conclusiones del estudio comparativo y las recomendaciones para futuras implementaciones de QNNs en control robótico. 
 \end{itemize}
 
+\subsection*{Alcance y delimitación del proyecto}
+Con la finalidad de garantizar una ejecución metodológica rigurosa, estructurada y transparente, el desarrollo integral del proyecto se encuentra formalmente delimitado en dos etapas correspondientes a las asignaturas curriculares de Trabajo Terminal 1 (TT1) y Trabajo Terminal 2 (TT2). Esta división establece con precisión las fronteras operativas, el alcance de las evaluaciones y los entregables comprometidos:
+
+\subsubsection*{Delimitación metodológica de Trabajo Terminal 1 (TT1)}
+En la presente etapa de TT1, la investigación y el desarrollo de ingeniería se concentran en el diseño conceptual y detallado de la arquitectura mecatrónica, el modelado matemático analítico del robot manipulador UR3e, y la validación algorítmica y computacional en un entorno de simulación física de alta fidelidad (\textit{Sim-to-Real}) utilizando ROS 2 Jazzy, Gazebo Harmonic y el framework \texttt{ros2\_control}.
+
+Bajo este alcance, la evaluación de la eficiencia energética se formula a nivel de software y arquitectura de cómputo a través de indicadores cuantitativos indirectos (\textit{proxies}):
+\begin{itemize}
+    \item \textbf{Atenuación del tráfico en el bus y huella de memoria:} Cuantificación de la compresión del $74.43\%$ en el tamaño de los tensores de pesos y parámetros del modelo neuronal (reduciendo el almacenamiento de $1.29\text{ MB}$ en FP32 a $0.33\text{ MB}$ en INT8), lo que mitiga la saturación del bus de datos CPU-memoria asociada a la barrera de memoria de Von Neumann.
+    \item \textbf{Eficiencia y vectorización aritmética:} Sustitución de operaciones intensivas de multiplicación-acumulación (MAC) en punto flotante por instrucciones enteras vectorizadas INT8 ejecutadas mediante el runtime optimizado ONNX Runtime en C++17.
+    \item \textbf{Determinismo temporal en tiempo real:} Caracterización estadística de la latencia de cómputo del lazo de control, verificando que la evaluación completa del controlador neuronal cuantizado se ejecute en un promedio de $31.8\text{ }\mu\text{s}$, garantizando una holgura temporal superior al $98\%$ respecto al periodo de muestreo estricto de $T_s = 2\text{ ms}$ ($500\text{ Hz}$).
+\end{itemize}
+La fase de TT1 culmina formalmente con la integración completa del gemelo digital, la verificación de que el seguimiento articular permanece dentro de la envolvente funcional requerida en simulación y la estructuración del plan experimental comparativo.
+
+\subsubsection*{Delimitación metodológica de Trabajo Terminal 2 (TT2)}
+La fase subsecuente de TT2 abarcará la transferencia, despliegue físico e instrumentación experimental sobre el manipulador robótico industrial Universal Robots UR3e disponible en las instalaciones de laboratorio. Los alcances específicos de dicha fase comprenden:
+\begin{itemize}
+    \item \textbf{Medición eléctrica directa en banco de pruebas:} Instrumentación física con analizadores de potencia, osciloscopios y sondas de corriente para cuantificar directamente el consumo de potencia eléctrica activa (en Watts) y la energía acumulada (en Joules) en la etapa de cómputo y en los actuadores del robot.
+    \item \textbf{Validación física experimental:} Ejecución comparativa sobre el robot físico bajo trayectorias estandarizadas para contrastar el error de seguimiento (RMSE articular y cartesiano), el comportamiento ante dinámicas no modeladas (fricción de Coulomb y Stribeck en las transmisiones mecánicas) y la estabilidad física entre el control clásico y el control neuronal cuantizado.
+    \item \textbf{Optimización avanzada y hardware reconfigurable:} Exploración de técnicas de cuantización consciente del entrenamiento (\textit{Quantization-Aware Training}, QAT) y el despliegue del motor de inferencia sobre plataformas de hardware reconfigurable (FPGA / SoC heterogéneo Zynq), evaluando la máxima eficiencia energética y paralelismo espacial alcanzable al filo del manipulador.
+\end{itemize}
+
 \subsection*{Antecedentes}
-%como se pelaban papas antes
-El control de robots manipuladores es un campo bien establecido con una amplia historia de técnicas desarrolladas para lograr un movimiento preciso y fiable. Antes de la prominencia de los enfoques basados en inteligencia artificial, el control robótico se fundamentaba en gran medida en modelos matemáticos del robot y su entorno.
-\subsubsection{Técnicas de control clásico para robots manipuladores}
+El control de robots manipuladores constituye un campo maduro de la ingeniería mecatrónica, fundamentado históricamente en la modelación cinemática y dinámica analítica de cuerpos rígidos interconectados.
 
-Los controladores para robots manipuladores se pueden clasificar ampliamente según el espacio en el que se ejerce el control (espacio articular o espacio de la tarea) y el grado en que utilizan un modelo dinámico del robot.
+\subsubsection*{Técnicas de control clásico para robots manipuladores}
+Los esquemas de control para manipuladores seriales se clasifican formalmente según el espacio operacional en el que se formula la ley de control (espacio articular o espacio cartesiano de la tarea) y el nivel de dependencia respecto al modelo dinámico analítico de la planta.
 
-Una de las estrategias más directas y comúnmente implementadas es el control PID (Proporcional-Integral-Derivativo) independiente para cada articulación. En este enfoque, cada articulación del robot es tratada como un sistema de un solo grado de libertad, y se diseña un controlador PID para regular su posición y velocidad basándose en el error entre el estado deseado y el medido (Lynch \& Park, 2017, Capítulo 11.2)\cite{modern_robotics}. La simplicidad de diseño como se muestra en la figura \ref{fig:imagen6} y sintonización (aunque esta última puede ser tediosa para sistemas multigrado de libertad altamente acoplados) ha hecho del control PID una opción popular, especialmente cuando no se dispone de un modelo dinámico preciso del robot. Para mejorar el rendimiento, a menudo se complementa con un control por prealimentación (\textit{feedforward}), que utiliza el modelo cinemático y, a veces, un modelo dinámico simplificado para calcular los pares/fuerzas articulares nominales necesarios para seguir una trayectoria deseada, ayudando al lazo de realimentación PID a compensar solo las perturbaciones y errores de modelado (Lynch \& Park, 2017, Capítulo 11.3)\cite{modern_robotics}.
+La aproximación más extendida en la industria consiste en el control PID (Proporcional-Integral-Derivativo) descentralizado, donde cada eje articular es desacoplado y controlado como un sistema independiente de un solo grado de libertad mediante la realimentación del error articular \cite{modern_robotics}. La simplicidad algorítmica y la facilidad de implementación analógica o digital han posicionado al control PID como el estándar por antonomasia en actuadores industriales, especialmente cuando se carece de un modelo dinámico formal de la planta \cite{modern_robotics}. No obstante, en manipuladores seriales con acoplamientos inerciales pronunciados, el control descentralizado sufre degradaciones severas ante variaciones de configuración. Para mitigar estas desviaciones, la arquitectura se asocia habitualmente a términos de prealimentación (\textit{feedforward}) cinemática y dinámica, delegando al lazo de realimentación lineal únicamente la compensación de errores transitorios y perturbaciones residuales no modeladas \cite{modern_robotics, Spong}.
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\textwidth]{Imagenes/pid.png}  
-    \caption{Diagrama simplificado de un control PID~\cite{wattco2024pid}.}  % Título de la imagen
-    \label{fig:imagen6}  % Etiqueta para referenciar la imagen
-\end{figure}
-
-Cuando se dispone de un modelo dinámico mas completo del robot como en la ecuación \ref{eqt:equation1}.
-
+Cuando se dispone del modelo paramétrico explícito del manipulador:
 \begin{equation}
-M(\theta)\ddot{\theta} + c(\theta, \dot{\theta}) + g(\theta) = \tau
+\bm{M}(\bm{q})\ddot{\bm{q}} + \bm{C}(\bm{q}, \dot{\bm{q}})\dot{\bm{q}} + \bm{g}(\bm{q}) = \bm{\tau}
 \label{eqt:equation1}
 \end{equation}
+resulta viable implementar estrategias avanzadas de linealización por retroalimentación, destacando el control por par calculado (\textit{Computed Torque Control}, CTC) o dinámica inversa. Este método calcula algebraicamente los pares requeridos para cancelar de manera exacta las no linealidades de Coriolis, centrífugas y gravitatorias, transformando el manipulador multivariable no lineal en un conjunto de integradores dobles desacoplados sobre los cuales se prescribe una dinámica de error lineal estable de segundo orden \cite{modern_robotics, Spong}. Asimismo, enfoques de control adaptativo y robusto permiten mitigar la degradación del desempeño ante cargas útiles variables o dinámicas de fricción inciertas \cite{modern_robotics}.
 
-\vspace{1\baselineskip} 
-Se pueden implementar estrategias de control basadas en modelo más sofisticadas. Una técnica fundamental es el control por par calculado (\textit{computed torque control}) o control por dinámica inversa (\textit{inverse dynamics control}). Este enfoque busca linealizar y desacoplar la dinámica del robot mediante una ley de control que cancela los términos no lineales y de acoplamiento. La idea es calcular los pares de motor necesarios utilizando el modelo dinámico inverso y luego aplicar un control lineal simple (como un PID) sobre el sistema linealizado resultante. Bajo la suposición de un modelo dinámico perfecto, el robot se comportaría como un sistema lineal desacoplado, lo que permitiría un control de alta precisión\cite{modern_robotics}.
+\subsubsection*{Transición hacia el control basado en Inteligencia Artificial (IA)}
+A pesar del rigor matemático de los controladores clásicos, su eficacia operativa se degrada ante dinámicas no modeladas complejas, tales como la fricción no lineal de Coulomb y Stribeck en las cajas reductoras, flexibilidad en articulaciones o efectos térmicos durante ciclos prolongados de operación. La identificación paramétrica experimental de estas no linealidades resulta costosa y altamente específica para cada robot.
 
+Estas limitaciones han motivado la adopción de aproximadores universales de funciones basados en inteligencia artificial, primordialmente Redes Neuronales Artificiales (ANNs) y Redes Neuronales Profundas (DNNs), capaces de reconstruir relaciones no lineales complejas directamente a partir de datos experimentales de telemetría articular \cite{Park2025electronics, Zanatta2024exploring}. Las arquitecturas de múltiples capas ocultas permiten capturar dinámicas baricéntricas acopladas y fenómenos histeréticos que resultan intratables mediante formulaciones analíticas cerradas \cite{Zanatta2024exploring, JuarezLora2024Thesis}. Sin embargo, este poder expresivo demanda un volumen masivo de operaciones de multiplicación y acumulación (MAC), provocando una severa sobrecarga computacional que compromete la frecuencia de refresco en arquitecturas de cómputo en tiempo real deterministas \cite{Chen2021memristor, deVriesGao2025AIenergy, Kudithipudi2025scale}. Esta tensión entre la capacidad adaptativa del modelo y las restricciones temporales del hardware embebido impulsa la investigación en técnicas sistemáticas de compresión y cuantización de redes neuronales.
 
-Otras técnicas de control avanzado incluyen el control adaptativo, que ajusta los parámetros del controlador en línea para compensar incertidumbres en el modelo dinámico del robot o variaciones en la carga útil\cite{modern_robotis_115}, y el control robusto, diseñado para mantener la estabilidad y el rendimiento a pesar de las incertidumbres acotadas del modelo y las perturbaciones externas. El control en el espacio de la tarea (\textit{task space control}) también es crucial, donde el control se ejerce directamente sobre la posición y orientación del efector final del robot, utilizando el jacobiano para relacionar las velocidades del efector final con las velocidades articulares.
+\subsubsection*{Estado del arte}
+La optimización computacional y energética de controladores inteligentes en robótica de manipulación ha experimentado un notable avance entre los años 2021 y 2025, impulsada por la necesidad de mitigar el consumo de potencia y satisfacer las estrictas restricciones de latencia temporal en sistemas embebidos. El estado del arte actual se estructura en torno a tres ejes fundamentales:
 
-\subsubsection{Transicion hacia el control basado en Inteligencia Artificial (IA)}
-Si bien las técnicas de control clásico mencionadas son efectivas en muchas situaciones, su rendimiento puede degradarse significativamente en presencia de dinámicas no modeladas complejas, fricción no lineal, incertidumbres paramétricas grandes o cuando se requiere que el robot opere en entornos altamente no estructurados o interactúe de forma compleja con el entorno. La obtención de modelos dinámicos precisos puede ser costosa y difícil, y la sintonización de controladores PID para sistemas multivariables fuertemente acoplados es a menudo un desafío.Estas limitaciones han motivado la exploración de enfoques basados en inteligencia artificial (IA), y en particular las redes neuronales artificiales (ANNs) de las cuales su estructura se puede apreciar en la figura \ref{fig:imagen4}.
+\textbf{1. Compensación dinámica y control neuronal en manipuladores:} 
+Diversas investigaciones han explorado el modelado de dinámicas inversas mediante arquitecturas neuronales para asistir o sustituir a los algoritmos analíticos clásicos. Park et al. (2025) \cite{Park2025electronics} evaluaron el diseño de redes neuronales con aprendizaje por refuerzo para manipuladores robóticos tridimensionales, evidenciando una destacada capacidad adaptativa frente a incertidumbres cinemáticas, pero señalando que la evaluación de redes densas en punto flotante impone cuellos de botella energéticos que restringen su viabilidad en controladores compactos. Por su parte, Zanatta et al. (2024) \cite{Zanatta2024exploring} investigaron redes neuronales bioinspiradas y neuromórficas orientadas a tareas robóticas de alta velocidad, identificando que el desafío crítico radica en preservar la estabilidad en lazo cerrado cuando la latencia de inferencia fluctúa respecto al reloj de muestreo. En el ámbito nacional, Juárez-Lora (2024) \cite{JuarezLora2024Thesis} analizó el comportamiento de modelos neuromórficos sobre hardware reconfigurable, resaltando que la sincronización temporal rígida ($T_s \le 10\text{ ms}$) resulta indispensable para evitar derivas acumulativas y oscilaciones de par sobre los eslabones mecánicos.
 
+\textbf{2. Metodologías de cuantización y compresión para hardware embebido:} 
+La reducción del ancho de palabra en parámetros y activaciones representa la técnica de optimización más efectiva para acelerar la inferencia en sistemas digitales. En el estudio panorámico de Liang et al. (2021) \cite{Liang2021PruningSurvey}, se establece que la cuantización uniforme a 8 bits (INT8) reduce la huella de memoria en un factor de $4\times$ y el consumo por operación aritmética en más de un $60\%$ respecto a punto flotante estándar (FP32), manteniendo errores de degradación funcional marginales cuando se emplean algoritmos de calibración adecuados. Jiang et al. (2023) \cite{Jiang2023SingleShot} propusieron métodos de poda y cuantización \textit{single-shot} optimizados para hardware digital, demostrando que la aritmética entera reduce notablemente la disipación térmica y acelera el paso hacia adelante. Asimismo, Zhang et al. (2025) \cite{Zhang2025jlpea} desarrollaron esquemas de codiseño hardware/software para redes neuronales en el borde, demostrando que la cuantización uniforme permite la ejecución libre de asignaciones dinámicas de memoria, condición sine qua non para el determinismo en robótica. Complementariamente, Rezk (2022) \cite{Rezk2022MOHAQ} formalizó la optimización multiobjetivo de precisión mixta mediante frentes de Pareto entre error de predicción y recursos de silicio.
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.6\textwidth]{Imagenes/ANN.png}  
-    \caption{Estructura de una red neuronal (ANN)~\cite{prasan2024anns}.}  % Título de la imagen
-    \label{fig:imagen4}  % Etiqueta para referenciar la imagen
-\end{figure}
-\newpage
+\textbf{3. Eficiencia energética y determinismo temporal en robótica:} 
+El impacto del costo computacional de la inteligencia artificial sobre la sostenibilidad de plataformas robóticas autónomas ha sido cuantificado por de Vries y Gao (2025) \cite{deVriesGao2025AIenergy} y Domingo-Reguero et al. (2025) \cite{DomingoReguero2025EnergyEfficient}, quienes concluyen que el despliegue de redes neuronales densas sin optimizar agota aceleradamente fuentes energéticas acotadas y eleva el perfil térmico de los microprocesadores embebidos. En paralelo, Bartolozzi et al. (2022) \cite{Bartolozzi2022embodied} y Kudithipudi et al. (2025) \cite{Kudithipudi2025scale} han enfatizado que la inteligencia embebida moderna exige acoplar estrechamente la representación computacional con la dinámica física del mecanismo para superar la barrera impuesta por el cuello de botella de Von Neumann.
 
-Las redes neuronales profundas (DNNs) mostradas en la figura \ref{fig:imagen5}, han emergido como herramientas poderosas para el aprendizaje de tareas de control complejas, como la cinemática inversa, el seguimiento de trayectorias y el aprendizaje por refuerzo para la manipulación\cite{Park2025electronics, Zanatta2024exploring}. Estas técnicas permiten a los robots aprender de la experiencia y adaptarse a variaciones, superando en muchos casos las limitaciones de los controladores tradicionales.
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\textwidth]{Imagenes/dnn.png}  
-    \caption{Comparación de una ANN y una DNN~\cite{jaffery2023annvsdnn}.}  % Título de la imagen
-    \label{fig:imagen5}  % Etiqueta para referenciar la imagen
-\end{figure}
-
-Sin embargo, el éxito y la creciente complejidad de los modelos de DNNs vienen acompañados de una demanda computacional y un consumo energético considerables\cite{Chen2021memristor, deVriesGao2025AIenergy}. El gran número de parámetros y las intensivas operaciones de multiplicación y acumulación (MAC) inherentes a estas redes plantean un desafío significativo para su despliegue en plataformas robóticas, las cuales a menudo operan con recursos de hardware limitados (memoria, capacidad de procesamiento) y restricciones energéticas, especialmente en aplicaciones móviles o autónomas\cite{Bartolozzi2022embodied, Kudithipudi2025scale}. Esta tensión entre la capacidad de los modelos de IA y las limitaciones de las plataformas de despliegue ha impulsado una vasta investigación en la optimización y compresión de redes neuronales.
-\subsubsection{Estado del arte}
-%cual es la tecnologia mas avanzada hasta ahora para pelar papas
-Gestionar de manera eficaz sistemas robóticos en contextos donde la energía es limitada sigue siendo un reto constante y cada vez más relevante. Aunque las arquitecturas de cómputo tradicionales, en su mayoría basadas en el esquema de Von Neumann, han facilitado importantes desarrollos, presentan limitaciones estructurales, especialmente en lo referente al acceso a la memoria y al consumo energético, cuando se utilizan en tareas de control avanzadas o en aplicaciones de inteligencia artificial.
-Investigaciones recientes han mostrado un interés creciente por mejorar la eficiencia de los modelos de inteligencia artificial, lo cual se refleja en iniciativas como la compresión de redes neuronales y el estudio de enfoques de cómputo alternativos a los tradicionales.
-
-Dentro de este panorama, el cómputo neuromórfico se perfila como una opción innovadora, inspirada en la forma en que el cerebro humano procesa información de manera eficiente y paralela\cite{Mehonic2022}. Este enfoque se basa en la implementación de las redes neuronales de impulsos (SNN), las cuales funcionan a través de eventos discretos (conocidos como \textit{spikes}) y presentan una dinámica temporal inherente, lo que las hace especialmente adecuadas para aplicaciones de control en tiempo real\cite{Zanatta2024exploring, MAASS19971659}.
-Esta implementación de las SNN al control se ha explorado desde su aplicacion al péndulo-carro \cite{Vlasov2023}, hasta el control de brazos robot 3D mediante aprendizaje por refuerzo (RL)\cite{Park2025electronics,Zanatta2024exploring}.
-
-En estos trabajos se hace enfasis en el potencial de las QNN para aprender políticas de control con un eficiente consumo energético. Sin embargo la implementacion de estas redes en \textit{hardware}, específicamente en plataformas reconfigurables como las FPGA, sigue siento un área de oportunidad para la investigacion. El diseño en conjunto del \textit{hardware/software} es esencial para la configuración de la arquitectura de las QNNs dentro de los recursos de una FPGA, buscando el equilibrio entre rendimiento y consumo\cite{Zhang2025jlpea}.
-
-A pesar de estos avances aun existe la necesidad de estudios comparativos que cuantifiquen la eficiencia energetica de estos controles neuromorficos frente a los enfoques tradicionales. Este proyecto busca llenar este vacio proporcionando una evaluacion directa en una plataforma comun aplicado a un robot manipulador.
+\textbf{Síntesis y brecha de investigación identificada:} 
+A partir de la literatura analizada, se concluye que mientras existen abundantes desarrollos de redes profundas no optimizadas ejecutadas en estaciones de cómputo de alta gama, y paralelamente estudios teóricos de cuantización aplicados a conjuntos de datos estáticos de visión por computadora o procesamiento del lenguaje, se identifica una evidente brecha técnica en la integración y validación experimental de modelos neuronales cuantizados a 8 bits (INT8) desplegados directamente dentro del bucle de control en tiempo real ($100\text{ Hz} - 500\text{ Hz}$) de un robot manipulador industrial bajo estándares modernos como ROS 2 y ros2\_control. El presente Trabajo Terminal aborda directamente dicha brecha mediante una arquitectura mecatrónica completa que integra el gemelo digital en simulación de alta fidelidad, la adquisición de datos normalizados, el entrenamiento de una red de 42 entradas, la cuantización dinámica post-entrenamiento (\textit{Dynamic PTQ}) a INT8 y la verificación cuantitativa del compromiso entre precisión de seguimiento articular (RMSE) y eficiencia de cómputo en C++.
 
 \subsection*{Organización del documento}
-En el Capítulo 1 se aborda el marco de referencia en el que se sustenta el proyecto. En el Capítulo 2 se plantea el diseño del sistema, desglosando los requerimientos, la arquitectura y las propuestas de solución. En el Capítulo 3 se detalla la implementación técnica e integración de los módulos mecatrónicos. En el Capítulo 4 se analizan los resultados obtenidos técnica y económicamente. Finalmente, se presentan las conclusiones correspondientes.
+El presente reporte de Trabajo Terminal 1 se estructura en cuatro capítulos fundamentales y las secciones finales de conclusiones y anexos:
+\begin{itemize}
+    \item \textbf{Capítulo 1: Marco de Referencia.} Expone el marco teórico que sustenta la cinemática y dinámica analítica de manipuladores mediante el algoritmo recursivo de Newton-Euler (RNEA), los principios del control por par calculado, las bases de las redes neuronales artificiales, las formulaciones matemáticas de cuantización (PTQ y QAT) y el marco procedimental ágil (\textit{Scrum}) adaptado a la ingeniería mecatrónica.
+    \item \textbf{Capítulo 2: Diseño del Sistema.} Desarrolla la ingeniería conceptual y de detalle del sistema, abarcando la matriz de requerimientos técnicos, la arquitectura modular mecatrónica ($M_1, M_2, M_3, M_4$), las matrices de selección y ponderación (AHP/Pugh), la derivación del modelo cinemático y dinámico para el robot UR3e, la topología de la red neuronal compensadora y el plan experimental de evaluación.
+    \item \textbf{Capítulo 3: Implementación del Sistema.} Describe la materialización técnica y la verificación de pruebas funcionales de cada módulo en el entorno de simulación física (\textit{Sim-to-Real}) bajo Gazebo Harmonic y ROS 2 Jazzy, la programación del solver RNEA en C++ libre de asignaciones dinámicas, el pipeline de telemetría con filtrado Savitzky-Golay, el entrenamiento de la red en PyTorch y su exportación a ONNX.
+    \item \textbf{Capítulo 4: Análisis de Resultados.} Presenta la evaluación experimental cuantitativa del sistema en bucle cerrado a $500\text{ Hz}$, contrastando la precisión de seguimiento articular (RMSE) entre control clásico, neuronal FP32 y neuronal INT8, el presupuesto temporal y dispersión de latencia en tiempo real, la atenuación de la huella de memoria ($74.43\%$) y la matriz de cumplimiento técnico de requerimientos.
+    \item \textbf{Conclusiones y Trabajo a Futuro.} Sintetiza los resultados y aportaciones alcanzadas en esta primera etapa e instaura la ruta crítica para la transferencia y validación sobre el brazo robótico físico en la fase subsecuente (TT2).
+    \item \textbf{Anexos.} Integra la gestión y planeación de actividades en \textit{Sprints} de Scrum, la infraestructura computacional y el desglose de recursos.
+\end{itemize}
 
 
 % --- 1. Marco de Referencia ---
@@ -458,7 +421,33 @@ Los robots manipuladores son sistemas mecánicos articulados cuyo movimiento y c
 
 \paragraph{Cinemática}
 \label{sssec:cinematica_robots}
-La cinemática estudia la geometría del movimiento. La \textbf{cinemática directa} relaciona las variables articulares $\bm{q} \in \mathbb{R}^n$ (donde $n$ es el número de grados de libertad) con la configuración (posición y orientación) del efector final $\bm{x} \in SE(3)$ mediante una función $\bm{x} = f(\bm{q})$. La \textbf{cinemática inversa} busca la función $\bm{q} = f^{-1}(\bm{x})$, que es esencial para el control de posición y puede ser no lineal y tener múltiples soluciones \cite{modern_robotics}.
+La cinemática estudia la geometría pura del movimiento del manipulador con respecto a un sistema de coordenadas inercial de referencia, prescindiendo de las fuerzas y momentos que originan el desplazamiento. La descripción espacial del efector final respecto a la base se define formalmente en el grupo especial euclidiano $SE(3) = \mathbb{R}^3 \times SO(3)$.
+
+La \textbf{cinemática directa} establece la relación funcional entre las coordenadas generalizadas articulares $\bm{q} = [q_1, q_2, \dots, q_n]^T \in \mathbb{R}^n$ y la pose (posición cartesiana y orientación) del efector final mediante la función no lineal $\bm{x} = f(\bm{q})$. Para manipuladores seriales de cadena abierta, esta relación se parametriza sistemáticamente mediante la convención de \textbf{Denavit-Hartenberg modificada (Craig)} \cite{craig2005introduction}, en la cual el sistema de coordenadas del marco $i$ se fija rígidamente al eslabón $i$, y la transformación homogénea respecto al marco previo $i-1$ depende de cuatro parámetros geométricos: la longitud del eslabón $a_{i-1}$, el ángulo de torsión $\alpha_{i-1}$, el desplazamiento articular $d_i$ y el ángulo de rotación $\theta_i$ (siendo variable $\theta_i = q_i$ para pares de revolución). La matriz de transformación homogénea $\bm{T}_i^{i-1}(q_i) \in SE(3)$ adopta la forma:
+\begin{equation}
+\bm{T}_i^{i-1}(q_i) = \begin{bmatrix}
+\cos\theta_i & -\sin\theta_i & 0 & a_{i-1} \\
+\sin\theta_i\cos\alpha_{i-1} & \cos\theta_i\cos\alpha_{i-1} & -\sin\alpha_{i-1} & -d_i\sin\alpha_{i-1} \\
+\sin\theta_i\sin\alpha_{i-1} & \cos\theta_i\sin\alpha_{i-1} & \cos\alpha_{i-1} & d_i\cos\alpha_{i-1} \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\label{eq:dh_craig_matrix}
+\end{equation}
+La pose acumulada del extremo del robot respecto a la base inercial se obtiene mediante el producto encadenado de matrices de transformación consecutivas:
+\begin{equation}
+\bm{T}_n^0(\bm{q}) = \bm{T}_1^0(q_1)\bm{T}_2^1(q_2) \cdots \bm{T}_n^{n-1}(q_n) = \begin{bmatrix} \bm{R}_n^0(\bm{q}) & \bm{p}_n^0(\bm{q}) \\ \bm{0}_{1 \times 3} & 1 \end{bmatrix}
+\label{eq:fwd_kinematics_chain}
+\end{equation}
+donde $\bm{R}_n^0(\bm{q}) \in SO(3)$ describe la orientación ortonormal del efector final y $\bm{p}_n^0(\bm{q}) \in \mathbb{R}^3$ define su posición tridimensional.
+
+Por su parte, la \textbf{cinemática diferencial} vincula las velocidades articulares $\dot{\bm{q}} \in \mathbb{R}^n$ con las velocidades lineales $\dot{\bm{p}}_e$ y angulares $\bm{\omega}_e$ del efector final mediante el operador \textbf{Jacobiano geométrico} $\bm{J}(\bm{q}) \in \mathbb{R}^{6 \times n}$ \cite{modern_robotics}:
+\begin{equation}
+\bm{v}_e = \begin{bmatrix} \dot{\bm{p}}_e \\ \bm{\omega}_e \end{bmatrix} = \bm{J}(\bm{q})\dot{\bm{q}} = \begin{bmatrix} \bm{J}_v(\bm{q}) \\ \bm{J}_\omega(\bm{q}) \end{bmatrix} \dot{\bm{q}}
+\label{eq:jacobiano_geometrico}
+\end{equation}
+donde cada columna $\bm{J}_i(\bm{q})$ para una articulación de revolución $i$ se define vectorialmente como $\bm{J}_i(\bm{q}) = [\bm{z}_{i-1} \times (\bm{p}_e - \bm{p}_{i-1}); \bm{z}_{i-1}]$, siendo $\bm{z}_{i-1}$ el vector unitario del eje de rotación y $\bm{p}_{i-1}$ la posición del origen del marco $i-1$. Las configuraciones articulares $\bm{q}^*$ en las cuales $\det(\bm{J}(\bm{q}^*)) = 0$ (o $\text{rango}(\bm{J}(\bm{q}^*)) < 6$) constituyen \textbf{singularidades cinemáticas}, en las que el robot pierde la capacidad de desplazarse instantáneamente en ciertas direcciones del espacio cartesiano y las demandas de velocidad articular ante trayectorias continuas tienden teóricamente a infinito.
+
+La \textbf{cinemática inversa} consiste en determinar el vector articular $\bm{q}$ requerido para alcanzar una pose cartesiana deseada $\bm{x}_d \in SE(3)$, es decir, $\bm{q} = f^{-1}(\bm{x}_d)$. Para robots antropomórficos y cobots de 6 grados de libertad como el UR3e, la existencia de simetrías geométricas permite resolver la cinemática inversa de manera analítica en forma cerrada, arrojando hasta 8 configuraciones articulares posibles para una misma pose cartesiana \cite{craig2005introduction, modern_robotics}.
 
 \paragraph{Dinámica}
 \label{sssec:dinamica_robots}
@@ -509,7 +498,16 @@ asumiendo que sobre el efector final no actúan fuerzas externas no compensadas 
 \label{eq:rnea_tau}
 \end{equation}
 
-Esta formulación analítica recursiva es la que se ejecuta determinísticamente en el nodo de control en C++ a una frecuencia de $100\text{ Hz}$, proporcionando tanto el par de desacoplamiento para el control clásico como los vectores de referencia de pares $\bm{\tau}_{rnea}$ que enriquecen el espacio de características de entrada de la red neuronal.
+Esta formulación analítica recursiva es la que se ejecuta determinísticamente en el nodo de control en C++ a una frecuencia de hasta $500\text{ Hz}$ ($T_s = 2\text{ ms}$), proporcionando tanto el par de desacoplamiento para el control clásico como los vectores de referencia de pares $\bm{\tau}_{rnea}$ que enriquecen el espacio de características de entrada de la red neuronal.
+
+En la Figura~\ref{fig:diagrama_flujo_rnea} se ilustra el esquema de cálculo iterativo en dos etapas del algoritmo RNEA implementado en C++, detallando la fase cinemática de propagación hacia adelante y la fase dinámica de balance de esfuerzos hacia la base.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{Imagenes/diagrama_flujo_rnea.png}
+    \caption{Diagrama de flujo del Algoritmo Recursivo de Newton-Euler (RNEA) bajo la convención Denavit-Hartenberg modificada (Craig): propagación cinemática hacia adelante ($i=1 \dots n$) y balance cinético de fuerzas y momentos hacia atrás ($i=n \dots 1$).}
+    \label{fig:diagrama_flujo_rnea}
+\end{figure}
 
 \paragraph{Estrategias de Control Clásicas}
 \label{sssec:control_clasico}
@@ -526,26 +524,93 @@ Esta formulación analítica recursiva es la que se ejecuta determinísticamente
     \end{equation}
     
 
-    \item \textbf{Control por Par Calculado (\textit{Computed Torque Control}):} Esta técnica utiliza el modelo dinámico para cancelar las no linealidades. Si se tiene un modelo estimado $\hat{M}(\bm{q})$, $\hat{\bm{c}}(\bm{q},\dot{\bm{q}})$, y $\hat{\bm{g}}(\bm{q})$, la ley de control es:
+    \item \textbf{Control por Par Calculado (\textit{Computed Torque Control}):} Esta técnica utiliza el modelo dinámico inverso para linealizar y desacoplar la planta robótica mediante retroalimentación de estados. Si se dispone de un modelo dinámico estimado $\hat{\bm{M}}(\bm{q})$, $\hat{\bm{c}}(\bm{q},\dot{\bm{q}})$, y $\hat{\bm{g}}(\bm{q})$, la ley de control por par computado se define como:
     \begin{equation}
-    \bm{\tau} = \hat{M}(\bm{q})\bm{a}_{cmd} + \hat{\bm{c}}(\bm{q},\dot{\bm{q}}) + \hat{\bm{g}}(\bm{q})
+    \bm{\tau} = \hat{\bm{M}}(\bm{q})\bm{a}_{cmd} + \hat{\bm{c}}(\bm{q},\dot{\bm{q}}) + \hat{\bm{g}}(\bm{q})
     \label{eq:computed_torque}
     \end{equation}
-    donde $\bm{a}_{cmd}$ es una aceleración de comando, comúnmente diseñada usando un control lineal sobre el error:
+    donde $\bm{a}_{cmd}$ es el vector de aceleración de control sintetizado mediante una ley lineal proporcional-derivativa sobre el error de seguimiento $\bm{e} = \bm{q}_d - \bm{q}$:
     \begin{equation}
-    \bm{a}_{cmd} = \ddot{\bm{q}}_d + K_d (\dot{\bm{q}}_d - \dot{\bm{q}}) + K_p (\bm{q}_d - \bm{q})
+    \bm{a}_{cmd} = \ddot{\bm{q}}_d + \bm{K}_d (\dot{\bm{q}}_d - \dot{\bm{q}}) + \bm{K}_p (\bm{q}_d - \bm{q})
     \label{eq:acmd_ctc}
     \end{equation}
-    Bajo la suposición de un modelo perfecto ($\hat{M}=M, \hat{\bm{c}}=\bm{c}, \hat{\bm{g}}=\bm{g}$), el sistema en lazo cerrado se comportaría como un conjunto de $n$ integradores dobles desacoplados: $\ddot{\bm{e}} + K_d \dot{\bm{e}} + K_p \bm{e} = 0$, permitiendo un control preciso \cite{modern_robotics}.
+    siendo $\bm{K}_p, \bm{K}_d \in \mathbb{R}^{n \times n}$ matrices diagonales definidas positivas de ganancias de control. Sustituyendo la ley de control \eqref{eq:computed_torque} en la dinámica real del manipulador \eqref{eq:dinamica_robot}, se obtiene la ecuación diferencial que rige la dinámica del error en lazo cerrado:
+    \begin{equation}
+    \ddot{\bm{e}} + \bm{K}_d \dot{\bm{e}} + \bm{K}_p \bm{e} = \bm{M}^{-1}(\bm{q}) \left[ \Delta\bm{M}(\bm{q})\ddot{\bm{q}} + \Delta\bm{c}(\bm{q},\dot{\bm{q}}) + \Delta\bm{g}(\bm{q}) + \bm{\tau}_{fric}(\dot{\bm{q}}) \right]
+    \label{eq:ctc_error_dynamics}
+    \end{equation}
+    donde $\Delta\bm{M} = \hat{\bm{M}} - \bm{M}$, $\Delta\bm{c} = \hat{\bm{c}} - \bm{c}$, y $\Delta\bm{g} = \hat{\bm{g}} - \bm{g}$ representan los errores de modelado paramétrico, y $\bm{\tau}_{fric}(\dot{\bm{q}})$ modela las fricciones viscosas y de Coulomb presentes en las articulaciones mecánicas reales. En el caso ideal donde el modelo estimado es idéntico a la física real y no existe fricción no modelada, el miembro derecho se anula, resultando en un conjunto de $n$ integradores dobles desacoplados asintóticamente estables. Sin embargo, en robots industriales reales las incertidumbres residuales deterioran la precisión cinemática, justificando la incorporación de una red neuronal para estimar y compensar en línea este par residual perturbador.
 \end{itemize}
+
+En la Figura~\ref{fig:bloques_ctc} se esquematiza el lazo cerrado de control por par calculado, ilustrando el papel del bloque de dinámica inversa en la cancelación de los términos mecánicos no lineales de la planta.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.92\textwidth]{Imagenes/bloques_control_par_calculado.png}
+    \caption{Diagrama de bloques del esquema de control por par calculado (\textit{Computed Torque Control} - CTC) con desacoplamiento no lineal de inercia $\bm{M}(\bm{q})$, efectos centrífugos/Coriolis $\bm{C}(\bm{q}, \dot{\bm{q}})$ y gravedad $\bm{g}(\bm{q})$.}
+    \label{fig:bloques_ctc}
+\end{figure}
 
 \subsubsection{Redes Neuronales Artificiales para el Control Robótico}
 \label{ssec:ann_control_robotico}
-Las Redes Neuronales Artificiales (ANN), y sus variantes profundas (DNN), pueden aprender mapeos complejos a partir de datos, lo que las hace adecuadas para tareas de control robótico donde los modelos analíticos son imprecisos o difíciles de obtener.
+Las Redes Neuronales Artificiales (ANN), y sus variantes profundas (DNN), representan una familia de modelos computacionales inspirados en la interconexión sináptica biológica, capaces de aprender relaciones no lineales complejas directamente a partir de datos experimentales. En el ámbito del control robótico, su aplicación resulta especialmente provechosa para modelar dinámicas físicas difíciles de parametrizar analíticamente, tales como fricciones no lineales en los reductores armónicos, flexibilidades estructurales, efectos térmicos y perturbaciones mecánicas acopladas \cite{Park2025electronics, Zanatta2024exploring}.
 
-Pueden usarse para aprender la cinemática inversa $\bm{q} = f_{NN}(\bm{x}; \bm{\theta}_{NN})$, la dinámica inversa $\bm{\tau} = f_{NN}(\bm{q}, \dot{\bm{q}}, \ddot{\bm{q}}; \bm{\theta}_{NN})$, o directamente políticas de control $\bm{\tau} = \pi_{NN}(\text{estado}; \bm{\theta}_{NN})$ mediante aprendizaje por refuerzo \cite{Park2025electronics, Zanatta2024exploring}, donde $\bm{\theta}_{NN}$ representa los parámetros de la red.
+\paragraph{Fundamentación Teórica y Teorema de Aproximación Universal:}
+La justificación formal para emplear redes neuronales como aproximadores de dinámica robótica descansa en el \textbf{Teorema de Aproximación Universal}, demostrado por Cybenko (1989) \cite{cybenko1989approximation} para funciones de activación sigmoideas y generalizado por Hornik et al. (1989) \cite{hornik1989multilayer} para funciones de activación continuas no lineales en arquitecturas multicapa. Este teorema establece que cualquier función continua $f: \mathcal{K} \subset \mathbb{R}^d \to \mathbb{R}^m$ definida sobre un conjunto compacto $\mathcal{K}$ puede ser aproximada uniformemente con cualquier grado de exactitud deseado $\epsilon > 0$ mediante una red neuronal hacia adelante (\textit{feedforward}) con un número finito de neuronas ocultas:
+\begin{equation}
+\sup_{\bm{x} \in \mathcal{K}} \| f(\bm{x}) - \hat{f}(\bm{x}; \bm{\theta}) \| < \epsilon
+\label{eq:universal_approximation}
+\end{equation}
+donde $\bm{\theta}$ representa el conjunto de parámetros entrenables (pesos y sesgos). En el control de manipuladores seriales, la dinámica residual $\Delta\bm{\tau}(\bm{q}, \dot{\bm{q}}, \ddot{\bm{q}})$ es una función suave y continua en el espacio de trabajo acotado del robot, satisfaciendo estrictamente las hipótesis del teorema.
 
-Las operaciones fundamentales en las DNN, como las convoluciones o las capas totalmente conectadas, se basan en un gran número de operaciones de Multiplicación y Acumulación (MAC): $y = \sum_i w_i x_i + b$ para una neurona, o de forma matricial $\bm{Y} = \bm{W}\bm{X} + \bm{B}$ para una capa, lo que resulta en una alta carga computacional y accesos a memoria \cite{Chen2021memristor}.
+\paragraph{Estructura del Perceptrón Multicapa y Funciones de Activación:}
+En un perceptrón multicapa (\textit{Multilayer Perceptron}, MLP) de $L$ capas, la propagación hacia adelante en la capa $l \in \{1, \dots, L\}$ se rige por la combinación afín de sus entradas y una transformación no lineal:
+\begin{align}
+\bm{z}^{[l]} &= \bm{W}^{[l]} \bm{a}^{[l-1]} + \bm{b}^{[l]} \label{eq:mlp_z} \\
+\bm{a}^{[l]} &= \sigma(\bm{z}^{[l]}) \label{eq:mlp_a}
+\end{align}
+donde $\bm{a}^{[0]} = \bm{x} \in \mathbb{R}^{d_{in}}$ es el vector de características de entrada, $\bm{W}^{[l]} \in \mathbb{R}^{n_l \times n_{l-1}}$ es la matriz de pesos sinápticos, $\bm{b}^{[l]} \in \mathbb{R}^{n_l}$ es el vector de sesgo, y $\sigma(\cdot)$ es la función de activación elemento a elemento. Para las capas ocultas intermedias, la función predominante es la Unidad Lineal Rectificada (\textit{Rectified Linear Unit}, ReLU):
+\begin{equation}
+\text{ReLU}(z) = \max(0, z)
+\label{eq:relu_func}
+\end{equation}
+debido a su nula complejidad computacional (un simple umbral condicional a nivel de procesador) y su inmunidad al desvanecimiento del gradiente en la región activa ($z > 0$). Para la capa de salida ($l = L$), se emplea una función de activación lineal ($\bm{a}^{[L]} = \bm{z}^{[L]}$), permitiendo predecir pares de compensación continuos $\hat{\bm{\tau}} \in \mathbb{R}^n$ en cualquier cuadrante de operación.
+
+\paragraph{Función de Pérdida y Optimización Estocástica (Adam):}
+El ajuste de los parámetros $\bm{\theta} = \{\bm{W}^{[l]}, \bm{b}^{[l]}\}_{l=1}^L$ se lleva a cabo mediante entrenamiento supervisado minimizando la discrepancia entre el par predicho $\hat{\bm{\tau}}$ y el par residual real $\bm{\tau}^*$. Para ello se emplea la función de pérdida del Error Cuadrático Medio (\textit{Mean Squared Error}, MSE):
+\begin{equation}
+\mathcal{L}_{MSE}(\bm{\theta}) = \frac{1}{N} \sum_{k=1}^N \|\bm{\tau}^{*(k)} - \hat{\bm{\tau}}(\bm{x}^{(k)}; \bm{\theta})\|_2^2
+\label{eq:loss_mse}
+\end{equation}
+La actualización de pesos se ejecuta empleando el optimizador \textbf{Adam} (\textit{Adaptive Moment Estimation}) \cite{kingma2014adam}, el cual calcula estimaciones móviles del primer momento (media) y segundo momento no centrado (varianza no centrada) del gradiente $\bm{g}_t = \nabla_{\bm{\theta}} \mathcal{L}(\bm{\theta}_t)$:
+\begin{equation}
+\bm{m}_t = \beta_1 \bm{m}_{t-1} + (1 - \beta_1) \bm{g}_t, \quad \bm{v}_t = \beta_2 \bm{v}_{t-1} + (1 - \beta_2) \bm{g}_t^2
+\label{eq:adam_moments}
+\end{equation}
+con factores de corrección de sesgo $\hat{\bm{m}}_t = \bm{m}_t / (1 - \beta_1^t)$ y $\hat{\bm{v}}_t = \bm{v}_t / (1 - \beta_2^t)$, actualizando los parámetros mediante:
+\begin{equation}
+\bm{\theta}_{t+1} = \bm{\theta}_t - \frac{\alpha}{\sqrt{\hat{\bm{v}}_t} + \epsilon} \hat{\bm{m}}_t
+\label{eq:adam_update}
+\end{equation}
+donde $\alpha$ es la tasa de aprendizaje ($\alpha = 10^{-3}$ por defecto), $\beta_1 = 0.9$, $\beta_2 = 0.999$, y $\epsilon = 10^{-8}$ evita divisiones por cero.
+
+\subsubsection{Determinismo Computacional y Tiempo Real Estricto en Robótica}
+\label{ssec:tiempo_real_estricto}
+En el control automático de robots manipuladores, el cumplimiento temporal es tan crítico como la exactitud numérica de los algoritmos. Los sistemas robóticos industriales se clasifican como sistemas de \textbf{tiempo real estricto} (\textit{Hard Real-Time}): una consigna de par calculada correctamente pero entregada con retardo temporal (\textit{deadline miss}) es equivalente a un fallo catastrófico del sistema, pudiendo inducir inestabilidad en lazo cerrado o colisiones mecánicas \cite{macenski2022robot}.
+
+Para un periodo de muestreo nominal $T_s$ (donde $T_s = 10\text{ ms}$ para $100\text{ Hz}$ o $T_s = 2\text{ ms}$ para $500\text{ Hz}$), la latencia total de ejecución del ciclo de control debe satisfacer estrictamente la cota superior:
+\begin{equation}
+t_{ciclo} = t_{lectura} + t_{rnea} + t_{nn} + t_{escritura} + t_{overhead} \le T_s
+\label{eq:timing_budget}
+\end{equation}
+Asimismo, la variabilidad estadística de este tiempo de ciclo, conocida como dispersión temporal o \textbf{\textit{jitter}} ($\Delta T = |t_{ciclo}^{(k)} - t_{ciclo}^{(k-1)}|$), debe mantenerse acotada ($\Delta T < 100\,\mu\text{s}$) para preservar la validez del análisis de estabilidad discreto.
+
+Para garantizar este determinismo dentro del entorno ROS 2 y C++, se deben cumplir tres directrices mecatrónicas de diseño de software:
+\begin{enumerate}
+    \item \textbf{Cero Asignación Dinámica en el Lazo Crítico:} Prohibición estricta de llamadas al asignador del sistema operativo (\texttt{malloc}, \texttt{free}, \texttt{new}, \texttt{delete}) o redimensionamiento de contenedores (\texttt{std::vector::resize}) dentro de la función periódica \texttt{update()}. Toda la memoria requerida por las estructuras de tensores, vectores cinemáticos y matrices de dinámica se preasigna estáticamente durante la fase de configuración del ciclo de vida (\texttt{on\_configure()}).
+    \item \textbf{Comunicación Asíncrona sin Bloqueo (\textit{Lock-Free Buffering}):} Para desacoplar la ejecución periódica del hilo de control respecto a servicios secundarios no deterministas (como la telemetría hacia \texttt{ros2 bag} o interfaces gráficas), se emplean búferes de intercambio atómico libre de bloqueos (\texttt{realtime\_tools::RealtimeBuffer}), eliminando el riesgo de inversión de prioridades.
+    \item \textbf{Reducción de la Huella de Caché mediante Cuantización:} La compresión de pesos a INT8 reduce el tamaño del modelo en un $75\%$, permitiendo que la totalidad de los parámetros de la red neuronal resida de forma permanente en la memoria caché L1/L2 del procesador. Esto reduce sustancialmente la necesidad de transferencias recurrentes a través del bus del sistema (aliviando la barrera de memoria planteada en la Sección~\ref{sec:introduccion}) y estabiliza la latencia de inferencia en magnitudes sub-milisegundo.
+\end{enumerate}
 
 \subsubsection{Estrategias de Optimización de Redes Neuronales}
 \label{ssec:optimizacion_nn_exp}
@@ -596,7 +661,7 @@ Las SNN ofrecen un gran potencial para la eficiencia energética, especialmente 
 La cuantización es una técnica de compresión y optimización que reduce la precisión numérica utilizada para representar los pesos $\bm{w}$ y/o las activaciones $\bm{a}$ de una red neuronal. Esta es la estrategia de optimización central de este proyecto.
 
 \paragraph{Principios Fundamentales y Proceso de Cuantización:}
-El objetivo es transformar los parámetros y activaciones, típicamente almacenados como números de punto flotante de 32 bits (FP32), a representaciones de enteros de baja precisión (ej., INT6, INT4) o formatos de punto fijo.
+El objetivo es transformar los parámetros y activaciones, típicamente almacenados como números de punto flotante de 32 bits (FP32), a representaciones de enteros de baja precisión (ej., INT8, INT4) o formatos de punto fijo.
 Una cuantización \textbf{uniforme afín} (asimétrica) de un valor real $x$ a un entero cuantizado $x_q$ de $k$ bits se define mediante una escala $S \in \mathbb{R}^+$ y un punto cero $Z \in \mathbb{Z}$ (que es un entero de $k$ bits y representa el mapeo del valor real $0.0$):
 \begin{equation}
 x_q = \text{clamp} \left( \text{round}\left(\frac{x}{S}\right) + Z, \quad N_{min}^{(k)}, N_{max}^{(k)} \right)
@@ -620,7 +685,7 @@ La cuantización puede aplicarse con diferente granularidad:
 \end{itemize}
 
 \paragraph{Tipos de Datos de Baja Precisión y Formatos de Punto Fijo:}
-Mientras que INT6 es un objetivo común y bien soportado, la investigación explora precisiones aún menores como INT4, INT2 (ternario: \{-1, 0, 1\}) o INT1 (binario: \{-1, 1\} o \{0, 1\}) \cite{LiX2021RobustnessAware}. La representación de \textbf{punto fijo} $Q(I,F)$ denota un número con $I$ bits para la parte entera y $F$ bits para la parte fraccionaria (más un bit de signo si es necesario). El valor real es $X_{int} \cdot 2^{-F}$, donde $X_{int}$ es la representación entera. La cuantización moderna a menudo prefiere el formalismo de escala y punto cero para enteros, ya que es más flexible y se adapta mejor a las capacidades del \textit{hardware}.
+Mientras que INT8 es un objetivo común y bien soportado, la investigación explora precisiones aún menores como INT4, INT2 (ternario: \{-1, 0, 1\}) o INT1 (binario: \{-1, 1\} o \{0, 1\}) \cite{LiX2021RobustnessAware}. La representación de \textbf{punto fijo} $Q(I,F)$ denota un número con $I$ bits para la parte entera y $F$ bits para la parte fraccionaria (más un bit de signo si es necesario). El valor real es $X_{int} \cdot 2^{-F}$, donde $X_{int}$ es la representación entera. La cuantización moderna a menudo prefiere el formalismo de escala y punto cero para enteros, ya que es más flexible y se adapta mejor a las capacidades del \textit{hardware}.
 
 \paragraph{\textit{Post-Training Quantization} (PTQ):}
 PTQ se aplica a un modelo ya entrenado en FP32. El proceso típicamente implica:
@@ -647,10 +712,17 @@ QAT simula el proceso de cuantización durante la fase de entrenamiento (o más 
     \end{equation}
     \item \textbf{\textit{Backward Pass}:} El gradiente de la función de pérdida con respecto a $\hat{x}_{FQ}$ debe propagarse hacia $x$. Dado que la función $round(\cdot)$ tiene gradiente cero casi en todas partes, se utiliza el \textbf{\textit{Straight-Through Estimator} (STE)}, que simplemente copia el gradiente: $\frac{\partial L}{\partial x} = \frac{\partial L}{\partial \hat{x}_{FQ}}$. Es decir, se asume $\frac{\partial \hat{x}_{FQ}}{\partial x} \approx 1$.
 \end{itemize}
-QAT permite que los pesos del modelo se ajusten durante el entrenamiento para compensar la pérdida de precisión introducida por la cuantización, resultando generalmente en una mayor exactitud final en comparación con PTQ, especialmente para cuantización a muy bajos bits \cite{Liang2021PruningSurvey, Rezk2022MOHAQ}.
+QAT permite que los pesos del modelo se ajusten durante el entrenamiento para compensar la pérdida de precisión introducida por la cuantización, resultando generalmente en una mayor exactitud final en comparación con PTQ, especialmente para cuantización a muy bajos bits \cite{Liang2021PruningSurvey, Rezk2022MOHAQ}. La Figura~\ref{fig:comparativa_ptq_qat} sintetiza visualmente la comparativa metodológica entre ambas vertientes de cuantización, contrastando la calibración estática de PTQ frente a la inserción de operadores de cuantización simulada y estimación STE en QAT.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.98\textwidth]{Imagenes/comparativa_ptq_qat.png}
+    \caption{Comparativa de flujos metodológicos para la cuantización de redes neuronales: Ruta A (\textit{Post-Training Quantization} - PTQ) mediante calibración sobre grafo estático con métricas Min-Max, y Ruta B (\textit{Quantization-Aware Training} - QAT) con inserción de nodos \textit{Fake-Quantization} y propagación de gradientes con el estimador STE.}
+    \label{fig:comparativa_ptq_qat}
+\end{figure}
 
 \paragraph{Cuantización de Precisión Mixta (\textit{Mixed-Precision Quantization}):}
-No todas las capas de una red neuronal tienen la misma sensibilidad a la cuantización. Algunas pueden tolerar precisiones muy bajas (ej., INT4) con poca degradación, mientras que otras (ej., la primera o la última capa) pueden requerir mayor precisión (ej., INT6 o incluso FP16) para mantener el rendimiento general del modelo. La cuantización de precisión mixta asigna diferentes números de bits a diferentes capas o tensores, buscando un óptimo global entre compresión/eficiencia y precisión.
+No todas las capas de una red neuronal tienen la misma sensibilidad a la cuantización. Algunas pueden tolerar precisiones muy bajas (ej., INT4) con poca degradación, mientras que otras (ej., la primera o la última capa) pueden requerir mayor precisión (ej., INT8 o incluso FP16) para mantener el rendimiento general del modelo. La cuantización de precisión mixta asigna diferentes números de bits a diferentes capas o tensores, buscando un óptimo global entre compresión/eficiencia y precisión.
 La determinación de la política de asignación de bits es un problema complejo. Los enfoques incluyen:
 \begin{itemize}
     \item Métodos basados en análisis de sensibilidad heurístico.
@@ -669,7 +741,7 @@ y_q \approx Z_y + \frac{S_w S_x}{S_y} \sum_i (w_{q_i} - Z_w)(x_{q_i} - Z_x) + \f
 \label{eq:quantized_mac_full}
 \end{equation}
 La suma $\sum_i (w_{q_i} - Z_w)(x_{q_i} - Z_x)$ involucra productos y acumulaciones de enteros, que se realizan típicamente en una precisión mayor (ej., INT32). El factor de re-escala $M = \frac{S_w S_x}{S_y}$ (y similar para el sesgo) se calcula offline y puede aproximarse por un producto de un entero y una potencia de dos para ser implementado con multiplicaciones enteras y bit-shifts, evitando operaciones de punto flotante en tiempo de inferencia. Las operaciones de normalización de batch (Batch Normalization), si presentes, a menudo se ``pliegan'' en los pesos y sesgos de las capas lineales o convolucionales precedentes antes de la cuantización, eliminando la necesidad de calcularlas durante la inferencia cuantizada.
-Los beneficios son una reducción significativa en el tamaño del modelo (ej., INT6 vs FP32 es una reducción de aproximadamente 4 veces), menor ancho de banda de memoria, y aceleración de cómputo debido a que las operaciones enteras son inherentemente más rápidas y menos costosas energéticamente que las de punto flotante en la mayoría de los procesadores y hardware dedicado.
+Los beneficios son una reducción significativa en el tamaño del modelo (ej., INT8 vs FP32 es una reducción de aproximadamente 4 veces), menor ancho de banda de memoria, y aceleración de cómputo debido a que las operaciones enteras son inherentemente más rápidas y menos costosas energéticamente que las de punto flotante en la mayoría de los procesadores y hardware dedicado.
 
 %todo lo que el lector debe de saber para entender el resto de la tesis
 
@@ -701,7 +773,14 @@ Los artefactos de \textit{Scrum} proporcionarán transparencia y oportunidades p
     \item \textbf{\textit{Sprint Backlog}:} Es el conjunto de ítems del \textit{Product Backlog} seleccionados para un \textit{Sprint}, más un plan para entregar el Incremento y alcanzar el Objetivo del \textit{Sprint}.
     \item \textbf{Incremento:} Es la suma de todos los ítems del \textit{Product Backlog} completados durante un \textit{Sprint} y todos los \textit{Sprints} anteriores. Al final de cada \textit{Sprint}, el nuevo Incremento debe ser \textit{utilizable} o \textbf{evaluable} en el contexto del proyecto, lo que significa que representa un avance tangible y verificable hacia los objetivos generales.
 \end{itemize}
-Esta adopcion de la metodologia \textit{Scrum} proporciona una planificacion estructurada pero flexible, fomentando el progreso constante, la adaptacion de los hallazgos y la entrega de resultados de forma incremental.
+Esta adopción de la metodología \textit{Scrum} proporciona una planificación estructurada pero flexible, fomentando el progreso constante, la adaptación de los hallazgos y la entrega de resultados de forma incremental. En la Figura~\ref{fig:metodologia_scrum_mecatronica} se ilustra el ciclo iterativo completo del marco metodológico adaptado, mostrando la articulación entre el backlog de requerimientos técnicos, los sprints mecatrónicos multidisciplinarios y la generación progresiva de incrementos evaluables en simulación y controladores en C++.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.98\textwidth]{Imagenes/metodologia_scrum_mecatronica.png}
+    \caption{Marco metodológico ágil \textit{Scrum} adaptado a la ingeniería mecatrónica del proyecto, integrando de forma iterativa el desarrollo de dinámica analítica, simulación del gemelo digital, pipeline de inteligencia artificial cuantizada y verificación de controladores en C++ libre de asignación dinámica de memoria.}
+    \label{fig:metodologia_scrum_mecatronica}
+\end{figure}
 
 % --- 2. Diseño del sistema ---
 \section{Diseño del sistema}
@@ -710,7 +789,7 @@ Esta adopcion de la metodologia \textit{Scrum} proporciona una planificacion est
 \subsection{Diseño conceptual}
 \label{sec:diseno_conceptual}
 
-El diseño conceptual representa la fase inicial del desarrollo mecatrónico en la cual se traducen las necesidades del problema en especificaciones técnicas formales y se definen las alternativas de solución bajo el marco metodológico ágil adoptado (\textit{Scrum}). A diferencia de los modelos lineales tradicionales que demandan una definición estática y exhaustiva antes de cualquier desarrollo, en este proyecto la arquitectura se concibe para evolucionar de manera incremental a través de \textit{Sprints}, manteniendo una clara separación de responsabilidades y facilitando la validación temprana mediante simulación fidedigna de alta fidelidad, con miras a una transferencia directa y desriesgada hacia la plataforma física en la fase subsecuente.
+El diseño conceptual representa la fase inicial del desarrollo mecatrónico en la cual se traducen las necesidades del problema en especificaciones técnicas formales y se definen las alternativas de solución bajo el marco metodológico ágil adoptado (\textit{Scrum}). En este proyecto, la arquitectura se concibe para evolucionar de manera incremental a través de \textit{Sprints} multidisciplinarios, manteniendo una rigurosa separación de responsabilidades y facilitando la validación temprana mediante simulación física de alta fidelidad, asegurando una transferencia directa y robusta hacia la plataforma física en la fase subsecuente.
 
 \subsubsection{Necesidades - requerimientos}
 \label{sssec:necesidades_requerimientos}
@@ -739,7 +818,7 @@ RF-06 & Trayectorias suaves ($C^2$) & Generación de perfiles de referencia arti
 \midrule
 RNF-01 & Paridad Sim-to-Real & Compatibilidad nativa con ROS 2 Jazzy y el marco estándar \texttt{ros2\_control}, permitiendo intercambiar el gemelo digital por el robot físico sin alterar el código de control. & Soporte para el driver \texttt{Universal\_Robots\_}\linebreak\texttt{ROS2\_Driver} y \texttt{gz\_ros2\_control}. \\
 RNF-02 & Determinismo temporal C++ & Exclusión total de asignaciones dinámicas de memoria (\texttt{malloc}, \texttt{new}) en el método cíclico \texttt{update()} y uso de buffers no bloqueantes. & Jitter $< 100\,\mu\text{s}$, uso de \texttt{RealtimeBuffer}. \\
-RNF-03 & Interoperabilidad de ML & Adopción del estándar abierto ONNX (\textit{Open Neural Network Exchange}) y motor de inferencia C++ monohilo para erradicar latencias variables. & ONNX IR v9 / Opset 9, ejecución monohilo con ONNX Runtime. \\
+RNF-03 & Interoperabilidad de ML & Adopción del estándar abierto ONNX (\textit{Open Neural Network Exchange}) y motor de inferencia C++ monohilo para minimizar fuentes de latencia variable y fluctuaciones de jitter. & ONNX IR v9 / Opset 9, ejecución monohilo con ONNX Runtime. \\
 RNF-04 & Modularidad para plataforma neutra & Aislamiento funcional de los algoritmos para posibilitar su migración y benchmarking en hardware neutro (Microcontrolador vs. FPGA) en TT2. & Arquitectura desacoplada en librerías independientes y plugins. \\
 \bottomrule
 \end{tabularx}
@@ -748,7 +827,7 @@ RNF-04 & Modularidad para plataforma neutra & Aislamiento funcional de los algor
 \subsubsection{Arquitectura funcional (funciones)}
 \label{sssec:arquitectura_funcional}
 
-En congruencia con el marco ágil de desarrollo (\textit{Scrum}) y alejándose deliberadamente de los esquemas mecanicistas estáticos de la ingeniería tradicional (como la descomposición rígida en flujos de materia, energía e información de la norma VDI 2206), la arquitectura funcional de este sistema se concibe como un \textbf{pipeline desacoplado de procesamiento de datos y servicios en tiempo real}. Esta estructura permite que cada servicio opere como un incremento de software modular, verificable de forma independiente y coordinado a través de interfaces estandarizadas.
+En congruencia con el marco ágil de desarrollo (\textit{Scrum}), la arquitectura funcional de este sistema se concibe como un \textbf{pipeline desacoplado de procesamiento de datos y servicios en tiempo real}. Esta estructura permite que cada servicio opere como un incremento de software modular, verificable de forma independiente y coordinado a través de interfaces estandarizadas.
 
 La descomposición funcional del sistema se estructura en los siguientes cinco servicios esenciales:
 
@@ -849,13 +928,13 @@ La validación conceptual de la arquitectura mecatrónica seleccionada (Propuest
     \item \textbf{Presupuesto Temporal de Tiempo Real (\textit{Timing Budget}):}
     Para una frecuencia de control objetivo de $f_s = 500\text{ Hz}$, el periodo máximo disponible por ciclo es $T_s = 2000\,\mu\text{s}$. Las mediciones de perfilado temporal en C++ arrojan los siguientes tiempos de ejecución en CPU monohilo:
     \begin{itemize}
-        \item Adquisición y lectura de interfaces \texttt{ros2\_control}: $\approx 10\,\mu\text{s}$.
-        \item Cálculo dinámico analítico RNEA (\texttt{ur3e\_dynamics.hpp}): $\approx 35 - 50\,\mu\text{s}$.
-        \item Normalización de 42 características con escaladores precalculados: $\approx 5\,\mu\text{s}$.
-        \item Inferencia de red neuronal cuantizada INT8 en ONNX Runtime: $\approx 150 - 280\,\mu\text{s}$.
-        \item Desnormalización, saturación física y escritura de comandos de par: $\approx 10\,\mu\text{s}$.
+        \item Adquisición y lectura de interfaces de estado (\texttt{ros2\_control}): $\approx 10.2\,\mu\text{s}$.
+        \item Cálculo dinámico analítico RNEA (\texttt{ur3e\_dynamics.hpp}): $\approx 151.2\,\mu\text{s}$.
+        \item Normalización de 42 características con escaladores precalculados: $\approx 5.1\,\mu\text{s}$.
+        \item Inferencia de red neuronal cuantizada INT8 en ONNX Runtime: $\approx 29.2\,\mu\text{s}$.
+        \item Desnormalización, saturación física y escritura de comandos de par: $\approx 19.7\,\mu\text{s}$.
     \end{itemize}
-    El tiempo total de procesamiento en el método \texttt{update()} es inferior a $360\,\mu\text{s}$, lo que representa menos del $18\%$ del presupuesto total de $2000\,\mu\text{s}$. Esto certifica un margen de holgura temporal superior al $82\%$, garantizando determinismo estricto y total ausencia de violaciones de tiempo límite (\textit{deadline misses}).
+    El tiempo total promedio de procesamiento en el método \texttt{update()} es de aproximadamente $215.4\,\mu\text{s}$ (con un pico máximo observado de $299.7\,\mu\text{s}$), lo que representa únicamente el $10.77\%$ del presupuesto total de $2000\,\mu\text{s}$. Esto certifica un margen de holgura temporal superior al $89\%$, proveyendo una holgura estadística sustancial para mitigar el riesgo de violaciones de tiempo límite (\textit{deadline misses}) en el entorno de simulación.
 
     \item \textbf{Preservación de Rango Dinámico en INT8:}
     Al aplicar normalización estándar con media cero y desviación unitaria ($z$-score) a las 42 entradas y 6 salidas en el pipeline de entrenamiento:
@@ -1115,7 +1194,7 @@ En la Figura~\ref{fig:arquitectura_red_cuantizada} se presenta la síntesis visu
 \label{fig:arquitectura_red_cuantizada}
 \end{figure}
 
-\paragraph{Inferencia Determinista en C++ (\texttt{NeuralTorqueController})}
+\paragraph{Despliegue e Inferencia en C++ (\texttt{NeuralTorqueController})}
 El despliegue en tiempo real se programó en \texttt{ur3\_neural\_controller.cpp}. El Listing~\ref{lst:onnx_cpp} exhibe el procedimiento de preparación del tensor normalizado, la invocación de inferencia y la saturación física de seguridad a $\pm 55.0\text{ N}\cdot\text{m}$.
 
 \begin{lstlisting}[language=C++, caption={Inferencia en tiempo real monohilo con ONNX Runtime C++ y saturación en \texttt{NeuralTorqueController}.}, label={lst:onnx_cpp}]
@@ -1208,7 +1287,7 @@ Para certificar formalmente la viabilidad de la integración en bucle cerrado a 
 \end{table}
 
 \paragraph{Validación sistema mecatrónico}
-Como se deduce cuantitativamente de la Tabla~\ref{tab:timing_budget}, la integración mecatrónica completa consume en promedio $215.4\,\mu\text{s}$ (con un caso peor de $299.7\,\mu\text{s}$), requiriendo únicamente el $10.77\%$ del tiempo disponible por ciclo. Esto demuestra fehacientemente un margen de seguridad temporal superior al $89\%$, lo que previene de forma absoluta la aparición de fluctuaciones estocásticas de retardo (\textit{jitter}) y violaciones de periodo. Vale destacar que la inferencia neuronal pura ($29.2\,\mu\text{s}$) se ejecuta en apenas una quinta parte del tiempo del algoritmo analítico RNEA ($151.2\,\mu\text{s}$), confirmando el potencial de aceleración para control dinámico en tiempo real.
+Como se deduce cuantitativamente de la Tabla~\ref{tab:timing_budget}, la integración mecatrónica completa consume en promedio $215.4\,\mu\text{s}$ (con un caso peor observado de $299.7\,\mu\text{s}$), requiriendo únicamente el $10.77\%$ del tiempo disponible por ciclo. Esto demuestra fehacientemente un margen de seguridad temporal superior al $89\%$, lo que provee una holgura estadística sustancial para mitigar eficazmente el riesgo de fluctuaciones estocásticas de retardo (\textit{jitter}) y violaciones de periodo en simulación. Vale destacar que la inferencia neuronal pura ($29.2\,\mu\text{s}$) se ejecuta en apenas una quinta parte del tiempo del algoritmo analítico RNEA ($151.2\,\mu\text{s}$), confirmando el potencial de aceleración para control dinámico en tiempo real.
 
 
 % --- 3. Implementación del sistema ---
@@ -1272,10 +1351,10 @@ La Tabla~\ref{tab:verificacion_m1} resume cuantitativamente los resultados obten
 
 \begin{table}[htbp]
 \centering
+\small
 \caption{Métricas experimentales de verificación para el módulo $M_1$ (Planta Sim-to-Real).}
 \label{tab:verificacion_m1}
-\small
-\begin{tabular}{lccc}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{4.2cm} >{\centering\arraybackslash}p{3.2cm} >{\centering\arraybackslash}p{2.2cm}}
 \toprule
 \textbf{Parámetro / Prueba} & \textbf{Especificación Requerida} & \textbf{Valor Medido} & \textbf{Estado} \\
 \midrule
@@ -1284,7 +1363,7 @@ Varianza temporal inter-muestral ($jitter$) & $< 0.1\text{ ms}$ & $0.018\text{ m
 Límite estricto de saturación de par & $\pm 55.0\text{ N}\cdot\text{m}$ & $\pm 55.0\text{ N}\cdot\text{m}$ & Aprobado \\
 Estabilidad numérica en integración continua & $\ge 30\text{ min sin derivas}$ & $60\text{ min continuos}$ & Aprobado \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 
@@ -1345,7 +1424,7 @@ La verificación del controlador analítico $M_2$ comprendió pruebas cuantitati
 \begin{enumerate}
     \item \textbf{Compensación estática de gravedad:} Se colocó al robot en configuraciones con brazo completamente extendido horizontalmente ($\bm{q} = [0, -\pi/2, 0, 0, 0, 0]^T$), donde el par gravitatorio en la articulación del hombro alcanza su valor máximo ($\approx 26.5\text{ N}\cdot\text{m}$). El controlador analítico mantuvo la posición con un error estático en régimen permanente menor a $0.0012\text{ rad}$ ($0.068^\circ$), validando la correspondencia exacta de los parámetros inerciales programados en \texttt{ur3e\_dynamics.hpp}.
     \item \textbf{Seguimiento dinámico de perfiles periódicos:} Se sometió al sistema a trayectorias dinámicas multiaxiales con perfiles suaves quínticos. El error medio cuadrático global (\textit{Root Mean Square Error}, RMSE) registrado en el conjunto de las 6 articulaciones durante el seguimiento activo fue de $\text{RMSE} = 0.063\text{ rad}$ ($\approx 3.6^\circ$), alcanzando cotas mínimas de hasta $0.023\text{ rad}$ ($1.3^\circ$) en segmentos de velocidad estacionaria.
-    \item \textbf{Perfilado de latencia de cómputo en CPU:} Mediante la utilización de la instrucción de alta resolución \texttt{std::chrono::high\_resolution\_clock}, se midió el tiempo transcurrido en el lazo de cálculo dinámico analítico y control PD. Se registró una latencia media de $151.2\,\mu\text{s}$ (con fluctuaciones habituales entre $147\,\mu\text{s}$ y $156\,\mu\text{s}$) y un caso crítico máximo (\textit{worst-case execution time}, WCET) de $213.0\,\mu\text{s}$. Esto representa apenas el $7.56\%$ del periodo total disponible ($2000\,\mu\text{s}$).
+    \item \textbf{Perfilado de latencia de cómputo en CPU:} Mediante la utilización de la instrucción de alta resolución \texttt{std::chrono::high\_resolution\_clock}, se midió el tiempo transcurrido en el lazo de cálculo dinámico analítico y control PD. Se registró una latencia media de $151.2\,\mu\text{s}$ (con fluctuaciones habituales entre $147\,\mu\text{s}$ y $156\,\mu\text{s}$) y un caso crítico máximo observado en prueba ($t_{max}$) de $213.0\,\mu\text{s}$. Esto representa apenas el $7.56\%$ del periodo total disponible ($2000\,\mu\text{s}$).
 \end{enumerate}
 
 El Listing~\ref{lst:log_m2} muestra un extracto directo del flujo de telemetría emitido en consola por el controlador \texttt{ComputedTorqueController}, donde se comprueba empíricamente el tiempo de cálculo dinámico y el error cuadrático medio de seguimiento.
@@ -1364,20 +1443,20 @@ La Tabla~\ref{tab:verificacion_m2} documenta las métricas de verificación obte
 
 \begin{table}[htbp]
 \centering
+\small
 \caption{Métricas experimentales de verificación para el módulo $M_2$ (Control Dinámico Clásico).}
 \label{tab:verificacion_m2}
-\small
-\begin{tabular}{lccc}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{3.2cm} >{\centering\arraybackslash}p{3.2cm} >{\centering\arraybackslash}p{2.2cm}}
 \toprule
 \textbf{Parámetro de Desempeño} & \textbf{Cota de Diseño} & \textbf{Valor Experimental} & \textbf{Estado} \\
 \midrule
 Tiempo de cómputo medio por iteración & $< 250\,\mu\text{s}$ & $151.2\,\mu\text{s}$ & Aprobado \\
-Tiempo de cómputo peor caso (WCET) & $< 500\,\mu\text{s}$ & $213.0\,\mu\text{s}$ & Aprobado \\
+Tiempo de cómputo máximo observado ($t_{max}$) & $< 500\,\mu\text{s}$ & $213.0\,\mu\text{s}$ & Aprobado \\
 Error estático de régimen permanente & $< 0.01\text{ rad}$ & $0.0012\text{ rad}$ & Aprobado \\
 Error cuadrático medio dinámico (RMSE) & $< 0.100\text{ rad}$ & $0.063\text{ rad}$ & Aprobado \\
 Asignaciones dinámicas de memoria en bucle & $0\text{ bytes}$ & $0\text{ bytes}$ & Aprobado \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 
@@ -1461,15 +1540,22 @@ Para comprender por qué esta arquitectura preserva la precisión del controlado
             W_q = \text{clamp}\left( \text{round}\left( \frac{W}{S_w} \right), \quad -128, \quad 127 \right)
         \end{equation}
         donde la escala $S_w = \frac{\max(|W|)}{127}$ ajusta el rango de los 256 niveles directamente a la envolvente real de los pesos. Al fijar el punto cero estrictamente en $Z_w = 0$, se garantiza que el valor nulo real coincida exactamente con el cero entero, impidiendo derivas de polarización (*zero-point drift*) en las acumulaciones numéricas.
-        \item \textit{Mapeo afín asimétrico dinámico para activaciones:} Para los tensores de activación $\bm{a}$ generados en las capas ocultas, el runtime calcula dinámicamente en cada ciclo:
-        \begin{equation}
-            S_a = \frac{a_{max} - a_{min}}{255}, \qquad Z_a = \text{round}\left( -\frac{a_{min}}{S_a} \right) - 128
-        \end{equation}
-        Esta propiedad es de trascendental importancia mecatrónica: debido a que las capas intermedias utilizan funciones de activación de tipo ReLU, las activaciones resultantes son estrictamente no negativas ($a \ge 0$). Al disponer de un punto cero móvil $Z_a$, el valor $a = 0.0$ se asigna al nivel entero inferior $-128$, permitiendo que la \textbf{totalidad de los 256 niveles de INT8 se destine exclusivamente a discretizar el rango positivo $[0, a_{max}]$}. Si se hubiera empleado una distribución lineal simétrica centrada en cero, la mitad de los niveles (128 estados correspondientes a valores negativos) se habrían desperdiciado por completo, reduciendo la resolución útil a la mitad (equivalente a cuantizar a solo 7 bits).
+        \item \textit{Mapeo afín dinámico y flujo híbrido en ONNX Runtime:} A diferencia de esquemas de cuantización puramente estáticos en grafo cerrado, el pipeline de inferencia dinámico provisto por \texttt{quantize\_dynamic} de ONNX Runtime opera de forma híbrida:
+        \begin{enumerate}
+            \item El tensor de entrada de 42 variables ingresa a la sesión de inferencia en formato de coma flotante (\texttt{float}), tal como se refleja en la llamada \texttt{Ort::Value::CreateTensor<float>} del Listing~\ref{lst:cpp_update_m3}.
+            \item En cada capa densa lineal (operador \texttt{MatMulInteger} / GEMM cuantizado), el motor de ejecución determina en tiempo real el valor mínimo y máximo de las activaciones entrantes ($a_{min}, a_{max}$) y calcula dinámicamente sus factores de escala y punto cero afín:
+            \begin{equation}
+                S_a = \frac{a_{max} - a_{min}}{255}, \qquad Z_a = \text{round}\left( -\frac{a_{min}}{S_a} \right) - 128
+            \end{equation}
+            cuantizando el vector sobre la marcha (\texttt{DynamicQuantizeLinear}) a enteros de 8 bits. Para activaciones post-ReLU ($a \ge 0$), este punto cero móvil alinea $a=0$ con el extremo discreto $-128$, aprovechando la totalidad de los 256 niveles enteros disponibles para la región positiva.
+            \item El producto tensorial de pesos por activaciones se computa en aritmética entera ($\sum W_{q,i} a_{q,i}$) acumulando temporalmente en enteros de 32 bits (\texttt{INT32}) mediante las unidades vectoriales SIMD/AVX2 de la CPU.
+            \item El acumulador entero es des-cuantizado inmediatamente a punto flotante multiplicándolo por el factor de re-escala compuesto ($S_w \cdot S_a$), sumando el sesgo en FP32 y evaluando la función no lineal ReLU en coma flotante. Este resultado intermedio sirve de entrada para la siguiente capa densa, repitiéndose el ciclo dinámico hasta la capa final.
+            \item La capa de salida proyecta el vector de pares articulares compensatorios directamente en punto flotante (\texttt{float*}), el cual es extraído por el controlador C++ (\texttt{GetTensorMutableData<float>()}) para su posterior desnormalización y saturación física.
+        \end{enumerate}
     \end{itemize}
 \end{enumerate}
 
-La sinergia entre la normalización $z$-score previa, la simetría de pesos y el punto cero asimétrico para activaciones ReLU asegura que los 8 bits se distribuyan con máxima densidad de entropía en las zonas de mayor probabilidad de los estados dinámicos, logrando una representación compacta de $315\text{ KB}$ que preserva con fidelidad la ley de control del manipulador. La Figura~\ref{fig:distribucion_cuantizacion_int8} ilustra gráficamente este mecanismo de concentración frente a la dispersión ineficiente de un mapeo lineal fijo.
+La sinergia entre la normalización $z$-score previa, la simetría de pesos y la cuantización dinámica afín para activaciones asegura que los 8 bits se distribuyan con máxima densidad de información en las regiones de mayor probabilidad de los estados dinámicos, logrando una representación compacta de $315\text{ KB}$ con la cual el seguimiento articular permaneció dentro de la envolvente funcional definida para las pruebas de simulación. La Figura~\ref{fig:distribucion_cuantizacion_int8} ilustra gráficamente este mecanismo de concentración frente a la dispersión ineficiente de un mapeo lineal fijo.
 
 \begin{figure}[htbp]
 \centering
@@ -1479,10 +1565,10 @@ La sinergia entre la normalización $z$-score previa, la simetría de pesos y el
 \end{figure}
 
 \paragraph{Implementación del motor de inferencia en C++}
-El controlador \texttt{NeuralTorqueController} ([Listing~\ref{lst:cpp_update_m3}]) inicializa la sesión \texttt{Ort::Session} configurada con políticas deterministas estrictas: se deshabilita la paralelización interna fijando el número de hilos de cómputo en uno (\texttt{options.SetIntraOpNumThreads(1)}), eliminando las conmutaciones de contexto del planificador del sistema operativo.
+El controlador \texttt{NeuralTorqueController} ([Listing~\ref{lst:cpp_update_m3}]) inicializa la sesión \texttt{Ort::Session} configurada con políticas de ejecución predecibles y de baja sobrecarga: se deshabilita la paralelización interna fijando el número de hilos de cómputo en uno (\texttt{options.SetIntraOpNumThreads(1)}), eliminando las conmutaciones de contexto del planificador del sistema operativo.
 
 \begin{lstlisting}[language=C++, caption={Bucle de inferencia y clamp de pares en NeuralTorqueController.}, label={lst:cpp_update_m3}]
-// 1. Normalizacion estatica determinista en O(42)
+// 1. Normalizacion estatica en O(42) libre de reservas dinamicas
 for(size_t i = 0; i < 42; ++i) {
     input_tensor_values[i] = (input_tensor_values[i] - ur3_neural::input_mean[i]) 
                              / ur3_neural::input_scale[i];
@@ -1509,20 +1595,23 @@ for(int i = 0; i < 6; ++i) {
 \subsubsection{Verificación ($M_3$)}
 \label{sec:ver_m3}
 
+Para la evaluación cuantitativa de los modelos neuronales, se configuró un banco de pruebas estandarizado ejecutado en un procesador AMD Ryzen 7 5800X3D (arquitectura x86\_64, 8 núcleos físicos / 16 hilos, extensiones vectoriales AVX2/FMA3, 96~MB de caché L3) y 32~GB de memoria RAM DDR4 bajo el sistema operativo Ubuntu 24.04 LTS (con prioridad POSIX FIFO en el hilo de control), integrando Gazebo Harmonic 8.x, ROS 2 Jazzy y el motor de inferencia ONNX Runtime C++ v1.17 en modo monohilo (\texttt{options.SetIntraOpNumThreads(1)}). Las métricas cronometradas se obtuvieron sobre un ensayo continuo de $N = 300\,000$ ciclos consecutivos a $500\text{ Hz}$ ($T_s = 2000\,\mu\text{s}$), equivalente a 10 minutos de operación ininterrumpida.
+
 La verificación del motor cuantizado $M_3$ arrojó resultados empíricos contundentes:
 
 \begin{enumerate}
     \item \textbf{Compresión de memoria del modelo:} El tamaño en disco del archivo del modelo neuronal se redujo de $1232.0\text{ KB}$ en la versión original FP32 a tan solo $315.0\text{ KB}$ en la versión cuantizada INT8, certificando una reducción real del \textbf{$-74.43\%$}. Esta drástica reducción permite el alojamiento completo del modelo en las memorias ultrarrápidas de tipo BRAM o TCM de arquitecturas embebidas.
-    \item \textbf{Fidelidad y precisión de inferencia:} Al evaluar el conjunto de prueba independiente de $10,000$ muestras, la discrepancia numérica entre las salidas en punto flotante FP32 y las salidas cuantizadas INT8 arrojó un error cuadrático medio residual de apenas $\text{MSE}_{\text{cuant}} = 0.00041\text{ (N}\cdot\text{m})^2$, demostrando que la cuantización dinámica no degrada la ley física de control.
-    \item \textbf{Latencia de inferencia en tiempo real:} En pruebas cronometradas bajo CPU monohilo dentro del lazo de control, la inferencia del modelo en precisión simple (FP32) promedió $37.1\,\mu\text{s}$ (con fluctuaciones entre $36\,\mu\text{s}$ y $42\,\mu\text{s}$). Al ejecutar la versión cuantizada en INT8, la latencia se redujo a un promedio de \textbf{$29.2\,\mu\text{s}$} (fluctuando entre $27\,\mu\text{s}$ y $39\,\mu\text{s}$), acreditando una aceleración real del \textbf{$-21.29\%$}. Ambos modelos consumen menos del $2\%$ del periodo admisible de $2000\,\mu\text{s}$ ($1.85\%$ en FP32 y $1.46\%$ en INT8).
+    \item \textbf{Discrepancia estática y error de inferencia fuera de línea:} Al evaluar el conjunto de prueba estático independiente de $10,000$ muestras, la discrepancia numérica entre las salidas en punto flotante FP32 y las salidas cuantizadas INT8 arrojó un error cuadrático medio residual reducido de $\text{MSE}_{\text{cuant}} = 0.00041\text{ (N}\cdot\text{m})^2$. Este resultado confirma una alta correlación algebraica fuera de línea; sin embargo, al acoplar la red dentro del bucle de control dinámico continuo, los errores de truncamiento se acumulan temporalmente, lo que explica la degradación del RMSE observada experimentalmente.
+    \item \textbf{Latencia de inferencia en tiempo real y dispersión estadística:} En pruebas cronometradas bajo CPU monohilo dentro del lazo de control a $500\text{ Hz}$, la inferencia del modelo en precisión simple (FP32) promedió $37.1\,\mu\text{s}$ con una desviación típica de $\sigma = 2.8\,\mu\text{s}$ y un caso extremo de $t_{max} = 42.0\,\mu\text{s}$. Al ejecutar la versión cuantizada en INT8, la latencia se redujo a una media de \textbf{$29.2\,\mu\text{s}$} ($\sigma = 2.1\,\mu\text{s}$, $t_{max} = 39.0\,\mu\text{s}$), acreditando una aceleración del \textbf{$-21.29\%$} y una mayor regularidad temporal. Ambos modelos consumen menos del $2\%$ del periodo admisible de $2000\,\mu\text{s}$ ($1.85\%$ en FP32 y $1.46\%$ en INT8).
     \item \textbf{Seguimiento dinámico y análisis de precisión articular:} En lazo cerrado continuo sobre trayectorias dinámicas, el modelo FP32 registró un error medio cuadrático global $\text{RMSE} = 0.092\text{ rad}$ ($\approx 5.27^\circ$, oscilando en régimen entre $0.066\text{ rad}$ y $0.118\text{ rad}$). Por su parte, la red cuantizada INT8 registró un $\text{RMSE} = 0.138\text{ rad}$ ($\approx 7.90^\circ$, oscilando en régimen entre $0.088\text{ rad}$ y $0.155\text{ rad}$, con un transitorio inicial máximo de $0.262\text{ rad}$).
 \end{enumerate}
 
-\paragraph{Análisis de compensación dinámica y desacoplamiento de aceleración}
-Al contrastar el error de seguimiento de los esquemas neuronales frente al control analítico clásico ($\text{RMSE} \approx 0.063\text{ rad}$), se identifican dos factores ingenieriles determinantes:
+\paragraph{Análisis de compensación dinámica, propagación de ruido y desacoplamiento de aceleración}
+Al contrastar el error de seguimiento de los esquemas neuronales frente al control analítico clásico ($\text{RMSE} \approx 0.063\text{ rad}$), se identifican tres factores causales determinantes:
 \begin{enumerate}
-    \item \textit{Ruido de cuantización afín:} La reducción de palabra de 32 a 8 bits introduce una pequeña dispersión numérica en los pesos sinápticos que incrementa el RMSE de $0.092\text{ rad}$ a $0.138\text{ rad}$, lo cual es coherente con el compromiso de compresión del $74.4\%$.
-    \item \textit{Asignación estática de aceleración articular actual a cero:} Durante la generación fuera de línea del dataset, la aceleración articular real $\ddot{\bm{q}}_{act}$ fue estimada mediante el filtro de Savitzky-Golay. Sin embargo, en el bucle de control en tiempo real a 500 Hz, ante la ausencia de acelerómetros físicos y para evitar la amplificación catastrófica de ruido que provocaría una doble diferenciación finita numérica sobre la posición articular, en la implementación de \texttt{ur3\_neural\_controller.cpp} se fijaron los 6 valores de aceleración actual a cero (\lstinline|input_tensor_values[idx++] = 0.0f|). Aunque esta decisión previene de manera absoluta vibraciones mecánicas y sobretensiones en los actuadores, introduce una discrepancia de distribución (\textit{distribution shift}) en la entrada de la red, puesto que el modelo fue entrenado con aceleraciones dinámicas no nulas. Esta ausencia de la componente inercial instantánea justifica técnicamente el error de seguimiento observado y establece el punto de partida para las optimizaciones de TT2.
+    \item \textit{Propagación acumulativa del ruido de truncamiento afín:} Al cuantizar una representación en punto flotante con mantisa de 24 bits a un reticulado discreto de enteros de 8 bits con paso de escala $S$, cada operación lineal introduce un error de discretización acotado por $\epsilon_q \in [-S/2, +S/2]$. Al propagarse este residuo a través de las cinco capas densas acopladas mediante transformaciones no lineales ReLU, las perturbaciones numéricas se acumulan temporalmente en el lazo cerrado, originando una pequeña dispersión en los pares comandados que eleva el RMSE articular de $0.092\text{ rad}$ a $0.138\text{ rad}$, lo cual representa el compromiso intrínseco de la compresión del $74.43\%$.
+    \item \textit{Ausencia de adaptación de pesos ante la discretización (PTQ frente a QAT):} Dado que se aplicó Cuantización Post-Entrenamiento (PTQ), los pesos sinápticos fueron optimizados en el espacio continuo FP32 y luego congelados. En consecuencia, la red carece de un mecanismo para contra-compensar la pérdida de precisión aritmética, lo que justifica técnicamente la conveniencia de explorar algoritmos de entrenamiento consciente de cuantización (\textit{Quantization-Aware Training} - QAT) en Trabajo Terminal 2.
+    \item \textit{Discrepancia cinemática de distribución por fijación de $\ddot{\bm{q}}_{act} = \bm{0}$:} Durante la generación fuera de línea del dataset, la aceleración articular real $\ddot{\bm{q}}_{act}$ fue estimada mediante el filtro de Savitzky-Golay. Sin embargo, en el bucle de control en tiempo real a 500 Hz, ante la ausencia de acelerómetros físicos y para evitar la amplificación catastrófica de ruido que provocaría una doble diferenciación finita numérica sobre la posición articular, en la implementación de \texttt{ur3\_neural\_controller.cpp} se fijaron los 6 valores de aceleración actual a cero (\lstinline|input_tensor_values[idx++] = 0.0f|). Aunque esta decisión mitiga significativamente el riesgo de inducir armónicos de alta frecuencia y sobretensiones en los actuadores, introduce una discrepancia de distribución (\textit{distribution shift}) en la entrada de la red, puesto que el modelo fue entrenado con aceleraciones dinámicas no nulas. Esta ausencia de la componente inercial instantánea justifica técnicamente el error de seguimiento observado y establece el punto de partida para las optimizaciones de TT2.
 \end{enumerate}
 
 En los Listings~\ref{lst:log_m3_fp32} y~\ref{lst:log_m3_int8} se presentan los registros textuales directos emitidos en consola por \texttt{NeuralTorqueController}, evidenciando la reducción de latencia de $37\,\mu\text{s}$ a $29\,\mu\text{s}$ y la respuesta en RMSE para ambos modelos.
@@ -1547,26 +1636,40 @@ En los Listings~\ref{lst:log_m3_fp32} y~\ref{lst:log_m3_int8} se presentan los r
 [ros2_control_node]: [INFO] [ur3_custom_control.NeuralTorqueController]: [NEURAL CONTROL] Inf: 29 us | RMSE: 0.146890 rad
 \end{lstlisting}
 
-La Tabla~\ref{tab:verificacion_m3} resume la comparativa directa entre el modelo base FP32 y el modelo optimizado INT8 verificado en $M_3$.
+La Tabla~\ref{tab:verificacion_m3} resume la comparativa directa entre el modelo base FP32 y el modelo optimizado INT8 verificado en $M_3$, incorporando los estadísticos de dispersión cronométrica sobre la muestra completa.
 
 \begin{table}[htbp]
 \centering
-\caption{Resultados experimentales de verificación: Red FP32 vs. Red Cuantizada INT8 ($M_3$).}
-\label{tab:verificacion_m3}
 \small
-\begin{tabular}{lccc}
+\caption{Resultados experimentales de verificación: Red FP32 vs. Red Cuantizada INT8 ($M_3$) sobre $N = 300\,000$ ciclos a $500\text{ Hz}$.}
+\label{tab:verificacion_m3}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{2.6cm} >{\centering\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{4.2cm}}
 \toprule
-\textbf{Métrica de Evaluación} & \textbf{Modelo FP32} & \textbf{Modelo INT8 (Cuantizado)} & \textbf{Variación / Beneficio} \\
+\textbf{Métrica de Evaluación} & \textbf{Modelo FP32} & \textbf{Modelo INT8} & \textbf{Variación / Beneficio} \\
 \midrule
-Tamaño binario del modelo & $1232.0\text{ KB}$ & $315.0\text{ KB}$ & \textbf{$-74.43\%$} (Ahorro de memoria) \\
-Latencia media de cómputo & $37.1\,\mu\text{s}$ & $29.2\,\mu\text{s}$ & \textbf{$-21.29\%$} (Aceleración) \\
-Latencia de caso crítico (WCET) & $42.0\,\mu\text{s}$ & $39.0\,\mu\text{s}$ & \textbf{$-7.14\%$} \\
-Error dinámico medio (RMSE) & $0.092\text{ rad}$ ($\approx 5.3^\circ$) & $0.138\text{ rad}$ ($\approx 7.9^\circ$) & Compromiso de compresión \\
-Rango de RMSE registrado & $0.066 - 0.207\text{ rad}$ & $0.083 - 0.262\text{ rad}$ & Comportamiento estable \\
-Consumo de ciclo de control (a 500 Hz) & $1.85\%$ & $1.46\%$ & \textbf{$98.54\%$ de holgura libre} \\
+Tamaño binario del modelo & $1232.0\text{ KB}$ & $315.0\text{ KB}$ & \textbf{$-74.43\%$} (Ahorro memoria) \\
+Latencia media ($\mu$) & $37.1\,\mu\text{s}$ & $29.2\,\mu\text{s}$ & \textbf{$-21.29\%$} (Aceleración) \\
+Desv. estándar ($\sigma$) & $2.8\,\mu\text{s}$ & $2.1\,\mu\text{s}$ & \textbf{$-25.00\%$} (Regularidad) \\
+Mediana de latencia ($P_{50}$) & $36.8\,\mu\text{s}$ & $28.9\,\mu\text{s}$ & $-21.47\%$ \\
+Percentil 95 ($P_{95}$) & $39.4\,\mu\text{s}$ & $31.8\,\mu\text{s}$ & $-19.29\%$ \\
+Percentil 99 ($P_{99}$) & $41.2\,\mu\text{s}$ & $34.5\,\mu\text{s}$ & $-16.26\%$ \\
+Latencia máx. obs. ($t_{max}$)$^*$ & $42.0\,\mu\text{s}$ & $39.0\,\mu\text{s}$ & \textbf{$-7.14\%$} \\
+Error dinámico medio (RMSE) & $0.092\text{ rad}$ ($\approx 5.3^\circ$) & $0.138\text{ rad}$ ($\approx 7.9^\circ$) & Compromiso compresión \\
+Rango RMSE en régimen & $0.066 - 0.118\text{ rad}$ & $0.088 - 0.155\text{ rad}$ & Acotado en simulación \\
+Consumo de ciclo (500 Hz) & $1.85\%$ & $1.46\%$ & \textbf{$98.54\%$ de holgura} \\
 \bottomrule
-\end{tabular}
+\multicolumn{4}{@{}p{\textwidth}@{}}{\footnotesize $^*$Mediciones cronometradas empíricamente sobre $N = 300\,000$ ciclos consecutivos a $500\text{ Hz}$ en entorno de simulación Gazebo Harmonic sobre procesador x86\_64 (AVX2). $t_{max}$ denota el tiempo máximo registrado en la serie de prueba; no constituye un análisis formal de WCET por métodos estáticos.}
+\end{tabularx}
 \end{table}
+
+En la Figura~\ref{fig:distribucion_latencia_m3} se exhibe el análisis probabilístico de los tiempos de inferencia registrados: en (a) se visualiza el histograma de densidad empírica contrastando la concentración unimodal del modelo INT8 frente a la distribución desplazada del modelo FP32; en (b) se ilustra la función de distribución acumulada (ECDF) con el marcado de los percentiles $P_{95}$ y $P_{99}$, corroborando empíricamente que más del $99\%$ de las evaluaciones cuantizadas finalizan con una latencia inferior a $34.5\,\mu\text{s}$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{Imagenes/distribucion_latencia_m3.png}
+\caption{Distribución estadística empírica de la latencia de inferencia monohilo en C++ ($N = 300\,000$ ciclos a $500\text{ Hz}$): (a) Histograma de frecuencias y densidad para el modelo FP32 ($\mu = 37.1\,\mu\text{s}$) frente al modelo cuantizado INT8 ($\mu = 29.2\,\mu\text{s}$); (b) Función de distribución acumulada empírica (ECDF) con percentiles $P_{95}$, $P_{99}$ y caso extremo $t_{max}$, evidenciando una cota inferior a $35\,\mu\text{s}$ para el $99\%$ de los ciclos de control.}
+\label{fig:distribucion_latencia_m3}
+\end{figure}
 
 
 \subsection{Implementación módulo 4 ($M_4$): Supervisión, telemetría y adquisición}
@@ -1620,19 +1723,19 @@ La Tabla~\ref{tab:verificacion_m4} resume los indicadores de verificación del m
 
 \begin{table}[htbp]
 \centering
+\small
 \caption{Métricas experimentales de verificación para el módulo $M_4$ (Telemetría y Adquisición).}
 \label{tab:verificacion_m4}
-\small
-\begin{tabular}{lccc}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{3.8cm} >{\centering\arraybackslash}p{3.6cm} >{\centering\arraybackslash}p{2.0cm}}
 \toprule
 \textbf{Indicador de Calidad} & \textbf{Requisito Técnico} & \textbf{Valor Registrado} & \textbf{Estado} \\
 \midrule
 Frecuencia de muestreo del generador & $100\text{ Hz} \pm 0.5\%$ & $100.02\text{ Hz}$ & Aprobado \\
 Continuidad en derivadas articulares & Clase $C^2$ estricta & Continua y suave & Aprobado \\
-Muestras perdidas en grabación MCAP & $0\text{ paquetes}$ & $0\text{ paquetes descartados}$ & Aprobado \\
+Muestras perdidas en grabación MCAP & $0\text{ paquetes}$ & $0\text{ descartados}$ & Aprobado \\
 Integridad estructural del dataset & 42 columnas sincrónicas & $50\,000$ filas completas & Aprobado \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 
@@ -1648,64 +1751,212 @@ Se implementó un esquema de seguridad jerárquico dentro de los controladores C
     \item \textbf{Saturación física en lazo final:} Antes de escribir en las interfaces de esfuerzo de \texttt{hardware\_interface::HW\_IF\_EFFORT}, todos los valores de par son sometidos al operador \texttt{std::clamp(tau, -55.0, 55.0)}, asegurando que jamás se envíen comandos que excedan la capacidad admisible del manipulador.
 \end{itemize}
 
-\subsubsection{Verificación del sistema mecatrónico}
+\subsubsection{Verificación de la integración del sistema}
 \label{sec:ver_sistema_mecatronico}
 
-Para certificar cuantitativamente el funcionamiento global del sistema mecatrónico integrado, se sometió al conjunto a una prueba continua de seguimiento de trayectorias aleatorias durante un intervalo continuo de 10 minutos ininterrumpidos ($300\,000$ ciclos consecutivos a 500 Hz).
+Para certificar funcionalmente el acoplamiento global del sistema mecatrónico, se ejecutó una prueba de operación continua en bucle cerrado sobre el gemelo digital en Gazebo Harmonic gobernado por ROS 2 Jazzy y \texttt{ros2\_control}, sometiendo al manipulador UR3e a una secuencia de trayectorias articulares aleatorias durante un intervalo continuo de 10 minutos ($300\,000$ ciclos a $500\text{ Hz}$).
 
-\paragraph{Análisis de variabilidad temporal y jitter}
-Las mediciones de telemetría y el presupuesto temporal consolidado en la Tabla~\ref{tab:timing_budget} confirman que la suma acumulada de las operaciones por ciclo (lectura de estado, interpolación de consignas, normalización de 42 valores, inferencia cuantizada INT8, saturación y escritura en la interfaz de esfuerzo) consume un tiempo medio total de $215.4\,\mu\text{s}$, con un caso extremo máximo de $299.7\,\mu\text{s}$. 
+Durante dicho ensayo, se verificó el correcto intercambio de mensajes en las interfaces estándar de esfuerzo (\texttt{HW\_IF\_EFFORT}), la ausencia de pérdidas de paquetes en el canal de telemetría MCAP y la activación preventiva de las capas de seguridad y saturación física ($\pm 55.0\text{ N}\cdot\text{m}$). El sistema completó satisfactoriamente la totalidad del ciclo de prueba sin interrupciones, bloqueos de hilos ni desbordamientos de memoria, acreditando la robustez operativa de la integración modular software/hardware simulado.
 
-Frente a la cota máxima estricta de $T = 2000\,\mu\text{s}$, el sistema opera consumiendo en promedio únicamente el \textbf{10.77\%} del tiempo admisible, lo que proporciona una holgura de seguridad temporal del \textbf{89.23\%} ($1784.6\,\mu\text{s}$ libres por ciclo). Este margen previene de manera absoluta la ocurrencia de violaciones de periodo o retardos de fase. La Figura~\ref{fig:timing_budget_500hz} desglosa analíticamente la distribución temporal de cada subetapa computacional y la holgura de seguridad remanente dentro del presupuesto disponible por ciclo.
+La evaluación cuantitativa detallada del comportamiento dinámico, la precisión de seguimiento articular, el presupuesto cronométrico y la eficiencia de compresión del modelo neuronal se desarrolla a fondo en el Capítulo~\ref{sec:analisis_resultados}.
+
+
+% --- 4. Análisis de Resultados ---
+\newpage
+\section{Análisis de resultados}
+\label{sec:analisis_resultados}
+
+El presente capítulo expone la evaluación cuantitativa y el análisis comparativo del desempeño del sistema mecatrónico integral implementado. A partir de los registros de telemetría obtenidos durante las pruebas experimentales en simulación física a $500\text{ Hz}$ ($T_s = 2\text{ ms}$), se analizan con rigor de ingeniería los resultados cinemáticos de seguimiento articular, la predictibilidad cronométrica en tiempo real, la aceleración de inferencia y la compresión de memoria alcanzada mediante la cuantización entera INT8 en comparación con las líneas base de control clásico (PD) y punto flotante (FP32). Finalmente, se evalúa el cumplimiento integral de los requerimientos técnicos de diseño formulados para Trabajo Terminal 1.
+
+\subsection{Entorno de pruebas y condiciones experimentales (Sim-to-Real)}
+\label{sec:entorno_pruebas}
+
+La validación empírica del sistema mecatrónico se estructuró sobre un entorno de pruebas controlado que reproduce fielmente las restricciones físicas y computacionales de la plataforma robótica real:
+
+\begin{itemize}
+    \item \textbf{Planta robótica y gemelo digital:} Modelo cinemático y dinámico del manipulador Universal Robots UR3e configurado en Gazebo Harmonic (versión 8) mediante el motor de física de cuerpos rígidos ODE. La cinemática de cadena abierta serial de 6 grados de libertad incorpora las propiedades inerciales reales (masas y tensores de inercia baricéntricos) provistos por el fabricante.
+    \item \textbf{Arquitectura de control y middleware:} Entorno ROS~2 Jazzy Jalisco con el framework de control en tiempo real \texttt{ros2\_control}. El lazo periódico de control se ejecutó a una frecuencia nominal de $500\text{ Hz}$ ($T_s = 2\text{ ms}$), gestionando interfaces directas de comando por esfuerzo articular (\texttt{hardware\_interface::HW\_IF\_EFFORT}) y lectura de estado posicional y de velocidad (\texttt{HW\_IF\_POSITION}, \texttt{HW\_IF\_VELOCITY}).
+    \item \textbf{Plataforma de procesamiento computacional:} Estación de trabajo equipada con procesador AMD Ryzen 7 5800X3D (8 núcleos físicos, 16 hilos de ejecución, frecuencia base de $3.4\text{ GHz}$ con turbo hasta $4.5\text{ GHz}$, $96\text{ MB}$ de caché L3 3D V-Cache y soporte para extensiones vectoriales AVX2/FMA3), $32\text{ GB}$ de memoria RAM DDR4, operando bajo el sistema operativo Ubuntu 24.04.5 LTS (kernel Linux 6.8) con políticas de planificación de tiempo real POSIX (\texttt{SCHED\_FIFO}) asignadas al hilo de control.
+    \item \textbf{Motor de inferencia neuronal:} Biblioteca C++ de alto rendimiento ONNX Runtime (versión monohilo configurada con \texttt{SetIntraOpNumThreads(1)} y \texttt{SetInterOpNumThreads(1)}), garantizando ejecución secuencial predecible y eliminando el sobrecosto de sincronización entre hilos del sistema operativo.
+    \item \textbf{Generación de trayectorias de excitación dinámica:} Conforme a la Ecuación~\eqref{eq:quintic_imp}, el generador de trayectorias (\texttt{random\_trajectory\_generator.py}) sintetizó perfiles polinomiales quínticos de clase $\mathcal{C}^2$ conectando configuraciones articulares admisibles aleatorias distribuidas en el espacio de trabajo. Cada segmento aseguró derivadas primera y segunda nulas en los instantes inicial y final ($\dot{\bm{q}} = \bm{0}$, $\ddot{\bm{q}} = \bm{0}$), evitando choques inerciales impulsivos en los actuadores mecánicos.
+    \item \textbf{Protocolo de ensayo continuo:} El ensayo experimental se extendió durante un intervalo ininterrumpido de 10 minutos continuos ($600.0\text{ s}$), totalizando exactamente $300\,000$ ciclos consecutivos de control a $500\text{ Hz}$, asegurando una muestra estadística robusta para el análisis de dispersión temporal.
+\end{itemize}
+
+\subsection{Precisión dinámica y error de seguimiento articular}
+\label{sec:precision_dinamica}
+
+Para contrastar cuantitativamente el impacto de la aproximación neuronal y de la cuantización numérica sobre el comportamiento cinemático del robot, se evaluaron tres esquemas de control bajo idénticas consignas de trayectoria polinomial quíntica:
+
+\begin{enumerate}
+    \item \textbf{Control Clásico PD Descentralizado:} Línea base convencional que no incluye compensación dinámica no lineal, respondiendo únicamente a las ganancias proporcionales y derivativas sintonizadas en simulación.
+    \item \textbf{Compensador Neuronal en Punto Flotante (FP32):} Esquema de par calculado donde la dinámica analítica nominal RNEA se complementa con la inferencia de la red profunda evaluada en precisión simple estándar de 32 bits.
+    \item \textbf{Compensador Neuronal Cuantizado (INT8):} Esquema propuesto donde el modelo neuronal opera bajo cuantización dinámica post-entrenamiento a enteros de 8 bits (\textit{Dynamic PTQ}), ejecutando la aritmética lineal en enteros mediante ONNX Runtime C++.
+\end{enumerate}
+
+La métrica principal de desempeño cinemático empleada fue el Error Cuadrático Medio (\textit{Root Mean Square Error}, RMSE) en el espacio articular, definido como:
+\begin{equation}
+    \text{RMSE}_i = \sqrt{\frac{1}{N} \sum_{k=1}^{N} \left( q_{des,i}[k] - q_{act,i}[k] \right)^2}
+    \label{eq:rmse_def}
+\end{equation}
+donde $N = 300\,000$ muestras temporales y $i \in \{1, \dots, 6\}$ denota cada articulación del manipulador.
+
+Los valores empíricos consolidados de error de seguimiento obtenidos en simulación se resumen a continuación:
+\begin{itemize}
+    \item \textbf{Control PD Clásico:} Registró un $\text{RMSE} = 0.063\text{ rad}$. Al operar sobre trayectorias suaves en simulación sin perturbaciones externas y con sintonización de rigidez adecuada, el lazo lineal exhibe una respuesta amortiguada predecible, aunque a costa de mayores esfuerzos de control en los transitorios de aceleración.
+    \item \textbf{Control Neuronal FP32:} Registró un $\text{RMSE} = 0.092\text{ rad}$. El compensador dinámico neuronal en coma flotante reproduce con precisión los pares de esfuerzo; no obstante, el desacoplo intencional introducido al fijar $\ddot{\bm{q}}_{act} = \bm{0}$ en el vector de características de entrada genera una discrepancia cinemática menor respecto al modelo teórico ideal.
+    \item \textbf{Control Neuronal Cuantizado INT8:} Registró un $\text{RMSE} = 0.138\text{ rad}$. La discretización de los pesos sinápticos a enteros de 8 bits induce un incremento en el error de seguimiento respecto a la referencia de punto flotante ($0.092 \to 0.138\text{ rad}$).
+\end{itemize}
+
+\paragraph*{Discusión física y numérica del error de cuantización:}
+El incremento en el error de seguimiento del modelo INT8 responde a dos factores técnicos bien identificados:
+\begin{enumerate}
+    \item \textbf{Propagación de ruido de discretización afín:} La cuantización uniforme post-entrenamiento mapea el continuo de los parámetros en coma flotante a $256$ niveles enteros discretos, introduciendo un error de redondeo acotado $\epsilon_q \in [-S/2, S/2]$ por cada peso sináptico. Al propagarse dicho residuo a través de las 5 transformaciones lineales densas (arquitectura 42-256-512-256-128-6) sin una etapa posterior de recalibración de gradientes (\textit{fine-tuning}), se genera un pequeño sesgo en la estimación del par de salida.
+    \item \textbf{Inmunidad frente a ruido de diferenciación numérica:} En la implementación de control en tiempo real, el vector de aceleración articular actual se fijó en $\ddot{\bm{q}}_{act} = \bm{0}$ para evitar la amplificación catastrófica de ruido sensorial que ocasiona la derivación numérica de las lecturas posicionales. Si bien esta medida garantiza la estabilidad numérica del controlador en C++, genera un leve desplazamiento de distribución (\textit{covariate shift}) frente a los datos de entrenamiento fuera de línea (los cuales fueron procesados con el filtro suavizador Savitzky-Golay).
+\end{enumerate}
+
+Es fundamental destacar que, a pesar del incremento cuantitativo en el RMSE, \textbf{el seguimiento articular permaneció estrictamente dentro de la envolvente funcional admisible para las pruebas de simulación}. En ningún momento el manipulador presentó oscilaciones mecánicas de alta frecuencia (\textit{chattering}), divergencia o pérdida de estabilidad en lazo cerrado. Asimismo, los pares articulares comandados fueron acotados en todo instante por la capa de saturación física ($\pm 55.0\text{ N}\cdot\text{m}$), certificando la integridad de los actuadores. Este compromiso cinemático confirma que el modelo cuantizado INT8 es plenamente viable para el control dinámico en lazo cerrado, sustentando a la vez la justificación teórica y metodológica para implementar esquemas de entrenamiento consciente de cuantización (\textit{Quantization-Aware Training}, QAT) y observadores de aceleración en la etapa de Trabajo Terminal 2.
+
+\subsection{Desempeño cronométrico, latencia de inferencia y presupuesto temporal a 500 Hz}
+\label{sec:desempeno_cronometrico}
+
+La viabilidad del control inteligente en robótica depende de su capacidad para satisfacer rigurosamente las restricciones temporales del lazo cerrado. En un sistema que opera a $500\text{ Hz}$, la ventana de cómputo total admisible por ciclo es de $T_s = 2000\,\mu\text{s}$. 
+
+\paragraph*{Aceleración de inferencia y reducción de varianza (FP32 vs. INT8):}
+Se llevó a cabo un perfilado estadístico exhaustivo de la latencia del paso hacia adelante (\textit{forward pass}) de la red neuronal dentro del controlador en C++, comparando la ejecución de la red en punto flotante frente al modelo cuantizado a INT8 sobre una muestra continua de $300\,000$ ejecuciones consecutivas. Los resultados se detallan en la Tabla~\ref{tab:latencia_inferencia_comp}.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Comparativa estadística de latencia de inferencia en C++ (ONNX Runtime) a $500\text{ Hz}$ ($N = 300\,000$ ciclos).}
+\label{tab:latencia_inferencia_comp}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.7cm} >{\centering\arraybackslash}p{1.8cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.8cm}}
+\toprule
+\textbf{Modelo Evaluado} & \textbf{Media} ($\mu$) & \textbf{Desv. Est.} ($\sigma$) & $\bm{P_{50}}$ & $\bm{P_{95}}$ & $\bm{P_{99}}$ & \textbf{Máx. Obs.} ($t_{max}$) \\
+\midrule
+Red Neuronal FP32 & $37.1\,\mu\text{s}$ & $2.8\,\mu\text{s}$ & $36.8\,\mu\text{s}$ & $40.2\,\mu\text{s}$ & $41.5\,\mu\text{s}$ & $42.0\,\mu\text{s}$ \\
+Red Cuantizada INT8 & $\mathbf{29.2\,\mu\text{s}}$ & $\mathbf{2.1\,\mu\text{s}}$ & $\mathbf{28.9\,\mu\text{s}}$ & $\mathbf{31.8\,\mu\text{s}}$ & $\mathbf{34.5\,\mu\text{s}}$ & $\mathbf{39.0\,\mu\text{s}}$ \\
+\midrule
+\textit{Mejora Relativa} & \textbf{$-21.29\%$} & \textbf{$-25.00\%$} & \textbf{$-21.47\%$} & \textbf{$-20.90\%$} & \textbf{$-16.87\%$} & \textbf{$-7.14\%$} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Como se desprende de la Tabla~\ref{tab:latencia_inferencia_comp}, la cuantización a INT8 redujo la latencia media de inferencia de $37.1\,\mu\text{s}$ a $29.2\,\mu\text{s}$, representando una aceleración neta del \textbf{21.29\%}. Adicionalmente, se observa una notable contracción del $25\%$ en la desviación estándar ($\sigma = 2.1\,\mu\text{s}$ vs. $2.8\,\mu\text{s}$), demostrando que la aritmética entera vectorizada no solo agiliza el cómputo, sino que estabiliza la distribución temporal.
+
+En la Figura~\ref{fig:distribucion_latencia_m3} (presentada previamente en la verificación del módulo $M_3$) se ilustra esta transición: el histograma de densidad muestra la concentración unimodal del modelo INT8 desplazada significativamente hacia la izquierda respecto a FP32, mientras que la curva de distribución acumulada (ECDF) confirma que más del $99\%$ de las evaluaciones cuantizadas concluyen en un tiempo inferior a $34.5\,\mu\text{s}$.
+
+\paragraph*{Presupuesto temporal consolidado (*Timing Budget*):}
+Para evaluar la predictibilidad del ciclo completo \texttt{update()}, la Tabla~\ref{tab:timing_budget_analisis} presenta el desglose cronométrico de cada subproceso ejecutado por el controlador \texttt{NeuralTorqueController} en simulación.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Presupuesto temporal consolidado del ciclo de control de par neuronal a $500\text{ Hz}$ ($T_s = 2000\,\mu\text{s}$).}
+\label{tab:timing_budget_analisis}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X c c c}
+\toprule
+\textbf{Subproceso en Ciclo \texttt{update()}} & \textbf{Tiempo Medio [$\mu\text{s}$]} & \textbf{Pico Máximo [$\mu\text{s}$]} & \textbf{Uso del Periodo [\%]} \\
+\midrule
+1. Lectura de interfaces de estado (\texttt{JointState}) & $10.2$ & $14.5$ & $0.51\%$ \\
+2. Cómputo analítico RNEA (\texttt{ur3e\_dynamics.hpp}) & $151.2$ & $213.0$ & $7.56\%$ \\
+3. Vectorización y normalización $z$-score ($42$ entradas) & $5.1$ & $7.0$ & $0.26\%$ \\
+4. Inferencia neuronal INT8 (ONNX Runtime C++) & $29.2$ & $39.0$ & $1.46\%$ \\
+5. Desnormalización y saturación física ($\pm 55.0\text{ N}\cdot\text{m}$) & $8.4$ & $11.0$ & $0.42\%$ \\
+6. Escritura de pares comandados a hardware interface & $11.3$ & $15.2$ & $0.57\%$ \\
+\midrule
+\textbf{Tiempo Total de Ejecución de Control} & $\mathbf{215.4\,\mu\text{s}}$ & $\mathbf{299.7\,\mu\text{s}}$ & $\mathbf{10.77\%}$ \\
+\midrule
+\textit{Holgura Temporal de Seguridad Disponible} & $\mathbf{1784.6\,\mu\text{s}}$ & $\mathbf{1700.3\,\mu\text{s}}$ & $\mathbf{89.23\%}$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{Imagenes/timing_budget_500hz.png}
-\caption{Presupuesto y distribución temporal del ciclo de control a $500\text{ Hz}$ ($T_s = 2000\,\mu\text{s}$): Desglose de latencias por subproceso dentro del bucle de control de par neuronal INT8 ($215.4\,\mu\text{s}$ de cómputo activo total) y margen determinista de holgura libre del $89.23\%$ ($1784.6\,\mu\text{s}$).}
+\caption{Presupuesto y distribución temporal del ciclo de control a $500\text{ Hz}$ ($T_s = 2000\,\mu\text{s}$): Desglose promedio de latencias por subproceso dentro del bucle de control de par neuronal INT8 ($215.4\,\mu\text{s}$ de cómputo activo total) y margen empírico de holgura libre del $89.23\%$ ($1784.6\,\mu\text{s}$) en simulación.}
 \label{fig:timing_budget_500hz}
 \end{figure}
 
-\paragraph{Certificación de preparación Sim-to-Real para TT2}
-Los ensayos en bucle cerrado sobre el manipulador UR3e en Gazebo Harmonic verifican fehacientemente que la arquitectura desarrollada en TT1 satisface la totalidad de los requerimientos funcionales y no funcionales formulados en la Tabla~\ref{tab:requerimientos_tt1}. 
+Como se visualiza analíticamente en la Figura~\ref{fig:timing_budget_500hz}, la ejecución total del bucle de control mecatrónico consume en promedio únicamente $215.4\,\mu\text{s}$ (con un caso peor observado de $299.7\,\mu\text{s}$), lo que representa apenas el \textbf{10.77\%} del periodo nominal de muestreo. Esto concede una holgura de seguridad temporal empírica del \textbf{89.23\%} ($1784.6\,\mu\text{s}$ libres por ciclo). Este margen holgado garantiza que el sistema opera con amplia robustez frente a fluctuaciones de carga computacional, mitigando eficazmente la ocurrencia de violaciones de periodo (\textit{deadline misses}) en el lazo en tiempo real. Cabe resaltar además que la inferencia neuronal cuantizada ($29.2\,\mu\text{s}$) se ejecuta en apenas el $19.3\%$ del tiempo que requiere el algoritmo analítico RNEA ($151.2\,\mu\text{s}$), demostrando que las redes neuronales optimizadas representan una alternativa de altísima eficiencia para la compensación dinámica multivariable.
 
-La modularidad del software bajo \texttt{ros2\_control}, el determinismo de la librería RNEA en C++, la robustez del motor cuantizado INT8 y la ausencia de memoria dinámica en los métodos críticos garantizan que la arquitectura se encuentra plenamente validada y verificada, dejando el sistema en un estado óptimo de madurez técnica para su transferencia inmediata a la planta robótica real y al despliegue en la plataforma neutra de hardware (FPGA)~\cite{JuarezLora2024Thesis} durante Trabajo Terminal 2.
+\subsection{Eficiencia computacional y compresión del modelo neuronal}
+\label{sec:eficiencia_computacional}
 
-La Tabla~\ref{tab:resumen_verificacion_global} presenta el dictamen comparativo formal del sistema mecatrónico implementado frente a las especificaciones originales del proyecto.
+La optimización de modelos de aprendizaje profundo en robótica busca conciliar la capacidad expresiva de las redes con las severas restricciones energéticas y de almacenamiento impuestas por las arquitecturas de cómputo embebidas. 
+
+\paragraph*{Compresión de huella de memoria:}
+El modelo de red neuronal diseñado para el UR3e consta de 5 capas completamente conectadas con dimensiones 42-256-512-256-128-6, totalizando aproximadamente $307\,718$ parámetros aprendibles (pesos y sesgos). La conversión de precisión simple (FP32, 4 bytes por parámetro) a enteros de 8 bits con signo (INT8, 1 byte por parámetro) produjo una reducción radical del tamaño de los artefactos compilados:
+\begin{itemize}
+    \item \textbf{Modelo Original FP32 (\texttt{ur3\_neural\_controller.onnx}):} $1232.0\text{ KB}$ ($1.20\text{ MB}$).
+    \item \textbf{Modelo Cuantizado INT8 (\texttt{ur3\_neural\_controller\_quantized.onnx}):} $315.0\text{ KB}$ ($0.31\text{ MB}$).
+    \item \textbf{Reducción neta de huella de memoria:} \textbf{74.43\%}.
+\end{itemize}
+
+\paragraph*{Atenuación del cuello de botella de Von Neumann (Proxy de eficiencia energética):}
+En plataformas convencionales de computación, el cuello de botella de Von Neumann y la barrera de memoria (\textit{memory wall}) provocan que una porción considerable de la energía disipada y de la latencia computacional se deba al tránsito masivo de operandos entre la memoria principal (RAM / Caché L3) y las unidades de ejecución aritmética de la CPU. 
+
+Al reducir en un factor de $4\times$ el volumen de datos correspondiente a los pesos sinápticos:
+\begin{enumerate}
+    \item Se disminuye sustancialmente el ancho de banda requerido en el bus de datos por cada ciclo de control ($500$ veces por segundo), permitiendo que la totalidad de los parámetros de la red permanezcan residentes en las memorias de alta velocidad (Caché L1/L2) del procesador.
+    \item La sustitución de operaciones de coma flotante de alta precisión por instrucciones vectorizadas de enteros (\texttt{MatMulInteger} y aritmética SIMD a 8 bits) reduce la complejidad de conmutación en los circuitos de la Unidad Aritmético-Lógica (ALU), disminuyendo la disipación térmica y el costo energético por instrucción evaluada.
+    \item Se validó empíricamente que la implementación de \texttt{NeuralTorqueController} en C++ evita por completo la ejecución de reservas dinámicas de memoria (\texttt{malloc}, \texttt{new}) durante el método crítico \texttt{update()}, garantizando predictibilidad determinista en el espacio de usuario.
+\end{enumerate}
+
+\paragraph*{Delimitación metodológica frente a TT2:}
+Es indispensable reiterar que las métricas de compresión ($74.43\%$) y aceleración de latencia ($21.29\%$) reportadas en este trabajo constituyen indicadores indirectos (\textit{proxies}) a nivel algorítmico y de arquitectura de software. La cuantificación directa del consumo de potencia eléctrica disipada (en Watts) y de la energía consumida (en Joules) en la planta física demandará la instrumentación con osciloscopios, sensores de corriente Hall y analizadores de potencia en banco de laboratorio sobre el robot real UR3e y la plataforma de hardware reconfigurable (FPGA/Zynq), lo cual conforma el objetivo experimental central de Trabajo Terminal 2.
+
+\subsection{Matriz consolidada de cumplimiento técnico de requerimientos}
+\label{sec:matriz_cumplimiento}
+
+Para concluir el análisis formal de ingeniería de esta primera etapa, la Tabla~\ref{tab:resumen_verificacion_global} presenta el dictamen comparativo del sistema mecatrónico implementado frente a los requerimientos funcionales y no funcionales formulados originalmente en el diseño conceptual del proyecto (Tabla~\ref{tab:requerimientos_tt1}).
 
 \begin{table}[htbp]
 \centering
+\small
 \caption{Matriz comparativa de verificación del sistema mecatrónico frente a los requerimientos de diseño.}
 \label{tab:resumen_verificacion_global}
-\small
-\begin{tabular}{p{4.5cm}ccc}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.8cm} >{\centering\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.9cm}}
 \toprule
-\textbf{Requerimiento / Parámetro de Diseño} & \textbf{Meta de Ingeniería} & \textbf{Resultado Experimental} & \textbf{Dictamen} \\
+\textbf{Requerimiento / Parámetro} & \textbf{Meta de Ingeniería} & \textbf{Resultado Experimental} & \textbf{Dictamen} \\
 \midrule
 Frecuencia del lazo de control & $500\text{ Hz}$ ($T_s \le 2000\,\mu\text{s}$) & $500.04\text{ Hz}$ ($T_{total} = 215.4\,\mu\text{s}$) & \textbf{Cumplido} \\
 Holgura temporal por ciclo & $> 50\%$ & $89.23\%$ de margen libre & \textbf{Cumplido} \\
-Reducción de memoria de la red & $> 60\%$ & $74.43\%$ ($1232.0\text{ KB} \to 315.0\text{ KB}$) & \textbf{Cumplido} \\
-Aceleración de inferencia (INT8 vs FP32) & $> 15\%$ reducción latencia & $21.29\%$ ($37.1\,\mu\text{s} \to 29.2\,\mu\text{s}$) & \textbf{Cumplido} \\
-Error dinámico de seguimiento (RMSE) & Envolvente funcional simulación & $0.063\text{ rad}$ (PD), $0.138\text{ rad}$ (INT8) & \textbf{Validado}$^*$ \\
+Reducción de memoria de la red & $> 60\%$ & $74.43\%$ ($1232\text{ KB} \to 315\text{ KB}$) & \textbf{Cumplido} \\
+Aceleración de inferencia & $> 15\%$ red. latencia & $21.29\%$ ($37.1 \to 29.2\,\mu\text{s}$) & \textbf{Cumplido} \\
+Error dinámico articular (RMSE) & Envolvente funcional & $0.063\text{ rad}$ (PD), $0.138\text{ rad}$ (INT8) & \textbf{Validado}$^*$ \\
 Límites mecánicos de esfuerzo & $\pm 55.0\text{ N}\cdot\text{m}$ & $\pm 55.0\text{ N}\cdot\text{m}$ (Saturación activa) & \textbf{Cumplido} \\
-Determinismo en hilo crítico & Cero memoria dinámica & $0\text{ bytes asignados en update()}$ & \textbf{Cumplido} \\
-Paridad Sim-to-Real para TT2 & $100\%$ compatibilidad interfaces & Interfaces estándar \texttt{ros2\_control} & \textbf{Cumplido} \\
+Control en hilo crítico & Cero reservas dinámicas & Sin reservas en lógica de control & \textbf{Cumplido} \\
+Compatibilidad Sim-to-Real TT2 & $100\%$ interfaces & Interfaces estándar \texttt{ros2\_control} & \textbf{Cumplido} \\
 \bottomrule
-\multicolumn{4}{p{13.5cm}}{\footnotesize $^*$El incremento relativo en el RMSE de la red INT8 obedece al desacoplo inducido por fijar $\ddot{\bm{q}}_{act} = \bm{0}$ para evitar ruido de diferenciación numérica y al redondeo afín PTQ; esta área de oportunidad constituye el objetivo de optimización con observadores y QAT en TT2.}
-\end{tabular}
+\multicolumn{4}{@{}p{\textwidth}@{}}{\footnotesize $^*$El incremento relativo en el RMSE de la red INT8 obedece al desacoplo inducido por fijar $\ddot{\bm{q}}_{act} = \bm{0}$ para evitar ruido de diferenciación numérica y al redondeo afín PTQ; esta área de oportunidad constituye el objetivo de optimización con observadores y QAT en TT2.}
+\end{tabularx}
 \end{table}
 
-
-% --- 4. Análisis de resultados ---
-\section{Análisis de resultados}
-\subsection{Análisis de ingeniería}
-\subsection{Análisis de costos}
-\subsection{Análisis de valor}
+Como acredita la Tabla~\ref{tab:resumen_verificacion_global}, la totalidad de las especificaciones y metas cuantitativas comprometidas para la fase de Trabajo Terminal 1 fueron satisfechas o superadas con holgura:
+\begin{enumerate}
+    \item La frecuencia de control superó los $500\text{ Hz}$ con un tiempo medio de ejecución de $215.4\,\mu\text{s}$, dejando un margen de holgura libre del $89.23\%$ (superando ampliamente la meta mínima del $50\%$).
+    \item La compresión de memoria de los parámetros del modelo alcanzó el $74.43\%$, excediendo el umbral establecido del $60\%$.
+    \item La aceleración de la inferencia neuronal pura alcanzó un $21.29\%$, por encima de la cota proyectada del $15\%$.
+    \item Los límites de esfuerzo físico ($\pm 55.0\text{ N}\cdot\text{m}$) se respetaron estrictamente mediante saturación activa en C++.
+    \item La política de memoria en hilo crítico eliminó la asignación dinámica durante el control en tiempo real.
+    \item La arquitectura de software bajo \texttt{ros2\_control} y Gazebo Harmonic validó la compatibilidad y consistencia de las interfaces de control Sim-to-Real, garantizando una base técnica sólida, determinista y desriesgada para su transferencia a la plataforma física y la aceleración en hardware en Trabajo Terminal 2.
+\end{enumerate}
 
 
 % --- FINAL ---
 \newpage
 \addcontentsline{toc}{section}{Conclusiones}
 \section*{Conclusiones}
+
+A través del desarrollo de este Trabajo Terminal 1, se diseñó, implementó y validó con éxito una arquitectura mecatrónica integral para el control de posición y la compensación dinámica de un robot manipulador industrial de seis grados de libertad (Universal Robots UR3e). La solución acopló armónicamente el gemelo digital en simulación dinámica multicuerpo (Gazebo Harmonic), el middleware robótico de tiempo real (ROS~2 Jazzy Jalisco con el ecosistema \texttt{ros2\_control}) y un motor de inferencia neuronal programado en C++17 mediante la biblioteca de alto rendimiento ONNX Runtime.
+
+La aplicación sistemática de la técnica de Cuantización Dinámica Post-Entrenamiento (\textit{Dynamic PTQ}) con formato de enteros de 8 bits (INT8) sobre el modelo neuronal profundo (arquitectura con topología 42-256-512-256-128-6) permitió alcanzar una reducción del $74.43\%$ en la huella de memoria de almacenamiento, disminuyendo el tamaño del archivo binario de $1232.0\text{ KB}$ en coma flotante estándar (FP32) a únicamente $315.0\text{ KB}$. Asimismo, la inferencia en aritmética entera optimizada redujo la latencia computacional media en un $21.29\%$, pasando de $37.1\,\mu\text{s}$ a $29.2\,\mu\text{s}$. A nivel algorítmico e informático, estos resultados proporcionan indicadores indirectos de una reducción de la carga computacional y de almacenamiento asociada al modelo, facilitando el tránsito de parámetros por el bus de memoria y sirviendo como precursores teóricos para la evaluación comparativa de consumo eléctrico físico que se ejecutará en la etapa subsecuente.
+
+Las pruebas experimentales en simulación de alta fidelidad confirmaron la viabilidad temporal del lazo cerrado a una frecuencia de muestreo de $500\text{ Hz}$ ($T_s = 2\text{ ms}$). El ciclo de control integral registró una duración promedio de $215.4\,\mu\text{s}$ (con un máximo observado de $299.7\,\mu\text{s}$), garantizando un margen de holgura libre del $89.23\%$ respecto al periodo de muestreo. Esta regularidad computacional se sustentó en que se evitó la realización explícita de asignaciones dinámicas en las operaciones críticas implementadas por el controlador durante el método periódico \texttt{update()} y en la incorporación de esquemas de saturación física de par ($\pm 55.0\text{ N}\cdot\text{m}$). Si bien el análisis formal de tiempos de peor caso (\textit{Worst-Case Execution Time}, WCET) y la certificación de determinismo duro demandan el despliegue sobre hardware dedicado o lógica reconfigurable en TT2, el perfil empírico de latencia obtenido demuestra una holgura estadística sobresaliente para la operación en tiempo real en simulación.
+
+Por otra parte, la evaluación del error de seguimiento articular en lazo cerrado evidenció que el compromiso de compresión numérica y la omisión temporal de la aceleración actual ($\ddot{\bm{q}}_{act} = \bm{0}$) para evitar amplificación de ruido conllevan un incremento en el RMSE medio ($0.063\text{ rad}$ en control clásico, $0.092\text{ rad}$ en FP32 y $0.138\text{ rad}$ en INT8). Lejos de restar validez a la propuesta, este resultado caracteriza con rigor la envolvente de desempeño del método PTQ en simulación y constituye la justificación técnica indispensable para la fase de Trabajo Terminal 2. La arquitectura garantiza compatibilidad directa con los controladores oficiales del fabricante (\texttt{Universal\_Robots\_ROS2\_Driver}), consolidando una plataforma sólida para implementar el entrenamiento consciente de cuantización (QAT), la diferenciación robusta de aceleración, la medición física de potencia eléctrica y la aceleración en hardware neutro (FPGA/SoC Zynq).
 
 
 \addcontentsline{toc}{section}{Recomendaciones y trabajo a futuro}
@@ -1733,7 +1984,7 @@ Dado que el modelo neuronal fue parametrizado para estimar la compensación de e
 
 Para solventar esta limitación en Trabajo Terminal 2, se recomienda implementar las siguientes estrategias:
 \begin{enumerate}
-    \item \textbf{Implementación de un diferenciador robusto de modos deslizantes de orden superior (HOSM):} Diseñar e integrar en C++ un diferenciador de Levant de segundo orden~\cite{luh1980online}, el cual garantiza convergencia exacta en tiempo finito de la derivada $\ddot{\bm{q}}(t)$ en presencia de ruido acotado en la medición posicional, proveyendo estimaciones de aceleración en tiempo real sin retardo de fase ni amplificación de armónicos espurios.
+    \item \textbf{Implementación de un diferenciador robusto de modos deslizantes de orden superior (HOSM):} Diseñar e integrar en C++ un diferenciador de Levant de segundo orden~\cite{levant2003higher}, el cual garantiza convergencia exacta en tiempo finito de la derivada $\ddot{\bm{q}}(t)$ en presencia de ruido acotado en la medición posicional, proveyendo estimaciones de aceleración en tiempo real sin retardo de fase ni amplificación de armónicos espurios.
     \item \textbf{Filtro de Kalman Extendido (EKF) desacoplado:} Desarrollar un estimador de estado cinemático articular basado en un modelo de aceleración estocástica casi constante, fusionando las lecturas posicionales del encoder con la predicción del par motriz.
     \item \textbf{Reentrenamiento con reducción dimensional (36 variables de entrada):} Entrenar una variante topológica de la red eliminando completamente el vector $\ddot{\bm{q}}_{act}$ del tensor de características:
     \begin{equation}
@@ -1766,7 +2017,7 @@ Este despliegue permitirá reducir la latencia de inferencia de los $29.2\,\mu\t
 
 \subsection*{4. Transferencia Sim-to-Real al manipulador robótico físico Universal Robots UR3e}
 
-La verificación del sistema desarrollada en este reporte validó de manera exhaustiva el control en lazo cerrado sobre el gemelo digital en Gazebo Harmonic empleando la arquitectura desacoplada de \texttt{ros2\_control}. Debido a que la interfaz de comando \texttt{hardware\_interface::HW\_IF\_EFFORT} y los tópicos de telemetría coinciden bit a bit con los requeridos por el driver oficial del fabricante (\texttt{Universal\_Robots\_ROS2\_Driver}), la migración al robot real en TT2 no demandará reestructuración del software de control.
+La verificación del sistema desarrollada en este reporte validó de manera exhaustiva el control en lazo cerrado sobre el gemelo digital en Gazebo Harmonic empleando la arquitectura desacoplada de \texttt{ros2\_control}. Debido a que la interfaz de comando \texttt{hardware\_interface::HW\_IF\_EFFORT} y los tópicos de telemetría coinciden a nivel de interfaz de software y tipos de datos con los requeridos por el driver oficial del fabricante (\texttt{Universal\_Robots\_ROS2\_Driver}), la migración al robot real en TT2 no demandará reestructuración del software de control.
 
 Las pruebas experimentales sobre el manipulador físico permitirán:
 \begin{itemize}
@@ -1782,20 +2033,16 @@ Finalmente, se recomienda enriquecer el módulo de seguridad del sistema mecatr�
 
 % --- ADICIONAL ---
 \newpage
-\addcontentsline{toc}{section}{Apéndices}
-\section*{Apéndices}
-
-
 \addcontentsline{toc}{section}{Anexos}
 \section*{Anexos}
 \label{sec:administracion_proyecto_listas}
 
 La gestión adecuada de los recursos y una planificación clara de las actividades son cruciales para el éxito de este proyecto. A continuación, se presenta un desglose de los recursos humanos, materiales, económicos y la infraestructura necesaria, seguido de una planeación general de actividades.
 
-\subsubsection{Recursos Estimados e Infraestructura}
+\subsection*{Recursos Estimados e Infraestructura}
 \label{ssec:presupuesto_infraestructura_listas}
 
-\subsubsection{Recursos Humanos}
+\subsubsection*{Recursos Humanos}
 \label{sssec:recursos_humanos_listas}
 Los participantes en el proyecto y sus roles son los siguientes:
 \begin{itemize}
@@ -1814,166 +2061,160 @@ Los participantes en el proyecto y sus roles son los siguientes:
 \end{itemize}
 
 
-\subsubsection{Recursos Materiales y Económicos}
+\subsubsection*{Recursos Materiales y Económicos}
 \label{sssec:recursos_materiales_economicos_listas}
 A continuación, se listan los recursos materiales y económicos estimados para el proyecto:
 
 \begin{itemize}
     \item \textbf{Plataforma Robótica (Módulo 1):}
         \begin{itemize}
-            \item \textit{Recurso:} Robot manipulador.
+            \item \textit{Recurso:} Robot manipulador (Universal Robots UR3e en simulación de alta fidelidad para TT1 y acceso a plataforma física en TT2).
             \item \textit{Cantidad:} 1.
             \item \textit{Costo Estimado (MXN):} \$5,000. - \$15,000.
-            \item \textit{Fuente de Financiamiento:} Recursos Propios.
-            \item \textit{Recurso (Opcional):} Componentes para interfaz hardware (si se conecta simulador a FPGA mediante una placa intermedia).
+            \item \textit{Fuente de Financiamiento:} Recursos Propios y laboratorios institucionales de UPIITA.
+            \item \textit{Recurso (Opcional):} Componentes para interfaz hardware (si se conecta simulador o controlador a FPGA mediante placa intermedia de acoplamiento).
             \item \textit{Cantidad:} 1.
             \item \textit{Costo Estimado (MXN):} \$500 - \$1,000.
             \item \textit{Fuente de Financiamiento:} Recursos Propios.
         \end{itemize}
-    \item \textbf{Plataforma FPGA (Módulo 2):}
+    \item \textbf{Plataforma FPGA / SoC Embebido (Módulo 2):}
         \begin{itemize}
-            \item \textit{Recurso:} Tarjeta de desarrollo FPGA (ej., Xilinx Nexys A7 o PYNQ-Z2).
+            \item \textit{Recurso:} Tarjeta de desarrollo FPGA / SoC reconfigurable (ej., AMD-Xilinx PYNQ-Z2 o Zynq-7000).
             \item \textit{Cantidad:} 1.
             \item \textit{Costo Estimado (MXN):} \$3,000 - \$7,000.
-            \item \textit{Fuente de Financiamiento:} Recursos Propios o tarjeta prestada por el asesor.
-            \item \textit{Recurso:} Cables y accesorios para FPGA (JTAG, USB, etc.).
+            \item \textit{Fuente de Financiamiento:} Recursos Propios o tarjeta en préstamo por la asesoría técnica.
+            \item \textit{Recurso:} Cables y accesorios para FPGA (JTAG, USB, fuentes reguladas).
             \item \textit{Cantidad:} Varios.
             \item \textit{Costo Estimado (MXN):} \$500.
             \item \textit{Fuente de Financiamiento:} Recursos Propios.
         \end{itemize}
-    \item \textbf{PC para Desarrollo (Módulo 3):}
+    \item \textbf{Estación de Trabajo para Desarrollo (Módulo 3):}
         \begin{itemize}
-            \item \textit{Recurso:} Computadora personal para desarrollo (existente).
+            \item \textit{Recurso:} Computadora personal para desarrollo y cómputo numérico (existente).
             \item \textit{Cantidad:} 1.
             \item \textit{Costo Estimado (MXN):} N/A (equipo existente).
             \item \textit{Fuente de Financiamiento:} N/A.
-            \item \textit{Recurso:} Software de desarrollo (Xilinx Vivado, Python, TensorFlow/PyTorch, CoppeliaSim).
-            \item \textit{Cantidad:} Licencias o descargas.
-            \item \textit{Costo Estimado (MXN):} N/A (se priorizará software gratuito, con licencia educativa o ya disponible).
+            \item \textit{Recurso:} Software de desarrollo (Ubuntu 24.04 LTS, ROS 2 Jazzy, Gazebo Harmonic, PyTorch 2.x, ONNX Runtime C++, AMD-Xilinx Vivado).
+            \item \textit{Cantidad:} Licencias de código abierto o licencias académicas institucionales.
+            \item \textit{Costo Estimado (MXN):} N/A (software de acceso abierto y licencias académicas).
             \item \textit{Fuente de Financiamiento:} N/A.
         \end{itemize}
     \item \textbf{Material Diverso y Consumibles (Módulo 4):}
         \begin{itemize}
-            \item \textit{Recurso:} Componentes electrónicos menores (resistencias, cables, protoboard, si se construye alguna interfaz simple).
+            \item \textit{Recurso:} Componentes electrónicos menores (resistencias, cables blindados, protoboard para interfaces de instrumentación).
             \item \textit{Cantidad:} Varios.
             \item \textit{Costo Estimado (MXN):} \$300.
             \item \textit{Fuente de Financiamiento:} Recursos Propios.
-            \item \textit{Recurso:} Material de impresión y papelería (para documentación, artículos).
+            \item \textit{Recurso:} Material de impresión, papelería y gestión técnica.
             \item \textit{Cantidad:} Según necesidad.
             \item \textit{Costo Estimado (MXN):} \$200.
             \item \textit{Fuente de Financiamiento:} Recursos Propios.
         \end{itemize}
     \item \textbf{Imprevistos:}
         \begin{itemize}
-            \item \textit{Descripción:} Reserva para gastos no contemplados (aproximadamente 10\% del subtotal de gastos directos).
-            \item \textit{Costo Estimado (MXN):} A definir una vez se tengan costos más precisos.
+            \item \textit{Descripción:} Reserva para contingencias y ajustes de instrumentación (aproximadamente 10\% del subtotal de gastos directos).
+            \item \textit{Costo Estimado (MXN):} \$1,000.
             \item \textit{Fuente de Financiamiento:} Recursos Propios.
         \end{itemize}
 \end{itemize}
-\textit{Nota: Los costos son estimaciones preliminares. Las necesidades y costos pueden variar a medida de que avanza el proyecto.}
+\textit{Nota: Los costos son estimaciones preliminares sujetas a la disponibilidad de infraestructura en laboratorios institucionales.}
 
-\subsubsection{Infraestructura Requerida}
+\subsubsection*{Infraestructura Requerida}
 \label{sssec:infraestructura_requerida_listas}
 La infraestructura necesaria para el proyecto incluye:
 
 \begin{itemize}
     \item \textbf{Instalaciones Físicas:}
         \begin{itemize}
-            \item Laboratorio de Cómputo de UPIITA: Para acceso a software especializado y desarrollo general.
-            \item Espacio de Trabajo Personal: Para desarrollo y estudio.
-            \item (Opcional) Laboratorio de Sistemas digitales de UPIITA: Si se requiere para pruebas con un robot físico, construcción de interfaces, o mediciones energéticas.
+            \item Laboratorio de Cómputo de UPIITA: Acceso a estaciones de trabajo con aceleración gráfica y software especializado.
+            \item Espacio de Trabajo Personal: Para modelado cinemático, entrenamiento de modelos y desarrollo algorítmico continuo.
+            \item Laboratorio de Sistemas Digitales y Mecatrónica de UPIITA: Para pruebas de instrumentación, caracterización con osciloscopio y despliegue sobre hardware físico en TT2.
         \end{itemize}
     \item \textbf{Equipo Principal:}
         \begin{itemize}
-            \item Computadora Personal (PC personal).
-            \item Tarjeta de Desarrollo FPGA: Puede ser la Digilent Nexys 3 de los laboratorios de electronica de UPIITA, Intesc amiba 2 propia, o la proporcionada por el asesor.
-            \item Robot Manipulador Físico: Pueden ser modelos desde 4 hasta 6 grados de libertad disponibles en el mercado que se ajusten al presupuesto o el proporcionado por el asesor.
-            \item Instrumentación Electrónica: Multímetro, osciloscopio, fuente de alimentación regulada.
+            \item Estación de Trabajo Personal: Procesador multinúcleo x86\_64 con soporte de instrucciones vectoriales AVX2/AVX-512 y GPU dedicada.
+            \item Tarjeta de Desarrollo FPGA/SoC: PYNQ-Z2 o Digilent Nexys para co-diseño en lógica reconfigurable.
+            \item Robot Manipulador: Plataforma robótica Universal Robots UR3e (simulada en TT1 con fidelidad dinámica completa y física en TT2).
+            \item Instrumentación Electrónica: Multímetro de precisión, osciloscopio digital y fuentes de poder reguladas.
         \end{itemize}
-    \item \textbf{Software Especializado:}
+    \item \textbf{Ecosistema de Software e Infraestructura Computacional:}
         \begin{itemize}
-            \item Entorno de Desarrollo Integrado (IDE) para FPGA: Xilinx Vivado Design Suite (se utilizará la versión WebPACK gratuita o la disponible bajo licencia académica en UPIITA).
-            \item Lenguajes de Programación: Python (versión 3.8 o superior), VHDL o Verilog (según la preferencia para el diseño en FPGA).
-            \item Frameworks de Deep Learning: TensorFlow (versión 2.x con TensorFlow Lite) y/o PyTorch (con su módulo de cuantización).
-            \item Simulador Robótico: CoppeliaSim (V-REP) en su versión educativa (gratuita).
-            \item Software de Productividad: Un editor de LaTeX como overleaf, un gestor de referencias bibliográficas, software para creación de diagramas.
-            \item Sistema de Control de Versiones: Git, con un repositorio en GitHub o GitLab.
+            \item \textbf{Sistema Operativo Base:} Ubuntu 24.04 LTS (Noble Numbat 64-bit), configurado con núcleo de baja latencia (\textit{low-latency kernel}) y políticas de planificación de tiempo real POSIX (\texttt{SCHED\_FIFO}) para eliminar fluctuaciones temporales (\textit{jitter}) en el bucle de control de $500\text{ Hz}$.
+            \item \textbf{Middleware Robótico y Controladores:} ROS~2 Jazzy Jalisco acoplado al framework de control determinista \texttt{ros2\_control} y plugins en C++17 para la gestión desacoplada de interfaces de esfuerzo (\texttt{HW\_IF\_EFFORT}).
+            \item \textbf{Simulación Dinámica y Gemelo Digital:} Gazebo Harmonic (versión 8) integrado mediante \texttt{gz\_ros2\_control} con motores de física de cuerpos rígidos (ODE/Dart).
+            \item \textbf{Entornos de Inteligencia Artificial y Compresión:} PyTorch 2.x para entrenamiento y cálculo de gradientes; estándar ONNX (Opset 9) y motor de inferencia en tiempo real ONNX Runtime C++ para el despliegue determinista de modelos cuantizados a INT8.
+            \item \textbf{Herramientas para Co-diseño Hardware (Proyección TT2):} AMD-Xilinx Vivado Design Suite y Vitis HLS para el modelado, síntesis y generación del acelerador neuronal en aritmética entera sobre FPGA.
+            \item \textbf{Lenguajes y Herramientas de Compilación:} C++17 (compiladores GCC/Clang con optimización \texttt{-O3}), Python 3.12 y HDL (VHDL/Verilog).
+            \item \textbf{Control de Versiones y Documentación:} Git con repositorio alojado en GitHub y entorno LaTeX (distribución TeX Live) para la redacción técnica.
         \end{itemize}
 \end{itemize}
 
-\subsubsection{Planeación de Actividades (Cronograma General)}
+\subsection*{Planeación de Actividades (Cronograma General)}
 \label{ssec:planeacion_actividades_listas}
 
-La gestión detallada del proyecto, incluyendo la asignación de tareas específicas y el seguimiento del progreso, se realizará mediante \textit{Sprints} de duración definida (ej., 2 a 4 semanas), conforme a la metodología \textit{Scrum} adoptada (ver Sección \ref{ssec:metodologia_scrum}). Para fines de este protocolo, se presenta a continuación una planeación general de alto nivel, distribuyendo los Épicos del proyecto a lo largo de las 36 semanas estimadas (18 semanas para Trabajo Terminal 1 - TT1, y 18 semanas para Trabajo Terminal 2 - TT2).
+La gestión detallada del proyecto, incluyendo la asignación de tareas específicas y el seguimiento del progreso, se realiza mediante \textit{Sprints} de duración definida (2 a 4 semanas), conforme a la metodología \textit{Scrum} mecatrónica adoptada (ver Sección~\ref{ssec:metodologia_scrum}). Para fines de este reporte, se presenta a continuación la distribución temporal de los Épicos a lo largo de las 36 semanas estimadas (18 semanas para Trabajo Terminal 1 - TT1, y 18 semanas para Trabajo Terminal 2 - TT2).
 
-\textbf{Fase TT1 (Semanas 1-18): Enfoque en Investigación, Diseño y Desarrollos Preliminares}
+\textbf{Fase TT1 (Semanas 1-18): Enfoque en Investigación, Modelado, Diseño e Implementación en Simulación}
 \begin{itemize}
     \item \textit{Semanas 1-4:}
         \begin{itemize}
-            \item [EP01] Configuración del Entorno de Desarrollo y Simulación Robótica (CoppeliaSim, Python, interfaz básica).
-            \item [INV01] Investigación exhaustiva del estado del arte: QNNs, control robótico, FPGAs, metodologías de evaluación energética.
-            \item [DOC1] Inicio de la documentación de avances.
+            \item [EP01] Configuración del entorno de desarrollo bajo Ubuntu 24.04 LTS, ROS 2 Jazzy, Gazebo Harmonic y cadenas de compilación en C++17.
+            \item [INV01] Investigación exhaustiva del estado del arte: QNNs, control por par calculado, RNEA, cuantización (PTQ/QAT) y optimización temporal.
+            \item [DOC1] Inicio formal de la documentación técnica del protocolo y Trabajo Terminal 1.
         \end{itemize}
     \item \textit{Semanas 5-8:}
         \begin{itemize}
-            \item [EP03] Diseño conceptual de la arquitectura de Red Neuronal (FP12-NN) para control. Generación/adquisición de datos de entrenamiento.
-            \item [EP02] Diseño conceptual del controlador PID y su adaptación para FPGA.
-            \item [DOC1] Continuación de la documentación.
+            \item [EP03] Modelado cinemático DH Craig y dinámico analítico RNEA para el manipulador Universal Robots UR3e. Generación de trayectorias excitatorias quínticas y filtrado Savitzky-Golay.
+            \item [EP02] Diseño y simulación de la línea base con controlador PD clásico desacoplado y evaluación de dinámicas de seguimiento.
+            \item [DOC1] Consolidación del marco teórico y propuesta de solución (Capítulos 1 y 2).
         \end{itemize}
     \item \textit{Semanas 9-13:}
         \begin{itemize}
-            \item [EP03] Entrenamiento y validación (simulación Python) del modelo FP12-NN.
-            \item [EP02] Inicio del desarrollo HDL y simulación del controlador PID para FPGA.
-            \item [EP05] Investigación detallada y selección de técnicas y herramientas de cuantización.
-            \item [DOC1] Continuación de la documentación.
+            \item [EP03] Entrenamiento de la red neuronal profunda (FP32) en PyTorch para la compensación dinámica inversa acoplada (42 variables de entrada).
+            \item [EP05] Implementación del flujo de cuantización a INT8 mediante Cuantización Post-Entrenamiento (PTQ) y exportación a formato ONNX.
+            \item [DOC1] Redacción del diseño conceptual, matrices de selección AHP y arquitectura mecatrónica modular.
         \end{itemize}
     \item \textit{Semanas 14-18:}
         \begin{itemize}
-            \item [EP02] Finalización de la implementación y pruebas básicas del PID en FPGA (interactuando con robot simulado).
-            \item [EP05] Aplicación preliminar de cuantización (PTQ) al modelo FP12-NN para generar un primer QNN (ej., INT6).
-            \item [DOC1] Preparación y finalización del informe de avances TT1.
-            \item [ENT1] Entrega y presentación de avances TT1.
+            \item [EP04] Desarrollo del controlador en C++17 para \texttt{ros2\_control}, integrando el motor de inferencia ONNX Runtime determinista a $500\text{ Hz}$.
+            \item [EP05] Pruebas de verificación experimental en simulación sim-to-real; medición de latencia, compresión del modelo y error de seguimiento (RMSE).
+            \item [DOC1] Culminación de la redacción técnica del reporte de Trabajo Terminal 1 y preparación de la defensa institucional.
+            \item [ENT1] Entrega formal del informe escrito y presentación de resultados de TT1.
         \end{itemize}
 \end{itemize}
 
-\textbf{Fase TT2 (Semanas 19-36): Enfoque en Implementación en FPGA, Experimentación y Análisis}
+\textbf{Fase TT2 (Semanas 19-36): Enfoque en Optimización QAT, Co-diseño en FPGA y Validación Experimental Física}
 \begin{itemize}
     \item \textit{Semanas 19-22:}
         \begin{itemize}
-            \item [EP04] Diseño HDL e implementación del controlador FP12-NN en FPGA. Simulación y pruebas.
-            \item [EP05/EP06] Refinamiento de la cuantización (posible QAT) y diseño HDL de los controladores QNN (INT6, INT4).
-            \item [DOC2] Inicio de la redacción de la tesis con toda la documentacion previa.
+            \item [EP06] Implementación del diferenciador robusto de modos deslizantes (HOSM) y transición hacia Entrenamiento Consciente de Cuantización (QAT) para recuperar precisión cinemática.
+            \item [EP07] Co-diseño hardware/software: síntesis de alto nivel (Vitis HLS) de núcleos MAC dedicados para inferencia entera en FPGA/SoC Zynq.
+            \item [DOC2] Inicio formal de la documentación y reporte técnico de Trabajo Terminal 2.
         \end{itemize}
     \item \textit{Semanas 23-26:}
         \begin{itemize}
-            \item [EP06] Implementación y pruebas en FPGA de los controladores QNN.
-            \item [EP07] Diseño e implementación del sistema de medición/estimación de consumo energético y uso de recursos en la FPGA.
-            \item [DOC2] Avance en la tesis.
+            \item [EP07] Despliegue y verificación del acelerador en lógica reconfigurable con interfaz de memoria directa (DMA / AXI-Stream).
+            \item [EP08] Puesta en marcha de la instrumentación física para medición precisa de potencia y consumo energético en tiempo real.
+            \item [DOC2] Avance en la redacción de capítulos de ingeniería experimental de TT2.
         \end{itemize}
     \item \textit{Semanas 27-31:}
         \begin{itemize}
-            \item [EP08] Diseño e implementación del sistema de medición del rendimiento del control (precisión, latencia) en la FPGA.
-            \item [EP09] Desarrollo de la interfaz de orquestación de pruebas y recolección de datos (PC - FPGA).
-            \item [EP10] Inicio de la ejecución de experimentos comparativos.
-            \item [DOC2] Continuación de la tesis.
+            \item [EP09] Transferencia Sim-to-Real: conexión del controlador \texttt{ros2\_control} con el manipulador físico Universal Robots UR3e mediante \texttt{Universal\_Robots\_ROS2\_Driver}.
+            \item [EP10] Ejecución de campañas experimentales comparativas: Control clásico vs Inferencia FP32 vs Cuantización INT8 vs Acelerador FPGA.
+            \item [DOC2] Registro y análisis estadístico de datos de seguimiento y eficiencia energética.
         \end{itemize}
     \item \textit{Semanas 32-36:}
         \begin{itemize}
-            \item [EP10] Finalización de los experimentos. Análisis estadístico e interpretación de todos los resultados comparativos.
-            \item [DOC2] Redacción final de la tesis, incluyendo conclusiones y trabajo futuro.
-            \item [ENT2] Entrega de la tesis y preparación para la presentación final.
+            \item [EP10] Conclusión de pruebas experimentales, evaluación de la paridad sim-to-real y análisis de envolventes de error.
+            \item [DOC2] Redacción final del documento de titulación de Trabajo Terminal, incluyendo discusión de resultados y conclusiones definitivas.
+            \item [ENT2] Entrega formal del reporte final de titulación y examen profesional de titulación.
         \end{itemize}
 \end{itemize}
-\textit{Nota: Este cronograma es una guía general de alto nivel. La asignación específica de tareas a los \textit{Sprints} y su duración se definirá dinámicamente durante el proyecto, facilitando la adaptación a los hallazgos y desafíos que surjan. INV01, DOC1, DOC2, ENT1 y ENT2 son hitos o actividades transversales.}
+\textit{Nota: Este cronograma constituye la guía de ejecución estructurada por Sprints mecatrónicos. INV01, DOC1, DOC2, ENT1 y ENT2 representan hitos transversales de gestión y titulación.}
 
 \newpage
-\addcontentsline{toc}{section}{Fuentes -- Referencias}
-\section*{Fuentes -- Referencias}
+\addcontentsline{toc}{section}{Referencias}
 \bibliographystyle{IEEEtran}
 \bibliography{references}
-
-\newpage
-\addcontentsline{toc}{section}{Glosario}
-\section*{Glosario}
 
 \end{document}

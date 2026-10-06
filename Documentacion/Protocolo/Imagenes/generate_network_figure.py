@@ -275,7 +275,7 @@ ax_bot_fp.text(np.pi, 0.65, 'Gradiente suave y continuo\nSin ruido de discretiza
 card_fp_text = (
     "Métricas Reales (Controlador C++ a 500 Hz):\n"
     "• Almacenamiento modelo: 1232.0 KB (1.20 MB - Base)\n"
-    "• Latencia inferencia C++: 37.1 us (WCET 42.0 us)\n"
+    "• Latencia inferencia C++: 37.1 us (t_max obs 42.0 us)\n"
     "• Error dinámico seguimiento: RMSE = 0.092 rad (5.27 deg)\n"
     "• Ejecución: Unidades FPU / Registros AVX2 de 32 bits"
 )
@@ -312,7 +312,7 @@ ax_bot_int.text(np.pi, 0.65, r'Malla discreta de 256 niveles' + '\n' + r'Paso $\
 card_int_text = (
     "Métricas Reales (Controlador C++ a 500 Hz):\n"
     "• Almacenamiento modelo: 315.0 KB (-74.43% de reducción)\n"
-    "• Latencia inferencia C++: 29.2 us (-21.29% de aceleración)\n"
+    "• Latencia inferencia C++: 29.2 us (t_max obs 39.0 us, -21.3%)\n"
     "• Error dinámico seguimiento: RMSE = 0.138 rad (7.91 deg)\n"
     "• Ejecución: Aritmética entera ALU / Co-procesador DSP48E"
 )
