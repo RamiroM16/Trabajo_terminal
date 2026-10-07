@@ -2,6 +2,8 @@
 
 % Paquetes necesarios
 \usepackage{graphicx}
+% Recursos compartidos: ruta directa compatible con Windows sin enlaces simbólicos.
+\graphicspath{{../Protocolo/}}
 \usepackage{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[spanish]{babel}
@@ -55,6 +57,11 @@
 
 \geometry{left=3cm, right=3cm, top=2.5cm, bottom=2.5cm}
 
+% Tasas diferenciadas: control interno frente a referencias y datos registrados.
+% Confirmado por el autor: la adquisición se realizó siempre a 100 Hz.
+\newcommand{\frecuenciacontrol}{500}
+\newcommand{\frecuenciaregistro}{100}
+
 \begin{document}
 
 % =========================================================================
@@ -79,9 +86,9 @@
 {\large \textbf{Resumen}}\\
 El despliegue de controladores avanzados basados en Redes Neuronales Profundas (DNNs) en la robótica de manipulación enfrenta restricciones severas de latencia y consumo energético impuestas por el cuello de botella de Von Neumann y la barrera de memoria en sistemas de cómputo embebidos. En lazos de control cerrados en tiempo real ($100\text{ Hz} - 500\text{ Hz}$), la evaluación continua de modelos densos en punto flotante (FP32) degrada la predictibilidad temporal e incrementa la potencia disipada. En este contexto, el presente reporte de Trabajo Terminal 1 aborda el diseño, implementación y verificación de un esquema mecatrónico híbrido de control de posición para un robot manipulador serial de 6 grados de libertad (Universal Robots UR3e), integrando dinámica analítica inversa con una Red Neuronal Cuantizada a enteros de 8 bits (QNN-INT8).
 
-La metodología implementada articula una ley de control por par calculado (\textit{Computed Torque Control}) donde el Algoritmo Recursivo de Newton-Euler (RNEA), programado en C++17 evitando la realización de asignaciones dinámicas en su evaluación recursiva, compensa las no linealidades mecánicas nominales ($\mathcal{O}(n)$). De forma complementaria, una red neuronal perceptrón multicapa (MLP) con vector de características de 42 dimensiones estima en línea las dinámicas residuales no modeladas y fricciones articulares. El modelo fue entrenado en PyTorch, exportado al estándar ONNX y cuantizado mediante Cuantización Dinámica Post-Entrenamiento (\textit{Dynamic PTQ}) a INT8, ejecutándose dentro del middleware ROS 2 Jazzy Jalisco con el motor ONNX Runtime monohilo en C++. La verificación experimental se llevó a cabo en un gemelo digital de alta fidelidad (\textit{Sim-to-Real}) desarrollado en Gazebo Harmonic gobernado por la arquitectura modular de \texttt{ros2\_control} a una frecuencia de $500\text{ Hz}$ ($T_s = 2\text{ ms}$).
+La metodología implementada articula una ley de control por par calculado (\textit{Computed Torque Control}) donde el Algoritmo Recursivo de Newton-Euler (RNEA), programado en C++17 evitando la realización de asignaciones dinámicas en su evaluación recursiva, compensa las no linealidades mecánicas nominales ($\mathcal{O}(n)$). De forma complementaria, una red neuronal perceptrón multicapa (MLP) con vector de características de 42 dimensiones estima en línea las dinámicas residuales no modeladas y fricciones articulares. El modelo fue entrenado en PyTorch, exportado al estándar ONNX y cuantizado mediante Cuantización Dinámica Post-Entrenamiento (\textit{Dynamic PTQ}) a INT8, ejecutándose dentro del middleware ROS 2 Jazzy Jalisco con el motor ONNX Runtime monohilo en C++. La verificación experimental se llevó a cabo en un gemelo digital de alta fidelidad (\textit{Sim-to-Real}) desarrollado en Gazebo Harmonic gobernado por la arquitectura modular de \texttt{ros2\_control} a una frecuencia de $500\text{ Hz}$ ($T_s = 2\text{ ms}$). La publicación de referencias y la recopilación de datos se realizaron a $100\text{ Hz}$ ($T_{datos}=10\text{ ms}$), independientemente de la frecuencia interna del control.
 
-Los resultados empíricos demuestran que la cuantización a INT8 redujo la huella de memoria del modelo en un $74.43\%$ (de $1.23\text{ MB}$ a $315\text{ KB}$) y aceleró la latencia media de inferencia a $29.2\,\mu\text{s}$. El tiempo de cómputo medio por ciclo de control fue de $215.4\,\mu\text{s}$ (con un máximo observado de $299.7\,\mu\text{s}$ en la muestra experimental), proporcionando una holgura temporal empírica del $89.23\%$ frente al periodo de muestreo admisible ($T_s = 2000\,\mu\text{s}$) y acotando los pares de esfuerzo estrictamente dentro de los límites mecánicos ($\pm 55.0\text{ N}\cdot\text{m}$). Si bien el lazo cerrado continuo acumula un incremento en el error cuadrático medio articular ($\text{RMSE} = 0.138\text{ rad}$) respecto al modelo en punto flotante ($0.092\text{ rad}$) debido a la discretización afín y a la asignación de $\ddot{\bm{q}}_{act} = \bm{0}$ para evitar ruido de diferenciación numérica, el seguimiento articular permaneció dentro de la envolvente funcional definida para las pruebas de simulación. Estos hallazgos validan la viabilidad algorítmica y la reducción del costo computacional de la arquitectura, sentando la base técnica para el entrenamiento consciente de cuantización (QAT), la instrumentación y medición física de potencia eléctrica y la aceleración en hardware neutro (FPGA / SoC Zynq) en Trabajo Terminal 2.
+Los resultados empíricos demuestran que la cuantización a INT8 redujo la huella de memoria del modelo en un $74.43\%$ (de $1.23\text{ MB}$ a $315\text{ KB}$) y aceleró la latencia media de inferencia a $29.2\,\mu\text{s}$. El tiempo de cómputo medio por ciclo de control fue de $215.4\,\mu\text{s}$ (con un máximo observado de $299.7\,\mu\text{s}$ en la muestra experimental), proporcionando una holgura temporal empírica del $89.23\%$ frente al periodo de muestreo admisible ($T_s = 2000\,\mu\text{s}$) y acotando los pares de esfuerzo estrictamente dentro de los límites mecánicos ($\pm 55.0\text{ N}\cdot\text{m}$). Si bien el lazo cerrado continuo acumula un incremento en el error cuadrático medio articular ($\text{RMSE} = 0.138\text{ rad}$) respecto al modelo en punto flotante ($0.092\text{ rad}$) debido a la discretización afín y a la asignación de $\ddot{\bm{q}}_{act} = \bm{0}$ para evitar ruido de diferenciación numérica, el requisito RF-01 de RMSE $<0.05\text{ rad}$ no se alcanzó en esta campaña. Los errores reportados se establecen como referencia de desempeño para TT2, donde se buscará mejorar la precisión de seguimiento. Estos hallazgos validan la viabilidad algorítmica y la reducción del costo computacional de la arquitectura, sentando la base técnica para el entrenamiento consciente de cuantización (QAT), la instrumentación y medición física de potencia eléctrica y la aceleración en hardware neutro (FPGA / SoC Zynq) en Trabajo Terminal 2.
 
 \vspace{0.6cm}
 \textbf{Palabras clave:} Redes Neuronales Cuantizadas, Robótica de Manipulación, Control por Par Calculado, Cuantización Dinámica, ROS 2, INT8, Sim-to-Real.
@@ -91,9 +98,9 @@ Los resultados empíricos demuestran que la cuantización a INT8 redujo la huell
 {\large \textbf{Abstract}}\\
 The deployment of advanced controllers based on Deep Neural Networks (DNNs) in robotic manipulation faces severe latency and energy constraints imposed by the Von Neumann bottleneck and the memory wall in embedded computing platforms. In closed real-time control loops ($100\text{ Hz} - 500\text{ Hz}$), continuous evaluation of high-density floating-point models (FP32) degrades temporal predictability and escalates power dissipation. In this context, this Term Project 1 report presents the design, implementation, and verification of a hybrid mechatronic position control scheme for a 6-DOF serial manipulator (Universal Robots UR3e), coupling analytical inverse dynamics with an 8-bit integer Quantized Neural Network (QNN-INT8).
 
-The methodology integrates a Computed Torque Control (CTC) framework wherein the Recursive Newton-Euler Algorithm (RNEA), implemented in C++17 avoiding dynamic memory allocations in its recursive evaluation, compensates for nominal mechanical non-linearities with optimal linear complexity ($\mathcal{O}(n)$). Concurrently, a multilayer perceptron (MLP) neural network fed by a 42-dimensional input feature vector estimates unmodeled residual dynamics and joint friction online. The network was trained in PyTorch, exported to the ONNX standard, and compressed via dynamic Post-Training Quantization (Dynamic PTQ) to INT8, running within the ROS 2 Jazzy Jalisco middleware via the single-threaded C++ ONNX Runtime engine. Experimental verification was conducted on a high-fidelity Sim-to-Real digital twin in Gazebo Harmonic managed by the \texttt{ros2\_control} framework at a closed-loop frequency of $500\text{ Hz}$ ($T_s = 2\text{ ms}$).
+The methodology integrates a Computed Torque Control (CTC) framework wherein the Recursive Newton-Euler Algorithm (RNEA), implemented in C++17 avoiding dynamic memory allocations in its recursive evaluation, compensates for nominal mechanical non-linearities with optimal linear complexity ($\mathcal{O}(n)$). Concurrently, a multilayer perceptron (MLP) neural network fed by a 42-dimensional input feature vector estimates unmodeled residual dynamics and joint friction online. The network was trained in PyTorch, exported to the ONNX standard, and compressed via dynamic Post-Training Quantization (Dynamic PTQ) to INT8, running within the ROS 2 Jazzy Jalisco middleware via the single-threaded C++ ONNX Runtime engine. Experimental verification was conducted on a high-fidelity Sim-to-Real digital twin in Gazebo Harmonic managed by the \texttt{ros2\_control} framework at a closed-loop frequency of $500\text{ Hz}$ ($T_s = 2\text{ ms}$). Trajectory references and experimental data were published and collected at $100\text{ Hz}$ ($T_{data}=10\text{ ms}$), independently of the internal control frequency.
 
-Empirical results demonstrate that INT8 quantization reduced the model memory footprint by $74.43\%$ (from $1.23\text{ MB}$ down to $315\text{ KB}$) and accelerated mean inference latency to $29.2\,\mu\text{s}$. Total critical-loop execution time averaged $215.4\,\mu\text{s}$ (with an observed empirical maximum of $299.7\,\mu\text{s}$), providing an empirical $89.23\%$ timing margin with respect to the sampling period ($T_s = 2000\,\mu\text{s}$), with commanded torques strictly bounded within physical thresholds ($\pm 55.0\text{ N}\cdot\text{m}$). While closed-loop control exhibits a tracking degradation ($\text{RMSE} = 0.138\text{ rad}$) compared to the floating-point baseline ($0.092\text{ rad}$) due to integer quantization noise and setting $\ddot{\bm{q}}_{act} = \bm{0}$ to prevent numerical differentiation noise, joint trajectory tracking remained strictly within the functional operational envelope defined for the simulation trials. These outcomes validate the algorithmic feasibility and computational overhead reduction of the architecture, establishing the technical foundation for Quantization-Aware Training (QAT), physical electrical power measurement, and embedded hardware acceleration on FPGA / SoC Zynq in Term Project 2.
+Empirical results demonstrate that INT8 quantization reduced the model memory footprint by $74.43\%$ (from $1.23\text{ MB}$ down to $315\text{ KB}$) and accelerated mean inference latency to $29.2\,\mu\text{s}$. Total critical-loop execution time averaged $215.4\,\mu\text{s}$ (with an observed empirical maximum of $299.7\,\mu\text{s}$), providing an empirical $89.23\%$ timing margin with respect to the sampling period ($T_s = 2000\,\mu\text{s}$), with commanded torques strictly bounded within physical thresholds ($\pm 55.0\text{ N}\cdot\text{m}$). While closed-loop control exhibits a tracking degradation ($\text{RMSE} = 0.138\text{ rad}$) compared to the floating-point baseline ($0.092\text{ rad}$) due to integer quantization noise and setting $\ddot{\bm{q}}_{act} = \bm{0}$ to prevent numerical differentiation noise, the RF-01 tracking requirement of RMSE $<0.05\text{ rad}$ was not met in this campaign. The reported errors establish a performance baseline for TT2, where tracking accuracy will be an improvement objective. These outcomes validate the algorithmic feasibility and computational overhead reduction of the architecture, establishing the technical foundation for Quantization-Aware Training (QAT), physical electrical power measurement, and embedded hardware acceleration on FPGA / SoC Zynq in Term Project 2.
 
 \vspace{0.6cm}
 \textbf{Keywords:} Quantized Neural Networks, Robotic Manipulation, Computed Torque Control, Dynamic Quantization, ROS 2, INT8, Sim-to-Real.
@@ -351,7 +358,7 @@ Bajo este alcance, la evaluación de la eficiencia energética se formula a nive
     \item \textbf{Eficiencia y vectorización aritmética:} Sustitución de operaciones intensivas de multiplicación-acumulación (MAC) en punto flotante por instrucciones enteras vectorizadas INT8 ejecutadas mediante el runtime optimizado ONNX Runtime en C++17.
     \item \textbf{Determinismo temporal en tiempo real:} Caracterización estadística de la latencia de cómputo del lazo de control, verificando que la evaluación completa del controlador neuronal cuantizado se ejecute en un promedio de $31.8\text{ }\mu\text{s}$, garantizando una holgura temporal superior al $98\%$ respecto al periodo de muestreo estricto de $T_s = 2\text{ ms}$ ($500\text{ Hz}$).
 \end{itemize}
-La fase de TT1 culmina formalmente con la integración completa del gemelo digital, la verificación de que el seguimiento articular permanece dentro de la envolvente funcional requerida en simulación y la estructuración del plan experimental comparativo.
+La fase de TT1 comprende la integración del gemelo digital, la caracterización del desempeño de seguimiento articular y la estructuración del plan experimental comparativo. El requisito RF-01 de RMSE $<0.05\text{ rad}$ no se alcanzó en la campaña evaluada; sus resultados constituyen la referencia de desempeño y un objetivo de mejora para TT2.
 
 \subsubsection*{Delimitación metodológica de Trabajo Terminal 2 (TT2)}
 La fase subsecuente de TT2 abarcará la transferencia, despliegue físico e instrumentación experimental sobre el manipulador robótico industrial Universal Robots UR3e disponible en las instalaciones de laboratorio. Los alcances específicos de dicha fase comprenden:
@@ -807,7 +814,7 @@ Con el propósito de garantizar un control articular preciso, estable y computac
 \midrule
 \multicolumn{4}{l}{\textit{\textbf{Requerimientos Funcionales (RF)}}} \\
 \midrule
-RF-01 & Cinemática de 6 GDL & Control articular coordinado de las 6 articulaciones rotacionales del robot en espacio articular ($\bm{q} \in \mathbb{R}^6$). & Grados de libertad: 6. Error de seguimiento $e_q < 0.05\text{ rad}$. \\
+RF-01 & Cinemática de 6 GDL & Control articular coordinado de las 6 articulaciones rotacionales del robot en espacio articular ($\bm{q} \in \mathbb{R}^6$). & Grados de libertad: 6. Error de seguimiento evaluado mediante RMSE $< 0.05\text{ rad}$. \\
 RF-02 & Bucle de control en tiempo real & Ejecución periódica determinista del lazo cerrado de control a una tasa mínima de 100~Hz, con escalabilidad a 500~Hz. & Periodo $T_s \le 10\text{ ms}$ (diseño nominal $T_s = 2\text{ ms}$). \\
 RF-03 & Compensación dinámica híbrida & Integración de un modelo dinámico analítico inverso (RNEA) acoplado a un módulo de compensación neuronal para dinámicas no modeladas. & Cálculo en línea de $\bm{\tau}_{RNEA} + \bm{\tau}_{NN}$. \\
 RF-04 & Cuantización a INT8 & Compresión de pesos y activaciones a precisión entera de 8 bits (INT8) mediante cuantización post-entrenamiento (PTQ). & Reducción de tamaño $\ge 50\%$ (alcanzado: 74.4\%). \\
@@ -1332,20 +1339,12 @@ El motor de física de Gazebo Harmonic se configuró utilizando el integrador DA
 La verificación del módulo de planta $M_1$ se llevó a cabo mediante tres protocolos experimentales:
 
 \begin{enumerate}
-    \item \textbf{Verificación de estabilidad y frecuencia de publicación:} Se instrumentó la recepción de los estados articulares en el tópico \texttt{/joint\_states}. Empleando la herramienta \texttt{ros2 topic hz}, se midió una tasa media de actualización de $500.04\text{ Hz}$ con una desviación típica de $\sigma = 0.08\text{ Hz}$, comprobando la ausencia de caídas de paquetes o bloqueos en la capa de transporte entre Gazebo y el middleware.
+    \item \textbf{Distinción entre frecuencia de control y adquisición:} El lazo interno de control se configuró a una frecuencia nominal de $\frecuenciacontrol\text{ Hz}$, mientras que la publicación de referencias del generador de trayectorias y la recopilación de datos se realizaron a $\frecuenciaregistro\text{ Hz}$. La frecuencia de los datos registrados no constituye una medición directa de la tasa de ejecución del controlador.
     \item \textbf{Verificación de respuesta dinámica a par en lazo abierto:} Se inyectaron escalones de esfuerzo conocidos ($\tau_i = \pm 5.0\text{ N}\cdot\text{m}$) sobre articulaciones individuales con el manipulador en reposo horizontal. Se verificó que las aceleraciones angulares resultantes correspondieran a las leyes de Newton-Euler ($I_{ii} \ddot{q}_i = \tau_i - \tau_{g,i}$), descartando divergencias numéricas o singularidades en la matriz de rigidez del simulador.
     \item \textbf{Verificación de barrera de saturación física:} Se sometió el modelo a comandos de par forzados superiores a los límites mecánicos del actuador ($\pm 80\text{ N}\cdot\text{m}$). Se comprobó que el módulo saturara de forma estricta las entradas a $\pm 55.0\text{ N}\cdot\text{m}$, protegiendo el modelo cinemático de esfuerzos destructivos o desbordamientos numéricos.
 \end{enumerate}
 
-Como evidencia empírica de la estabilidad en la frecuencia de actualización, en el Listing~\ref{lst:log_hz_m1} se presenta la captura directa de la herramienta de diagnóstico \texttt{ros2 topic hz}, evidenciando una tasa media de $500.04\text{ Hz}$ y una dispersión temporal de solo $0.08\text{ ms}$.
-
-\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Evidencia de telemetría de frecuencia en el tópico /joint\_states (500 Hz nominal).}, label={lst:log_hz_m1}]
-$ ros2 topic hz /joint_states
-average rate: 500.041
-	min: 0.00191s max: 0.00209s std dev: 0.00008s window: 500
-average rate: 500.038
-	min: 0.00192s max: 0.00208s std dev: 0.00007s window: 1000
-\end{lstlisting}
+El periodo nominal del control interno fue de $2\text{ ms}$, y el intervalo nominal entre referencias y muestras recopiladas fue de $10\text{ ms}$. Entre publicaciones de referencia, el controlador utilizó la última consigna disponible. No se presenta un registro de publicación a $500\text{ Hz}$, pues la adquisición experimental se realizó a $100\text{ Hz}$.
 
 La Tabla~\ref{tab:verificacion_m1} resume cuantitativamente los resultados obtenidos en las pruebas de verificación de $M_1$.
 
@@ -1356,10 +1355,11 @@ La Tabla~\ref{tab:verificacion_m1} resume cuantitativamente los resultados obten
 \label{tab:verificacion_m1}
 \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{4.2cm} >{\centering\arraybackslash}p{3.2cm} >{\centering\arraybackslash}p{2.2cm}}
 \toprule
-\textbf{Parámetro / Prueba} & \textbf{Especificación Requerida} & \textbf{Valor Medido} & \textbf{Estado} \\
+\textbf{Parámetro / Prueba} & \textbf{Especificación Requerida} & \textbf{Valor / Condición} & \textbf{Estado} \\
 \midrule
-Frecuencia de actualización de estado & $500\text{ Hz} \pm 1\%$ & $500.04\text{ Hz}$ & Aprobado \\
-Varianza temporal inter-muestral ($jitter$) & $< 0.1\text{ ms}$ & $0.018\text{ ms}$ & Aprobado \\
+Frecuencia nominal del lazo interno & $500\text{ Hz}$ & $500\text{ Hz}$ (configuración) & Configurado \\
+Frecuencia de recopilación de datos & $100\text{ Hz}$ & $100\text{ Hz}$ & Implementado \\
+Dispersión temporal inter-muestral ($jitter$) & $< 0.1\text{ ms}$ & Sin registro cuantitativo trazable & Por verificar \\
 Límite estricto de saturación de par & $\pm 55.0\text{ N}\cdot\text{m}$ & $\pm 55.0\text{ N}\cdot\text{m}$ & Aprobado \\
 Estabilidad numérica en integración continua & $\ge 30\text{ min sin derivas}$ & $60\text{ min continuos}$ & Aprobado \\
 \bottomrule
@@ -1453,7 +1453,7 @@ La Tabla~\ref{tab:verificacion_m2} documenta las métricas de verificación obte
 Tiempo de cómputo medio por iteración & $< 250\,\mu\text{s}$ & $151.2\,\mu\text{s}$ & Aprobado \\
 Tiempo de cómputo máximo observado ($t_{max}$) & $< 500\,\mu\text{s}$ & $213.0\,\mu\text{s}$ & Aprobado \\
 Error estático de régimen permanente & $< 0.01\text{ rad}$ & $0.0012\text{ rad}$ & Aprobado \\
-Error cuadrático medio dinámico (RMSE) & $< 0.100\text{ rad}$ & $0.063\text{ rad}$ & Aprobado \\
+Error cuadrático medio dinámico (RMSE), RF-01 & $< 0.05\text{ rad}$ & $0.063\text{ rad}$ & No alcanzado \\
 Asignaciones dinámicas de memoria en bucle & $0\text{ bytes}$ & $0\text{ bytes}$ & Aprobado \\
 \bottomrule
 \end{tabularx}
@@ -1555,7 +1555,7 @@ Para comprender por qué esta arquitectura preserva la precisión del controlado
     \end{itemize}
 \end{enumerate}
 
-La sinergia entre la normalización $z$-score previa, la simetría de pesos y la cuantización dinámica afín para activaciones asegura que los 8 bits se distribuyan con máxima densidad de información en las regiones de mayor probabilidad de los estados dinámicos, logrando una representación compacta de $315\text{ KB}$ con la cual el seguimiento articular permaneció dentro de la envolvente funcional definida para las pruebas de simulación. La Figura~\ref{fig:distribucion_cuantizacion_int8} ilustra gráficamente este mecanismo de concentración frente a la dispersión ineficiente de un mapeo lineal fijo.
+La sinergia entre la normalización $z$-score previa, la simetría de pesos y la cuantización dinámica afín para activaciones asegura que los 8 bits se distribuyan con máxima densidad de información en las regiones de mayor probabilidad de los estados dinámicos, logrando una representación compacta de $315\text{ KB}$ cuyo desempeño de seguimiento se reporta como referencia experimental. La compresión obtenida no implica el cumplimiento del requisito RF-01, que no se alcanzó en esta campaña. La Figura~\ref{fig:distribucion_cuantizacion_int8} ilustra gráficamente este mecanismo de concentración frente a la dispersión ineficiente de un mapeo lineal fijo.
 
 \begin{figure}[htbp]
 \centering
@@ -1595,7 +1595,7 @@ for(int i = 0; i < 6; ++i) {
 \subsubsection{Verificación ($M_3$)}
 \label{sec:ver_m3}
 
-Para la evaluación cuantitativa de los modelos neuronales, se configuró un banco de pruebas estandarizado ejecutado en un procesador AMD Ryzen 7 5800X3D (arquitectura x86\_64, 8 núcleos físicos / 16 hilos, extensiones vectoriales AVX2/FMA3, 96~MB de caché L3) y 32~GB de memoria RAM DDR4 bajo el sistema operativo Ubuntu 24.04 LTS (con prioridad POSIX FIFO en el hilo de control), integrando Gazebo Harmonic 8.x, ROS 2 Jazzy y el motor de inferencia ONNX Runtime C++ v1.17 en modo monohilo (\texttt{options.SetIntraOpNumThreads(1)}). Las métricas cronometradas se obtuvieron sobre un ensayo continuo de $N = 300\,000$ ciclos consecutivos a $500\text{ Hz}$ ($T_s = 2000\,\mu\text{s}$), equivalente a 10 minutos de operación ininterrumpida.
+Para la evaluación cuantitativa de los modelos neuronales, se configuró un banco de pruebas estandarizado ejecutado en un procesador AMD Ryzen 7 5800X3D (arquitectura x86\_64, 8 núcleos físicos / 16 hilos, extensiones vectoriales AVX2/FMA3, 96~MB de caché L3) y 32~GB de memoria RAM DDR4 bajo el sistema operativo Ubuntu 24.04 LTS (con prioridad POSIX FIFO en el hilo de control), integrando Gazebo Harmonic 8.x, ROS 2 Jazzy y el motor de inferencia ONNX Runtime C++ v1.17 en modo monohilo (\texttt{options.SetIntraOpNumThreads(1)}). La prueba tuvo una duración de diez minutos, con el lazo interno configurado a $500\text{ Hz}$ ($T_s=2000\,\mu\text{s}$) y recopilación de datos a $100\text{ Hz}$ ($T_{datos}=10\text{ ms}$). El número de observaciones corresponde a la serie registrada, no al conteo nominal de ciclos internos.
 
 La verificación del motor cuantizado $M_3$ arrojó resultados empíricos contundentes:
 
@@ -1641,7 +1641,7 @@ La Tabla~\ref{tab:verificacion_m3} resume la comparativa directa entre el modelo
 \begin{table}[htbp]
 \centering
 \small
-\caption{Resultados experimentales de verificación: Red FP32 vs. Red Cuantizada INT8 ($M_3$) sobre $N = 300\,000$ ciclos a $500\text{ Hz}$.}
+\caption{Resultados de verificación de los modelos FP32 e INT8 ($M_3$): control interno nominal a $500\text{ Hz}$ y recopilación de datos a $100\text{ Hz}$.}
 \label{tab:verificacion_m3}
 \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{2.6cm} >{\centering\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{4.2cm}}
 \toprule
@@ -1658,16 +1658,21 @@ Error dinámico medio (RMSE) & $0.092\text{ rad}$ ($\approx 5.3^\circ$) & $0.138
 Rango RMSE en régimen & $0.066 - 0.118\text{ rad}$ & $0.088 - 0.155\text{ rad}$ & Acotado en simulación \\
 Consumo de ciclo (500 Hz) & $1.85\%$ & $1.46\%$ & \textbf{$98.54\%$ de holgura} \\
 \bottomrule
-\multicolumn{4}{@{}p{\textwidth}@{}}{\footnotesize $^*$Mediciones cronometradas empíricamente sobre $N = 300\,000$ ciclos consecutivos a $500\text{ Hz}$ en entorno de simulación Gazebo Harmonic sobre procesador x86\_64 (AVX2). $t_{max}$ denota el tiempo máximo registrado en la serie de prueba; no constituye un análisis formal de WCET por métodos estáticos.}
+\multicolumn{4}{@{}p{\textwidth}@{}}{\footnotesize $^*$Valores de latencia reportados en simulación sobre procesador x86\_64. La recopilación se realizó a $100\text{ Hz}$, independientemente del control interno a $500\text{ Hz}$. $t_{max}$ denota el máximo de los valores recopilados, no un WCET formal ni un máximo garantizado de todos los ciclos internos.}
 \end{tabularx}
 \end{table}
 
-En la Figura~\ref{fig:distribucion_latencia_m3} se exhibe el análisis probabilístico de los tiempos de inferencia registrados: en (a) se visualiza el histograma de densidad empírica contrastando la concentración unimodal del modelo INT8 frente a la distribución desplazada del modelo FP32; en (b) se ilustra la función de distribución acumulada (ECDF) con el marcado de los percentiles $P_{95}$ y $P_{99}$, corroborando empíricamente que más del $99\%$ de las evaluaciones cuantizadas finalizan con una latencia inferior a $34.5\,\mu\text{s}$.
+La frecuencia interna del controlador y la tasa de recopilación se distinguen en la Figura~\ref{fig:distribucion_latencia_m3}. La recopilación a $100\text{ Hz}$ no permite afirmar que se registró la latencia de cada ciclo interno a $500\text{ Hz}$.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.96\textwidth]{Imagenes/distribucion_latencia_m3.png}
-\caption{Distribución estadística empírica de la latencia de inferencia monohilo en C++ ($N = 300\,000$ ciclos a $500\text{ Hz}$): (a) Histograma de frecuencias y densidad para el modelo FP32 ($\mu = 37.1\,\mu\text{s}$) frente al modelo cuantizado INT8 ($\mu = 29.2\,\mu\text{s}$); (b) Función de distribución acumulada empírica (ECDF) con percentiles $P_{95}$, $P_{99}$ y caso extremo $t_{max}$, evidenciando una cota inferior a $35\,\mu\text{s}$ para el $99\%$ de los ciclos de control.}
+\fbox{\parbox{0.88\textwidth}{\centering
+\textbf{Control interno:} $500\text{ Hz}$ ($T_s=2\text{ ms}$)\\[0.5em]
+\textbf{Publicación de referencias:} $100\text{ Hz}$ ($T_{ref}=10\text{ ms}$)\\[0.5em]
+\textbf{Recopilación de datos:} $100\text{ Hz}$ ($T_{datos}=10\text{ ms}$)\\[0.5em]
+En diez minutos: aproximadamente $300\,000$ actualizaciones internas y $60\,000$ muestras por señal, como conteos nominales distintos.
+}}
+\caption{Distinción entre las tasas nominales de control, publicación de referencias y recopilación de datos. Los conteos calculados a partir de frecuencia y duración no sustituyen el número efectivo de observaciones del registro experimental.}
 \label{fig:distribucion_latencia_m3}
 \end{figure}
 
@@ -1702,22 +1707,10 @@ La verificación del módulo $M_4$ demostró:
 \begin{enumerate}
     \item \textbf{Continuidad matemática en el espacio articular:} Las trayectorias generadas exhibieron perfiles de aceleración estrictamente diferenciables, sin discontinuidades en los puntos de inflexión temporal.
     \item \textbf{Calidad del suavizado por Savitzky-Golay:} El cálculo de $\ddot{\bm{q}}_{act}$ mostró una relación señal a ruido (\textit{SNR}) $18.4\text{ dB}$ superior en comparación con el esquema de derivación finita simple con filtro pasa-bajas de primer orden, eliminando los armónicos espurios en el par dinámico.
-    \item \textbf{Inmunidad de tiempo real:} La ejecución del nodo generador y del registrador MCAP se realizó en núcleos de procesamiento aislados, verificándose que la tasa de ciclo del controlador en C++ a $500\text{ Hz}$ no experimentó degradación alguna durante la captura masiva de datos.
+    \item \textbf{Separación de tasas de ejecución:} El nodo generador de trayectorias y la recopilación de datos operaron a $100\text{ Hz}$, mientras que el controlador C++ se configuró nominalmente a $500\text{ Hz}$. Las referencias y variables experimentales se publicaron y recopilaron a una tasa inferior a la del lazo interno.
 \end{enumerate}
 
-El Listing~\ref{lst:log_mcap_m4} presenta el reporte de metadatos obtenido mediante \texttt{ros2 bag info}, acreditando la adquisición exitosa de más de $300\,000$ mensajes continuos en formato MCAP sin pérdidas de paquetes.
-
-\begin{lstlisting}[language=bash, numbers=none, basicstyle=\ttfamily\scriptsize, caption={Reporte de metadatos de la telemetría binaria adquirida en formato MCAP (ros2 bag info).}, label={lst:log_mcap_m4}]
-$ ros2 bag info dataset_ur3e_telemetry_0.mcap
-Files:             dataset_ur3e_telemetry_0.mcap
-Bag size:          184.2 MiB
-Storage id:        mcap
-Duration:          600.02s
-Start:             1716302500.000 (UTC)
-End:               1716303100.020 (UTC)
-Messages:          300010
-Topic information: Topic: /joint_states | Type: sensor_msgs/msg/JointState | Count: 300010
-\end{lstlisting}
+La recopilación de datos se efectuó a una tasa nominal de $100\text{ Hz}$. Para una duración de $600\text{ s}$, esta tasa corresponde a aproximadamente $60\,000$ muestras por señal registrada; esta cifra es una estimación nominal y no un conteo de mensajes extraído del archivo MCAP. El número efectivo de mensajes y las pérdidas de adquisición deben obtenerse de los metadatos y marcas temporales del registro original. El conjunto utilizado para el entrenamiento contiene $50\,000$ muestras procesadas; su tamaño no debe confundirse con el número nominal de muestras de un ensayo de diez minutos ni con los ciclos internos de control.
 
 La Tabla~\ref{tab:verificacion_m4} resume los indicadores de verificación del módulo $M_4$.
 
@@ -1730,9 +1723,9 @@ La Tabla~\ref{tab:verificacion_m4} resume los indicadores de verificación del m
 \toprule
 \textbf{Indicador de Calidad} & \textbf{Requisito Técnico} & \textbf{Valor Registrado} & \textbf{Estado} \\
 \midrule
-Frecuencia de muestreo del generador & $100\text{ Hz} \pm 0.5\%$ & $100.02\text{ Hz}$ & Aprobado \\
+Frecuencia de publicación y adquisición & $100\text{ Hz}$ nominales & $100\text{ Hz}$ & Implementado \\
 Continuidad en derivadas articulares & Clase $C^2$ estricta & Continua y suave & Aprobado \\
-Muestras perdidas en grabación MCAP & $0\text{ paquetes}$ & $0\text{ descartados}$ & Aprobado \\
+Muestras perdidas en grabación MCAP & Registro continuo & Conteo por cotejar con el registro original & Por verificar \\
 Integridad estructural del dataset & 42 columnas sincrónicas & $50\,000$ filas completas & Aprobado \\
 \bottomrule
 \end{tabularx}
@@ -1754,9 +1747,9 @@ Se implementó un esquema de seguridad jerárquico dentro de los controladores C
 \subsubsection{Verificación de la integración del sistema}
 \label{sec:ver_sistema_mecatronico}
 
-Para certificar funcionalmente el acoplamiento global del sistema mecatrónico, se ejecutó una prueba de operación continua en bucle cerrado sobre el gemelo digital en Gazebo Harmonic gobernado por ROS 2 Jazzy y \texttt{ros2\_control}, sometiendo al manipulador UR3e a una secuencia de trayectorias articulares aleatorias durante un intervalo continuo de 10 minutos ($300\,000$ ciclos a $500\text{ Hz}$).
+Para evaluar funcionalmente el acoplamiento global del sistema mecatrónico, se ejecutó una prueba de operación continua en bucle cerrado sobre el gemelo digital en Gazebo Harmonic gobernado por ROS 2 Jazzy y \texttt{ros2\_control}, sometiendo al manipulador UR3e a una secuencia de trayectorias articulares aleatorias durante un intervalo de 10 minutos. El control interno se configuró a $500\text{ Hz}$, y las referencias y los datos recopilados se publicaron a $100\text{ Hz}$. Para ese intervalo se estiman nominalmente $300\,000$ actualizaciones internas de control y $60\,000$ muestras por señal registrada; ambos conteos son distintos y no sustituyen los registros efectivos de ejecución y adquisición.
 
-Durante dicho ensayo, se verificó el correcto intercambio de mensajes en las interfaces estándar de esfuerzo (\texttt{HW\_IF\_EFFORT}), la ausencia de pérdidas de paquetes en el canal de telemetría MCAP y la activación preventiva de las capas de seguridad y saturación física ($\pm 55.0\text{ N}\cdot\text{m}$). El sistema completó satisfactoriamente la totalidad del ciclo de prueba sin interrupciones, bloqueos de hilos ni desbordamientos de memoria, acreditando la robustez operativa de la integración modular software/hardware simulado.
+Durante dicho ensayo, se verificó el correcto intercambio de mensajes en las interfaces estándar de esfuerzo (\texttt{HW\_IF\_EFFORT}), la recopilación a $100\text{ Hz}$ y la operación de las capas de seguridad y saturación física ($\pm 55.0\text{ N}\cdot\text{m}$). El sistema completó satisfactoriamente la totalidad del ciclo de prueba sin interrupciones, bloqueos de hilos ni desbordamientos de memoria. El conteo de mensajes y las posibles pérdidas de adquisición requieren cotejo con el registro original.
 
 La evaluación cuantitativa detallada del comportamiento dinámico, la precisión de seguimiento articular, el presupuesto cronométrico y la eficiencia de compresión del modelo neuronal se desarrolla a fondo en el Capítulo~\ref{sec:analisis_resultados}.
 
@@ -1766,7 +1759,7 @@ La evaluación cuantitativa detallada del comportamiento dinámico, la precisió
 \section{Análisis de resultados}
 \label{sec:analisis_resultados}
 
-El presente capítulo expone la evaluación cuantitativa y el análisis comparativo del desempeño del sistema mecatrónico integral implementado. A partir de los registros de telemetría obtenidos durante las pruebas experimentales en simulación física a $500\text{ Hz}$ ($T_s = 2\text{ ms}$), se analizan con rigor de ingeniería los resultados cinemáticos de seguimiento articular, la predictibilidad cronométrica en tiempo real, la aceleración de inferencia y la compresión de memoria alcanzada mediante la cuantización entera INT8 en comparación con las líneas base de control clásico (PD) y punto flotante (FP32). Finalmente, se evalúa el cumplimiento integral de los requerimientos técnicos de diseño formulados para Trabajo Terminal 1.
+El presente capítulo expone la evaluación cuantitativa y el análisis comparativo del desempeño del sistema mecatrónico integral implementado. A partir de los registros de telemetría obtenidos durante las pruebas experimentales en simulación física, con recopilación a $100\text{ Hz}$ ($T_{datos}=10\text{ ms}$) y control interno nominal a $500\text{ Hz}$ ($T_s=2\text{ ms}$), se analizan con rigor de ingeniería los resultados cinemáticos de seguimiento articular, la predictibilidad cronométrica en tiempo real, la aceleración de inferencia y la compresión de memoria alcanzada mediante la cuantización entera INT8 en comparación con las líneas base de control clásico (PD) y punto flotante (FP32). Finalmente, se evalúa el cumplimiento integral de los requerimientos técnicos de diseño formulados para Trabajo Terminal 1.
 
 \subsection{Entorno de pruebas y condiciones experimentales (Sim-to-Real)}
 \label{sec:entorno_pruebas}
@@ -1779,7 +1772,7 @@ La validación empírica del sistema mecatrónico se estructuró sobre un entorn
     \item \textbf{Plataforma de procesamiento computacional:} Estación de trabajo equipada con procesador AMD Ryzen 7 5800X3D (8 núcleos físicos, 16 hilos de ejecución, frecuencia base de $3.4\text{ GHz}$ con turbo hasta $4.5\text{ GHz}$, $96\text{ MB}$ de caché L3 3D V-Cache y soporte para extensiones vectoriales AVX2/FMA3), $32\text{ GB}$ de memoria RAM DDR4, operando bajo el sistema operativo Ubuntu 24.04.5 LTS (kernel Linux 6.8) con políticas de planificación de tiempo real POSIX (\texttt{SCHED\_FIFO}) asignadas al hilo de control.
     \item \textbf{Motor de inferencia neuronal:} Biblioteca C++ de alto rendimiento ONNX Runtime (versión monohilo configurada con \texttt{SetIntraOpNumThreads(1)} y \texttt{SetInterOpNumThreads(1)}), garantizando ejecución secuencial predecible y eliminando el sobrecosto de sincronización entre hilos del sistema operativo.
     \item \textbf{Generación de trayectorias de excitación dinámica:} Conforme a la Ecuación~\eqref{eq:quintic_imp}, el generador de trayectorias (\texttt{random\_trajectory\_generator.py}) sintetizó perfiles polinomiales quínticos de clase $\mathcal{C}^2$ conectando configuraciones articulares admisibles aleatorias distribuidas en el espacio de trabajo. Cada segmento aseguró derivadas primera y segunda nulas en los instantes inicial y final ($\dot{\bm{q}} = \bm{0}$, $\ddot{\bm{q}} = \bm{0}$), evitando choques inerciales impulsivos en los actuadores mecánicos.
-    \item \textbf{Protocolo de ensayo continuo:} El ensayo experimental se extendió durante un intervalo ininterrumpido de 10 minutos continuos ($600.0\text{ s}$), totalizando exactamente $300\,000$ ciclos consecutivos de control a $500\text{ Hz}$, asegurando una muestra estadística robusta para el análisis de dispersión temporal.
+    \item \textbf{Protocolo de ensayo continuo:} El ensayo experimental se extendió durante $600\text{ s}$, con el lazo interno configurado a $500\text{ Hz}$ y la publicación de referencias y recopilación de datos a $100\text{ Hz}$. Esta última tasa corresponde nominalmente a $60\,000$ muestras por señal durante el ensayo; el tamaño efectivo de cada serie utilizada en los cálculos corresponde a los registros disponibles tras su procesamiento, no al número de actualizaciones internas del controlador.
 \end{itemize}
 
 \subsection{Precisión dinámica y error de seguimiento articular}
@@ -1798,7 +1791,7 @@ La métrica principal de desempeño cinemático empleada fue el Error Cuadrátic
     \text{RMSE}_i = \sqrt{\frac{1}{N} \sum_{k=1}^{N} \left( q_{des,i}[k] - q_{act,i}[k] \right)^2}
     \label{eq:rmse_def}
 \end{equation}
-donde $N = 300\,000$ muestras temporales y $i \in \{1, \dots, 6\}$ denota cada articulación del manipulador.
+donde $N$ es el número efectivo de muestras temporales válidas de la serie recopilada a $100\text{ Hz}$, y $i \in \{1, \dots, 6\}$ denota cada articulación del manipulador. Para un ensayo de $600\text{ s}$, el número nominal de muestras por articulación es aproximadamente $60\,000$; no se identifica $N$ con los ciclos internos del controlador a $500\text{ Hz}$.
 
 Los valores empíricos consolidados de error de seguimiento obtenidos en simulación se resumen a continuación:
 \begin{itemize}
@@ -1814,7 +1807,7 @@ El incremento en el error de seguimiento del modelo INT8 responde a dos factores
     \item \textbf{Inmunidad frente a ruido de diferenciación numérica:} En la implementación de control en tiempo real, el vector de aceleración articular actual se fijó en $\ddot{\bm{q}}_{act} = \bm{0}$ para evitar la amplificación catastrófica de ruido sensorial que ocasiona la derivación numérica de las lecturas posicionales. Si bien esta medida garantiza la estabilidad numérica del controlador en C++, genera un leve desplazamiento de distribución (\textit{covariate shift}) frente a los datos de entrenamiento fuera de línea (los cuales fueron procesados con el filtro suavizador Savitzky-Golay).
 \end{enumerate}
 
-Es fundamental destacar que, a pesar del incremento cuantitativo en el RMSE, \textbf{el seguimiento articular permaneció estrictamente dentro de la envolvente funcional admisible para las pruebas de simulación}. En ningún momento el manipulador presentó oscilaciones mecánicas de alta frecuencia (\textit{chattering}), divergencia o pérdida de estabilidad en lazo cerrado. Asimismo, los pares articulares comandados fueron acotados en todo instante por la capa de saturación física ($\pm 55.0\text{ N}\cdot\text{m}$), certificando la integridad de los actuadores. Este compromiso cinemático confirma que el modelo cuantizado INT8 es plenamente viable para el control dinámico en lazo cerrado, sustentando a la vez la justificación teórica y metodológica para implementar esquemas de entrenamiento consciente de cuantización (\textit{Quantization-Aware Training}, QAT) y observadores de aceleración en la etapa de Trabajo Terminal 2.
+Los errores de seguimiento reportados fueron $0.063\text{ rad}$ para el control analítico, $0.092\text{ rad}$ para FP32 y $0.138\text{ rad}$ para INT8. Los tres valores superan el umbral de RMSE $<0.05\text{ rad}$ establecido en RF-01; por tanto, el requisito no se alcanzó en la campaña experimental de TT1. Estos resultados se conservan como referencia de desempeño para evaluar las mejoras de TT2. La operación observada en simulación y la reducción del costo computacional no sustituyen el criterio cuantitativo de precisión.
 
 \subsection{Desempeño cronométrico, latencia de inferencia y presupuesto temporal a 500 Hz}
 \label{sec:desempeno_cronometrico}
@@ -1822,13 +1815,13 @@ Es fundamental destacar que, a pesar del incremento cuantitativo en el RMSE, \te
 La viabilidad del control inteligente en robótica depende de su capacidad para satisfacer rigurosamente las restricciones temporales del lazo cerrado. En un sistema que opera a $500\text{ Hz}$, la ventana de cómputo total admisible por ciclo es de $T_s = 2000\,\mu\text{s}$. 
 
 \paragraph*{Aceleración de inferencia y reducción de varianza (FP32 vs. INT8):}
-Se llevó a cabo un perfilado estadístico exhaustivo de la latencia del paso hacia adelante (\textit{forward pass}) de la red neuronal dentro del controlador en C++, comparando la ejecución de la red en punto flotante frente al modelo cuantizado a INT8 sobre una muestra continua de $300\,000$ ejecuciones consecutivas. Los resultados se detallan en la Tabla~\ref{tab:latencia_inferencia_comp}.
+Se compararon los valores recopilados de latencia del paso hacia adelante (\textit{forward pass}) de la red neuronal dentro del controlador en C++, para los modelos FP32 e INT8. La adquisición se realizó a $100\text{ Hz}$; por tanto, la serie registrada no representa una medición de cada ejecución interna del controlador a $500\text{ Hz}$. Los resultados se detallan en la Tabla~\ref{tab:latencia_inferencia_comp}.
 
 \begin{table}[htbp]
 \centering
 \footnotesize
 \setlength{\tabcolsep}{3.5pt}
-\caption{Comparativa estadística de latencia de inferencia en C++ (ONNX Runtime) a $500\text{ Hz}$ ($N = 300\,000$ ciclos).}
+\caption{Comparativa de latencia de inferencia en C++ (ONNX Runtime) con control interno nominal a $500\text{ Hz}$ y recopilación de datos a $100\text{ Hz}$.}
 \label{tab:latencia_inferencia_comp}
 \begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X >{\centering\arraybackslash}p{1.7cm} >{\centering\arraybackslash}p{1.8cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.8cm}}
 \toprule
@@ -1844,7 +1837,7 @@ Red Cuantizada INT8 & $\mathbf{29.2\,\mu\text{s}}$ & $\mathbf{2.1\,\mu\text{s}}$
 
 Como se desprende de la Tabla~\ref{tab:latencia_inferencia_comp}, la cuantización a INT8 redujo la latencia media de inferencia de $37.1\,\mu\text{s}$ a $29.2\,\mu\text{s}$, representando una aceleración neta del \textbf{21.29\%}. Adicionalmente, se observa una notable contracción del $25\%$ en la desviación estándar ($\sigma = 2.1\,\mu\text{s}$ vs. $2.8\,\mu\text{s}$), demostrando que la aritmética entera vectorizada no solo agiliza el cómputo, sino que estabiliza la distribución temporal.
 
-En la Figura~\ref{fig:distribucion_latencia_m3} (presentada previamente en la verificación del módulo $M_3$) se ilustra esta transición: el histograma de densidad muestra la concentración unimodal del modelo INT8 desplazada significativamente hacia la izquierda respecto a FP32, mientras que la curva de distribución acumulada (ECDF) confirma que más del $99\%$ de las evaluaciones cuantizadas concluyen en un tiempo inferior a $34.5\,\mu\text{s}$.
+La Figura~\ref{fig:distribucion_latencia_m3} distingue la tasa de control interno de las tasas de publicación y recopilación. Los percentiles de la Tabla~\ref{tab:latencia_inferencia_comp} describen los valores recopilados y no establecen una cota garantizada para todas las ejecuciones del controlador en el entorno CPU y sistema operativo.
 
 \paragraph*{Presupuesto temporal consolidado (*Timing Budget*):}
 Para evaluar la predictibilidad del ciclo completo \texttt{update()}, la Tabla~\ref{tab:timing_budget_analisis} presenta el desglose cronométrico de cada subproceso ejecutado por el controlador \texttt{NeuralTorqueController} en simulación.
@@ -1921,22 +1914,23 @@ Para concluir el análisis formal de ingeniería de esta primera etapa, la Tabla
 \toprule
 \textbf{Requerimiento / Parámetro} & \textbf{Meta de Ingeniería} & \textbf{Resultado Experimental} & \textbf{Dictamen} \\
 \midrule
-Frecuencia del lazo de control & $500\text{ Hz}$ ($T_s \le 2000\,\mu\text{s}$) & $500.04\text{ Hz}$ ($T_{total} = 215.4\,\mu\text{s}$) & \textbf{Cumplido} \\
+Frecuencia nominal del lazo de control & $500\text{ Hz}$ ($T_s = 2000\,\mu\text{s}$) & $500\text{ Hz}$ (configuración del lazo interno) & \textbf{Configurado} \\
+Frecuencia de publicación y adquisición & $100\text{ Hz}$ ($T_{datos} = 10\text{ ms}$) & $100\text{ Hz}$ & \textbf{Implementado} \\
 Holgura temporal por ciclo & $> 50\%$ & $89.23\%$ de margen libre & \textbf{Cumplido} \\
 Reducción de memoria de la red & $> 60\%$ & $74.43\%$ ($1232\text{ KB} \to 315\text{ KB}$) & \textbf{Cumplido} \\
 Aceleración de inferencia & $> 15\%$ red. latencia & $21.29\%$ ($37.1 \to 29.2\,\mu\text{s}$) & \textbf{Cumplido} \\
-Error dinámico articular (RMSE) & Envolvente funcional & $0.063\text{ rad}$ (PD), $0.138\text{ rad}$ (INT8) & \textbf{Validado}$^*$ \\
+Error dinámico articular (RMSE), RF-01 & $<0.05\text{ rad}$ & $0.063\text{ rad}$ (analítico), $0.092\text{ rad}$ (FP32), $0.138\text{ rad}$ (INT8) & \textbf{No alcanzado}$^*$ \\
 Límites mecánicos de esfuerzo & $\pm 55.0\text{ N}\cdot\text{m}$ & $\pm 55.0\text{ N}\cdot\text{m}$ (Saturación activa) & \textbf{Cumplido} \\
 Control en hilo crítico & Cero reservas dinámicas & Sin reservas en lógica de control & \textbf{Cumplido} \\
 Compatibilidad Sim-to-Real TT2 & $100\%$ interfaces & Interfaces estándar \texttt{ros2\_control} & \textbf{Cumplido} \\
 \bottomrule
-\multicolumn{4}{@{}p{\textwidth}@{}}{\footnotesize $^*$El incremento relativo en el RMSE de la red INT8 obedece al desacoplo inducido por fijar $\ddot{\bm{q}}_{act} = \bm{0}$ para evitar ruido de diferenciación numérica y al redondeo afín PTQ; esta área de oportunidad constituye el objetivo de optimización con observadores y QAT en TT2.}
+\multicolumn{4}{@{}p{\textwidth}@{}}{\footnotesize $^*$RF-01 no se alcanzó en la campaña de TT1. Los errores reportados se conservan como referencia de desempeño; reducir el RMSE por debajo de $0.05\text{ rad}$ constituye un objetivo de mejora para TT2.}
 \end{tabularx}
 \end{table}
 
-Como acredita la Tabla~\ref{tab:resumen_verificacion_global}, la totalidad de las especificaciones y metas cuantitativas comprometidas para la fase de Trabajo Terminal 1 fueron satisfechas o superadas con holgura:
+La Tabla~\ref{tab:resumen_verificacion_global} permite distinguir los avances de implementación y desempeño computacional del requisito de precisión que no se alcanzó en TT1. En particular, RF-01 permanece pendiente y sus resultados establecen la referencia de desempeño para TT2. Los principales resultados de esta etapa se sintetizan a continuación:
 \begin{enumerate}
-    \item La frecuencia de control superó los $500\text{ Hz}$ con un tiempo medio de ejecución de $215.4\,\mu\text{s}$, dejando un margen de holgura libre del $89.23\%$ (superando ampliamente la meta mínima del $50\%$).
+    \item El control interno se configuró nominalmente a $500\text{ Hz}$ y la publicación de referencias y recopilación de datos se realizó a $100\text{ Hz}$. El tiempo medio de ejecución reportado de $215.4\,\mu\text{s}$ representa un margen del $89.23\%$ respecto al periodo interno de $2\text{ ms}$; no constituye una medición de frecuencia de publicación ni del intervalo de adquisición.
     \item La compresión de memoria de los parámetros del modelo alcanzó el $74.43\%$, excediendo el umbral establecido del $60\%$.
     \item La aceleración de la inferencia neuronal pura alcanzó un $21.29\%$, por encima de la cota proyectada del $15\%$.
     \item Los límites de esfuerzo físico ($\pm 55.0\text{ N}\cdot\text{m}$) se respetaron estrictamente mediante saturación activa en C++.
@@ -1954,9 +1948,9 @@ A través del desarrollo de este Trabajo Terminal 1, se diseñó, implementó y 
 
 La aplicación sistemática de la técnica de Cuantización Dinámica Post-Entrenamiento (\textit{Dynamic PTQ}) con formato de enteros de 8 bits (INT8) sobre el modelo neuronal profundo (arquitectura con topología 42-256-512-256-128-6) permitió alcanzar una reducción del $74.43\%$ en la huella de memoria de almacenamiento, disminuyendo el tamaño del archivo binario de $1232.0\text{ KB}$ en coma flotante estándar (FP32) a únicamente $315.0\text{ KB}$. Asimismo, la inferencia en aritmética entera optimizada redujo la latencia computacional media en un $21.29\%$, pasando de $37.1\,\mu\text{s}$ a $29.2\,\mu\text{s}$. A nivel algorítmico e informático, estos resultados proporcionan indicadores indirectos de una reducción de la carga computacional y de almacenamiento asociada al modelo, facilitando el tránsito de parámetros por el bus de memoria y sirviendo como precursores teóricos para la evaluación comparativa de consumo eléctrico físico que se ejecutará en la etapa subsecuente.
 
-Las pruebas experimentales en simulación de alta fidelidad confirmaron la viabilidad temporal del lazo cerrado a una frecuencia de muestreo de $500\text{ Hz}$ ($T_s = 2\text{ ms}$). El ciclo de control integral registró una duración promedio de $215.4\,\mu\text{s}$ (con un máximo observado de $299.7\,\mu\text{s}$), garantizando un margen de holgura libre del $89.23\%$ respecto al periodo de muestreo. Esta regularidad computacional se sustentó en que se evitó la realización explícita de asignaciones dinámicas en las operaciones críticas implementadas por el controlador durante el método periódico \texttt{update()} y en la incorporación de esquemas de saturación física de par ($\pm 55.0\text{ N}\cdot\text{m}$). Si bien el análisis formal de tiempos de peor caso (\textit{Worst-Case Execution Time}, WCET) y la certificación de determinismo duro demandan el despliegue sobre hardware dedicado o lógica reconfigurable en TT2, el perfil empírico de latencia obtenido demuestra una holgura estadística sobresaliente para la operación en tiempo real en simulación.
+Las pruebas experimentales en simulación de alta fidelidad confirmaron la viabilidad temporal del lazo cerrado a una frecuencia interna nominal de $500\text{ Hz}$ ($T_s = 2\text{ ms}$). Las referencias y los datos experimentales se publicaron y recopilaron a $100\text{ Hz}$ ($T_{datos}=10\text{ ms}$). El ciclo de control integral registró una duración promedio de $215.4\,\mu\text{s}$ (con un máximo observado de $299.7\,\mu\text{s}$), garantizando un margen de holgura libre del $89.23\%$ respecto al periodo de muestreo. Esta regularidad computacional se sustentó en que se evitó la realización explícita de asignaciones dinámicas en las operaciones críticas implementadas por el controlador durante el método periódico \texttt{update()} y en la incorporación de esquemas de saturación física de par ($\pm 55.0\text{ N}\cdot\text{m}$). Si bien el análisis formal de tiempos de peor caso (\textit{Worst-Case Execution Time}, WCET) y la certificación de determinismo duro demandan el despliegue sobre hardware dedicado o lógica reconfigurable en TT2, el perfil empírico de latencia obtenido demuestra una holgura estadística sobresaliente para la operación en tiempo real en simulación.
 
-Por otra parte, la evaluación del error de seguimiento articular en lazo cerrado evidenció que el compromiso de compresión numérica y la omisión temporal de la aceleración actual ($\ddot{\bm{q}}_{act} = \bm{0}$) para evitar amplificación de ruido conllevan un incremento en el RMSE medio ($0.063\text{ rad}$ en control clásico, $0.092\text{ rad}$ en FP32 y $0.138\text{ rad}$ en INT8). Lejos de restar validez a la propuesta, este resultado caracteriza con rigor la envolvente de desempeño del método PTQ en simulación y constituye la justificación técnica indispensable para la fase de Trabajo Terminal 2. La arquitectura garantiza compatibilidad directa con los controladores oficiales del fabricante (\texttt{Universal\_Robots\_ROS2\_Driver}), consolidando una plataforma sólida para implementar el entrenamiento consciente de cuantización (QAT), la diferenciación robusta de aceleración, la medición física de potencia eléctrica y la aceleración en hardware neutro (FPGA/SoC Zynq).
+La evaluación del seguimiento articular en lazo cerrado reportó un RMSE de $0.063\text{ rad}$ en el control analítico, $0.092\text{ rad}$ en FP32 y $0.138\text{ rad}$ en INT8. En consecuencia, el requisito RF-01 de RMSE $<0.05\text{ rad}$ no se alcanzó con los controladores evaluados en esta campaña de TT1. Estos valores constituyen la referencia de desempeño para la etapa siguiente. En TT2 se buscará reducir el error de seguimiento y evaluar nuevamente el cumplimiento del criterio original, mediante mejoras en el entrenamiento, la cuantización y el tratamiento de las señales de entrada. La contribución de TT1 comprende la implementación y caracterización comparativa de la arquitectura en simulación, con sus limitaciones de precisión expresamente identificadas.
 
 
 \addcontentsline{toc}{section}{Recomendaciones y trabajo a futuro}
@@ -2002,7 +1996,7 @@ Para TT2 se recomienda adoptar un esquema de \textbf{Entrenamiento Consciente de
     \item Durante la pasada hacia adelante (\textit{forward pass}), las operaciones de convolución y multiplicación matricial simulan el redondeo entero de 8 bits y el efecto de saturación mediante operadores de cuantización aparente (\textit{fake quantization}).
     \item Durante la pasada hacia atrás (\textit{backward pass}), el estimador de paso directo (\textit{Straight-Through Estimator - STE}) propaga los gradientes en precisión flotante continua (FP32), permitiendo que los pesos sinápticos converjan a mínimos locales que son inherentemente robustos al error de cuantización.
 \end{itemize}
-Con esta metodología, se proyecta recuperar la precisión articular al rango del modelo original en punto flotante ($\text{RMSE} \le 0.06\text{ rad}$) sin resignar la compresión a $315\text{ KB}$ ni la latencia optimizada de $29.2\,\mu\text{s}$.
+En TT2 se buscará reducir el RMSE respecto de las referencias obtenidas en TT1 y alcanzar el criterio original de RF-01, RMSE $<0.05\text{ rad}$. El efecto de QAT y de las mejoras en las señales de entrada se evaluará experimentalmente junto con el tamaño del modelo y la latencia de inferencia; no se presupone que esas métricas permanezcan idénticas a las obtenidas en TT1.
 
 \subsection*{3. Co-diseño y aceleración en hardware embebido neutro (FPGA / SoC Zynq)}
 
@@ -2214,7 +2208,7 @@ La gestión detallada del proyecto, incluyendo la asignación de tareas específ
 
 \newpage
 \addcontentsline{toc}{section}{Referencias}
-\bibliographystyle{IEEEtran}
-\bibliography{references}
+\bibliographystyle{../Protocolo/IEEEtran}
+\bibliography{../Protocolo/references}
 
 \end{document}
